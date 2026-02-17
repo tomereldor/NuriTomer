@@ -67,3 +67,11 @@ dmypy.json
 
 # Logs
 *.log
+
+# Data files (generated, too large for git)
+*.csv
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+biotech_catalyst_v3/archive/
