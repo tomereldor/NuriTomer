@@ -20,7 +20,10 @@ The result is a balanced binary classification dataset: "Did this clinical data 
 - 80 unique biotech tickers
 - 41 columns per event
 - NCT ID coverage: 194/210 (92%)
-- Trial phase coverage: 190/210 (90%)
+- Trial phase coverage: 201/210 (96%)
+- Financial data coverage: 206/210 (98%)
+- Clinical fields (indication, is_pivotal, endpoint): 91-100%
+- Quality score: mean 0.83, 189/210 pass threshold (>= 0.7)
 - Time range: Jan 2024 – Dec 2025
 
 **Supporting datasets:**
@@ -28,9 +31,9 @@ The result is a balanced binary classification dataset: "Did this clinical data 
 | File | Rows | Description |
 |------|------|-------------|
 | `enriched_high_moves.csv` | 265 | All high-move events (all catalyst types) with ATR |
-| `enriched_final.csv` | 265 | Original enriched dataset (pre-ATR, archived) |
 | `low_move_enriched.csv` | 120 | Low-move Clinical Data events, fully enriched |
-| `low_move_candidates.csv` | 300 | Raw low-move candidates (pre-clinical filter) |
+
+Intermediate/archived files are in `archive/` with date suffixes.
 
 ---
 
@@ -41,13 +44,8 @@ biotech_catalyst_v3/
 │
 ├── ml_dataset_clinical.csv           # PRIMARY OUTPUT — balanced ML dataset
 ├── enriched_high_moves.csv           # High-move events with ATR normalization
-├── enriched_final.csv                # Original enriched dataset (archived)
 ├── low_move_enriched.csv             # Low-move Clinical Data, fully enriched
-├── low_move_clinical.csv             # Low-move Clinical Data (pre-enrichment)
-├── low_move_clinical_nct_fixed.csv   # Low-move after NCT backfill
-├── low_move_candidates.csv           # Raw low-move candidates (pre-filter)
-├── nct_search_results.csv            # Audit log from NCT ID backfill
-├── nct_search_trace.json             # Detailed NCT search trace log
+├── archive/                          # Dated intermediate/superseded files
 ├── .env                              # API keys (gitignored)
 │
 ├── clients/                          # API clients
@@ -63,10 +61,11 @@ biotech_catalyst_v3/
 │   ├── fix_missing_nct.py            #   Backfill missing ClinicalTrials.gov NCT IDs
 │   ├── find_press_release_urls.py    #   Find missing URLs via Perplexity API
 │   ├── extract_low_moves.py          #   [Legacy] Extract 3-10% moves by raw percentage
-│   ├── extract_low_move_clinical.py  #   [New] Extract ATR-normalized low-move events
-│   ├── filter_to_clinical.py         #   [New] Filter candidates to Clinical Data via Perplexity
-│   ├── create_ml_dataset.py          #   [New] Combine high+low into balanced ML dataset
-│   └── backfill_financials.py        #   Backfill missing financial data
+│   ├── extract_low_move_clinical.py  #   Extract ATR-normalized low-move events
+│   ├── filter_to_clinical.py         #   Filter candidates to Clinical Data via Perplexity
+│   ├── enrich_clinical_fields.py     #   Enrich indication/phase/endpoint via Perplexity
+│   ├── backfill_financials.py        #   Backfill missing financial data via yfinance
+│   └── create_ml_dataset.py          #   Combine high+low into balanced ML dataset
 │
 ├── batch_scanner.py                  # Market scanner (yfinance batch download)
 ├── batch_enrichment.py               # Main enrichment pipeline (AI researcher TODO)
@@ -96,7 +95,7 @@ batch_scanner.py  ──→  raw_moves_*.csv  ──→  batch_enrichment.py  �
                                           (quality + ATR + URLs)      (265 events + ATR cols)
 ```
 
-### Phase B: Low-Move Events (new)
+### Phase B: Low-Move Events
 
 ```
 enriched_high_moves.csv
@@ -111,12 +110,18 @@ extract_low_move_clinical.py  ──→  low_move_candidates.csv
                                (Perplexity API confirms     (120 Clinical Data events)
                                 clinical data catalyst)            │
                                                                    ▼
-                                                      fix_missing_nct.py  ──→  NCT enrichment
-                                                      fix_existing_data.py ──→ low_move_enriched.csv
-                                                      (quality + ATR)          (120 events, 101 NCTs)
+                                                      fix_missing_nct.py ──→ NCT IDs (101/120)
+                                                      fix_existing_data.py ──→ quality + ATR
+                                                      backfill_financials.py ──→ market cap, cash, etc.
+                                                      enrich_clinical_fields.py ──→ indication, phase,
+                                                                                    is_pivotal, endpoints
+                                                                   │
+                                                                   ▼
+                                                          low_move_enriched.csv
+                                                          (120 events, 98% field coverage)
 ```
 
-### Phase C: Balanced ML Dataset (new)
+### Phase C: Balanced ML Dataset
 
 ```
 enriched_high_moves.csv          low_move_enriched.csv
@@ -168,14 +173,15 @@ enriched_high_moves.csv          low_move_enriched.csv
 - Full pipeline from scan → enrich → ATR → ML dataset
 - ClinicalTrials.gov API client with smart prioritized search
 - ATR-normalized low-move extraction + Perplexity clinical filter
+- Clinical fields enrichment via Perplexity (indication, phase, is_pivotal, endpoints)
+- Financial data backfill via yfinance (market_cap, cash, short interest, etc.)
 - All post-processing scripts (quality, catalyst fix, ATR, NCT backfill, URLs)
 - All market scanners (batch, incremental, Perplexity, Finnhub)
 - Balanced ML dataset creation
 
 ### Needs Rebuilding
-- **AICatalystResearcher** — The Perplexity-based class in `batch_enrichment.py` that researches what caused each move. `perplexity_scanner.py` has a working reference. Needs extraction into a proper module.
-- **FinancialDataFetcher** — The yfinance-based financial data fetcher. Marked as `TODO` in `batch_enrichment.py`.
-- **Financial enrichment for low-move events** — `low_move_enriched.csv` has no financial data (market_cap, cash_position, etc). Need to run `backfill_financials.py` or rebuild the fetcher.
+- **AICatalystResearcher** — The Perplexity-based class in `batch_enrichment.py` that researches what caused each move. `perplexity_scanner.py` has a working reference. Needs extraction into a proper module. (Note: `enrich_clinical_fields.py` now covers the clinical field enrichment use case separately.)
+- **batch_enrichment.py** — Still has TODO stubs for `FinancialDataFetcher` and `AICatalystResearcher`. The individual scripts (`backfill_financials.py`, `enrich_clinical_fields.py`) cover these use cases but aren't integrated into a single orchestrated pipeline.
 
 ---
 
@@ -197,15 +203,19 @@ python3 scripts/extract_low_move_clinical.py --input enriched_high_moves.csv
 export PERPLEXITY_API_KEY="$(grep PERPLEXITY_API_KEY .env | cut -d= -f2)"
 python3 scripts/filter_to_clinical.py --input low_move_candidates.csv --output low_move_clinical.csv
 
-# Step 4: Enrich (NCT + quality + ATR)
+# Step 4: Enrich (NCT + quality + ATR + financials + clinical fields)
 python3 -m scripts.fix_missing_nct --input low_move_clinical.csv --all-types
 python3 -m scripts.fix_existing_data --input low_move_clinical_nct_fixed.csv --output low_move_enriched.csv
+python3 -m scripts.backfill_financials --input low_move_enriched.csv --output low_move_enriched.csv
+python3 -u scripts/enrich_clinical_fields.py --input low_move_enriched.csv
 
 # Step 5: Create balanced ML dataset
 python3 scripts/create_ml_dataset.py
 
 # === Individual tools ===
 python3 -m scripts.fix_missing_nct --input <file.csv>
+python3 -m scripts.backfill_financials --input <file.csv> --output <file.csv>
+python3 -u scripts/enrich_clinical_fields.py --input <file.csv>
 python3 -m scripts.find_press_release_urls --input <file.csv>
 python3 -m scripts.extract_low_moves --min-move 3 --max-move 10  # legacy raw-pct version
 python3 batch_scanner.py --min-move 30 --start-date 2024-01-01
@@ -214,6 +224,39 @@ python3 batch_scanner.py --min-move 30 --start-date 2024-01-01
 ---
 
 ## Change Log
+
+### v3.2.1 — Low-Move Enrichment Fix (2026-02-21)
+
+**What changed:** Fixed the low-move pipeline which was producing events with 0% fill rate on financial and AI-researched clinical fields.
+
+**Problem:** The low-move pipeline (v3.2) skipped two enrichment steps that the high-move data had received from the original `batch_enrichment.py` run:
+1. **Financial data** — `market_cap_m`, `current_price`, `cash_position_m`, `short_percent`, `institutional_ownership`, `analyst_target`, `analyst_rating`, `cash_runway_months` were all empty (0/120)
+2. **AI-researched clinical fields** — `indication`, `phase`, `is_pivotal`, `pivotal_evidence`, `primary_endpoint_met`, `primary_endpoint_result` were all empty (0/120)
+
+**Fix:**
+1. Ran `backfill_financials.py` on `low_move_enriched.csv` — filled 118/120 rows with yfinance data
+2. Created `scripts/enrich_clinical_fields.py` — new script that queries Perplexity API to fill clinical trial details (indication, phase, is_pivotal, endpoint results). Filled 120/120 rows.
+3. Rebuilt `ml_dataset_clinical.csv` with fully enriched data
+
+**Before → After (low-move data):**
+| Field | Before | After |
+|-------|--------|-------|
+| indication | 0% | 98% |
+| phase | 0% | 98% |
+| is_pivotal | 0% | 99% |
+| primary_endpoint_met | 0% | 99% |
+| market_cap_m | 0% | 98% |
+| current_price | 0% | 98% |
+| cash_position_m | 0% | 98% |
+| data_quality_score | 0% | 100% (mean: 0.83) |
+
+**New script:** `scripts/enrich_clinical_fields.py` — Uses Perplexity `sonar` model to research each clinical event and extract structured fields. Saves progress every 20 rows. Can be run on any enriched CSV with `drug_name` and `catalyst_summary` columns.
+
+**Pipeline update:** Step 4 of the low-move pipeline now includes `backfill_financials.py` and `enrich_clinical_fields.py` after NCT backfill.
+
+**Files cleaned:** Moved 6 intermediate/superseded files to `archive/` with date suffixes. Only latest CSVs remain in the working directory.
+
+---
 
 ### v3.2 — Balanced ML Dataset Pipeline (2026-02-17)
 
