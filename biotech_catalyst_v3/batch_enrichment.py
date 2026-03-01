@@ -32,6 +32,7 @@ from utils.data_quality import (
     flag_missing_financials,
 )
 from clients.clinicaltrials_client import ClinicalTrialsClient
+from clients.financial_client import FinancialDataFetcher
 
 # TODO: Set your Perplexity API key as env var or replace here
 PERPLEXITY_API_KEY = os.environ.get("PERPLEXITY_API_KEY", "")
@@ -64,6 +65,7 @@ class FinancialData:
     analyst_target: float = None
     analyst_rating: str = ""
     error: str = ""
+    missing_fields: str = ""
 
 
 @dataclass
@@ -149,15 +151,6 @@ class AICatalystResearcher:
         )
 
 
-class FinancialDataFetcher:
-    """TODO: Rebuild yfinance-based financial data fetcher."""
-    def __init__(self, api_key: str = ""):
-        pass
-
-    def fetch(self, ticker) -> FinancialData:
-        raise NotImplementedError(
-            "FinancialDataFetcher needs to be rebuilt."
-        )
 
 def enrich_events_batch(
     input_file: str = 'raw_moves_filtered.csv',
@@ -212,7 +205,7 @@ def enrich_events_batch(
     # Initialize modules
     ai_researcher = AICatalystResearcher(PERPLEXITY_API_KEY)
     ct_client = ClinicalTrialsClient(rate_limit=0.5)
-    financial_fetcher = FinancialDataFetcher(PERPLEXITY_API_KEY)
+    financial_fetcher = FinancialDataFetcher()
 
     total = len(events_df)
     start_time = time.time()
@@ -293,18 +286,17 @@ def enrich_events_batch(
                 ct_data.error = f"CT.gov fetch error: {e}"
                 errors.append(ct_data.error)
 
-        # Fetch financial data (less frequently to save API calls)
+        # Fetch financial data for EVERY event
         fin_data = FinancialData()
-        if idx % 5 == 0:  # Only fetch financials every 5 events
-            try:
-                fin_data = financial_fetcher.fetch(ticker)
-                if fin_data.error:
-                    errors.append(fin_data.error)
-            except Exception as e:
-                errors.append(f"Financial fetch error: {e}")
-            time.sleep(0.5)
-        else:
-            errors.append("Missing financials: skipped (batch sampling)")
+        try:
+            fin_data = financial_fetcher.fetch(ticker)
+            if fin_data.error:
+                errors.append(fin_data.error)
+            if fin_data.missing_fields:
+                errors.append(f"Missing: {fin_data.missing_fields}")
+        except Exception as e:
+            errors.append(f"Financial fetch error: {e}")
+        time.sleep(0.3)
 
         # Calculate quality score
         quality_score = calculate_quality_score(ai_result, ct_data, fin_data)

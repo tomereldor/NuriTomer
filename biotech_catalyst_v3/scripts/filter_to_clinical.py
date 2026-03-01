@@ -20,19 +20,24 @@ def check_if_clinical(ticker: str, date: str) -> dict:
 Answer in JSON only:
 {{"is_clinical": true/false, "drug_name": "name or null", "summary": "one sentence or null"}}"""
 
-    resp = requests.post(
-        "https://api.perplexity.ai/chat/completions",
-        headers={
-            "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "sonar",
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0
-        },
-        timeout=30
-    )
+    try:
+        resp = requests.post(
+            "https://api.perplexity.ai/chat/completions",
+            headers={
+                "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "sonar",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0
+            },
+            timeout=45
+        )
+    except requests.exceptions.Timeout:
+        return {"is_clinical": False, "error": "timeout"}
+    except requests.exceptions.RequestException as e:
+        return {"is_clinical": False, "error": f"request_error: {str(e)[:60]}"}
 
     if resp.status_code != 200:
         return {"is_clinical": False, "error": resp.status_code}
@@ -55,30 +60,45 @@ def filter_clinical_events(input_file: str, output_file: str, target_count: int 
     df = pd.read_csv(input_file)
     print(f"Loaded {len(df)} candidates from {input_file}")
 
+    # Resume from partial save if it exists
+    partial_file = output_file.replace(".csv", "_partial.csv")
     clinical_events = []
+    if os.path.exists(partial_file):
+        existing = pd.read_csv(partial_file)
+        clinical_events = existing.to_dict("records")
+        print(f"Resumed from partial save: {len(clinical_events)} events already found")
+
+    date_col = 'event_date' if 'event_date' in df.columns else 'date'
 
     for i, (_, row) in enumerate(df.iterrows()):
         if len(clinical_events) >= target_count:
             break
 
-        print(f"[{i+1}/{len(df)}] {row['ticker']} {row['date']}...", end=" ")
+        print(f"[{i+1}/{len(df)}] {row['ticker']} {row[date_col]}...", end=" ", flush=True)
 
-        result = check_if_clinical(row['ticker'], row['date'])
+        result = check_if_clinical(row['ticker'], row[date_col])
 
-        if result.get('is_clinical'):
+        if result.get('error'):
+            print(f"ERROR ({result['error']})", flush=True)
+        elif result.get('is_clinical'):
             row_dict = row.to_dict()
             row_dict['drug_name'] = result.get('drug_name')
             row_dict['catalyst_summary'] = result.get('summary')
             row_dict['catalyst_type'] = 'Clinical Data'
             clinical_events.append(row_dict)
-            print(f"CLINICAL ({result.get('drug_name', 'unknown')})")
+            print(f"CLINICAL ({result.get('drug_name', 'unknown')})", flush=True)
+            # Partial save every 10 clinical hits
+            if len(clinical_events) % 10 == 0:
+                pd.DataFrame(clinical_events).to_csv(partial_file, index=False)
         else:
-            print("Not clinical")
+            print("Not clinical", flush=True)
 
         time.sleep(1.0)
 
     result_df = pd.DataFrame(clinical_events)
     result_df.to_csv(output_file, index=False)
+    if os.path.exists(partial_file):
+        os.remove(partial_file)
 
     print(f"\nFound {len(result_df)} Clinical Data events")
     print(f"Saved to {output_file}")
