@@ -14,24 +14,30 @@ The result is a balanced binary classification dataset: "Did this clinical data 
 
 ## Latest Output
 
-**`ml_dataset_clinical.csv`** — Balanced ML dataset (primary output)
+**`enriched_all_clinical.csv`** — Full Clinical Data dataset (primary output, v3.3)
 
-- 210 events: 105 High-move + 105 Low-move Clinical Data events
-- 80 unique biotech tickers
-- 41 columns per event
-- NCT ID coverage: 194/210 (92%)
-- Trial phase coverage: 201/210 (96%)
-- Financial data coverage: 206/210 (98%)
-- Clinical fields (indication, is_pivotal, endpoint): 91-100%
-- Quality score: mean 0.83, 189/210 pass threshold (>= 0.7)
-- Time range: Jan 2024 – Dec 2025
+- **2,179 Clinical Data events** across 460 biotech tickers (21× expansion from v3.2's 104)
+- move_class_combo: 1,602 Low / 375 High / 165 Medium
+- Gainers / Losers: 1,121 / 1,058 (well-balanced)
+- market_cap filled: 2,172/2,179 (99.7%)
+- ATR filled: 2,142/2,179 (98.3%)
+- Move range: -98.5% to +196.1% | Avg absolute move: 13.9%
+- Time range: Jan 2023 – Dec 2025
+- 52 columns per event (all CT.gov, financial, ATR, and classification columns)
 
 **Supporting datasets:**
 
 | File | Rows | Description |
 |------|------|-------------|
-| `enriched_high_moves.csv` | 265 | All high-move events (all catalyst types) with ATR |
-| `low_move_enriched.csv` | 120 | Low-move Clinical Data events, fully enriched |
+| `enriched_all_clinical.csv` | 2,179 | **PRIMARY** — Clinical Data events only, fully enriched |
+| `enriched_large_moves.csv` | 2,339 | All catalyst types merged (Clinical + Regulatory + Earnings + etc.) |
+| `enriched_clinical_events.csv` | 1,939 | CT.gov-sourced events enriched (265 original + 1,674 new) |
+| `enriched_high_moves.csv` | 265 | Original high-move events with ATR (v3.1 baseline) |
+| `large_moves_clinical.csv` | 400 | High-move events confirmed clinical by Perplexity |
+| `large_moves_filtered.csv` | 5,661 | Pre-filtered candidates (15–200% moves) for Perplexity review |
+| `large_moves_new.csv` | 15,667 | Raw ≥10% moves from universe scan |
+| `clinical_events_new.csv` | 1,674 | CT.gov completions with stock moves (news-first) |
+| `biotech_universe_expanded.csv` | 460 | Validated biotech universe ($50M–$10B market cap) |
 
 Intermediate/archived files are in `archive/` with date suffixes.
 
@@ -42,33 +48,44 @@ Intermediate/archived files are in `archive/` with date suffixes.
 ```
 biotech_catalyst_v3/
 │
-├── ml_dataset_clinical.csv           # PRIMARY OUTPUT — balanced ML dataset
-├── enriched_high_moves.csv           # High-move events with ATR normalization
-├── low_move_enriched.csv             # Low-move Clinical Data, fully enriched
+├── enriched_all_clinical.csv         # PRIMARY OUTPUT — 2,179 Clinical Data events
+├── enriched_large_moves.csv          # All catalyst types merged (2,339 events)
+├── enriched_clinical_events.csv      # CT.gov-sourced events enriched
+├── enriched_high_moves.csv           # Original 265 high-move events (v3.1 baseline)
+├── large_moves_clinical.csv          # 400 high-move events confirmed clinical
+├── large_moves_filtered.csv          # 5,661 candidates (15–200% moves)
+├── large_moves_new.csv               # 15,667 raw ≥10% moves from universe scan
+├── clinical_events_new.csv           # 1,674 CT.gov completion events
+├── biotech_universe_expanded.csv     # 460 validated biotech tickers
 ├── archive/                          # Dated intermediate/superseded files
 ├── .env                              # API keys (gitignored)
 │
 ├── clients/                          # API clients
-│   └── clinicaltrials_client.py      #   ClinicalTrials.gov API v2 client
+│   ├── clinicaltrials_client.py      #   ClinicalTrials.gov API v2 client
+│   └── financial_client.py           #   FinancialData fetcher (yfinance)
 │
 ├── utils/                            # Shared utilities
 │   ├── data_quality.py               #   Quality threshold, catalyst classification, date validation
-│   └── volatility.py                 #   ATR calculation, move normalization
+│   └── volatility.py                 #   ATR + avg_daily_move, classify_move() (abs/norm/combo)
 │
 ├── scripts/                          # Pipeline scripts
+│   ├── expand_company_universe.py    #   Build 460-ticker universe (SPDR XBI + Nasdaq screener)
+│   ├── find_clinical_events.py       #   CT.gov completions → stock moves (news-first approach)
+│   ├── scan_large_moves.py           #   Scan universe for ≥10% moves not in existing dataset
+│   ├── filter_to_clinical.py         #   Perplexity: confirm Clinical Data catalyst, add drug_name
+│   ├── incremental_enrich.py         #   Enrich new events; deduplicates + partial-save resume
 │   ├── full_pipeline_fix.py          #   Orchestrates all fix steps in order
 │   ├── fix_existing_data.py          #   Apply quality/ATR/URL improvements to CSV
 │   ├── fix_missing_nct.py            #   Backfill missing ClinicalTrials.gov NCT IDs
 │   ├── find_press_release_urls.py    #   Find missing URLs via Perplexity API
-│   ├── extract_low_moves.py          #   [Legacy] Extract 3-10% moves by raw percentage
-│   ├── extract_low_move_clinical.py  #   Extract ATR-normalized low-move events
-│   ├── filter_to_clinical.py         #   Filter candidates to Clinical Data via Perplexity
-│   ├── enrich_clinical_fields.py     #   Enrich indication/phase/endpoint via Perplexity
+│   ├── extract_low_move_clinical.py  #   [Legacy v3.2] Extract ATR-normalized low-move events
+│   ├── enrich_clinical_fields.py     #   [Legacy v3.2] Enrich indication/phase/endpoint
 │   ├── backfill_financials.py        #   Backfill missing financial data via yfinance
-│   └── create_ml_dataset.py          #   Combine high+low into balanced ML dataset
+│   ├── create_ml_dataset.py          #   Combine high+low into balanced ML dataset
+│   └── extract_low_moves.py          #   [Legacy v3.1] Extract 3-10% moves by raw percentage
 │
 ├── batch_scanner.py                  # Market scanner (yfinance batch download)
-├── batch_enrichment.py               # Main enrichment pipeline (AI researcher TODO)
+├── batch_enrichment.py               # Main enrichment pipeline
 ├── incremental_scanner.py            # Finds NEW events not in existing data
 ├── perplexity_scanner.py             # Uses Perplexity AI to find biotech catalysts
 ├── finnhub_scanner.py                # Uses Finnhub API for market data
@@ -82,6 +99,46 @@ biotech_catalyst_v3/
 ---
 
 ## How the Pipeline Works
+
+### Phase D: Universe Expansion + Full Dataset (v3.3 — current)
+
+```
+SPDR XBI XLSX + Nasdaq screener API
+        │
+        ▼
+expand_company_universe.py  ──→  biotech_universe_expanded.csv
+(validate with yfinance,          (460 tickers, $50M–$10B)
+ $50M–$10B cap range)                      │
+                                           ├─────────────────────────────────┐
+                                           ▼                                 ▼
+                              find_clinical_events.py           scan_large_moves.py
+                              (CT.gov Phase 2/3 completions     (≥10% moves, all 460 tickers,
+                               → sponsor → ticker → move)        deduped vs existing data)
+                                           │                                 │
+                                           ▼                                 ▼
+                              clinical_events_new.csv          large_moves_new.csv
+                              (1,674 events, all move sizes)   (15,667 moves)
+                                           │                                 │
+                                           │                    large_moves_filtered.csv
+                                           │                    (5,661 rows, 15–200% moves)
+                                           │                                 │
+                                           │                    filter_to_clinical.py
+                                           │                    (Perplexity confirms clinical,
+                                           │                     adds drug_name + summary)
+                                           │                                 │
+                                           │                    large_moves_clinical.csv
+                                           │                    (400 confirmed clinical events)
+                                           │                                 │
+                                           └──────────────┬──────────────────┘
+                                                          ▼
+                                              incremental_enrich.py
+                                              (CT.gov + yfinance + ATR,
+                                               deduplication + partial save)
+                                                          │
+                                                          ▼
+                                              enriched_all_clinical.csv
+                                              (2,179 Clinical Data events)
+```
 
 ### Phase A: High-Move Events (existing)
 
@@ -170,46 +227,66 @@ enriched_high_moves.csv          low_move_enriched.csv
 ## What's Working vs What Needs Rebuilding
 
 ### Working Now
-- Full pipeline from scan → enrich → ATR → ML dataset
+- Full pipeline from universe expansion → scan → filter → enrich → final dataset
+- `expand_company_universe.py` — live ETF + Nasdaq screener fetch, yfinance validation
+- `find_clinical_events.py` — CT.gov API v2 with `AREA[CompletionDate]RANGE[...]`, paginated
+- `scan_large_moves.py` — batch yfinance scan with ATR + deduplication
+- `filter_to_clinical.py` — Perplexity clinical confirmation with timeout handling + partial saves
+- `incremental_enrich.py` — unified enrichment with dedup, partial saves, resume support
+- `clients/financial_client.py` — real `FinancialDataFetcher` using yfinance
+- `utils/volatility.py` — ATR + `avg_daily_move` + three-way `move_class_combo` classification
 - ClinicalTrials.gov API client with smart prioritized search
-- ATR-normalized low-move extraction + Perplexity clinical filter
-- Clinical fields enrichment via Perplexity (indication, phase, is_pivotal, endpoints)
-- Financial data backfill via yfinance (market_cap, cash, short interest, etc.)
-- All post-processing scripts (quality, catalyst fix, ATR, NCT backfill, URLs)
-- All market scanners (batch, incremental, Perplexity, Finnhub)
-- Balanced ML dataset creation
+- Financial data backfill via yfinance
+- All post-processing scripts (quality, catalyst fix, NCT backfill, URLs)
+- All legacy market scanners (batch, incremental, Perplexity, Finnhub)
 
-### Needs Rebuilding
-- **AICatalystResearcher** — The Perplexity-based class in `batch_enrichment.py` that researches what caused each move. `perplexity_scanner.py` has a working reference. Needs extraction into a proper module. (Note: `enrich_clinical_fields.py` now covers the clinical field enrichment use case separately.)
-- **batch_enrichment.py** — Still has TODO stubs for `FinancialDataFetcher` and `AICatalystResearcher`. The individual scripts (`backfill_financials.py`, `enrich_clinical_fields.py`) cover these use cases but aren't integrated into a single orchestrated pipeline.
+### Needs Attention
+- **AICatalystResearcher** — The Perplexity-based class in `batch_enrichment.py` for researching what caused each move. `perplexity_scanner.py` has a working reference. (Clinical fields enrichment is now covered by `enrich_clinical_fields.py`.)
+- **`enriched_all_clinical.csv` class balance** — 73% Low / 17% High / 8% Medium. If training a classifier, down-sample Low or up-sample High/Medium before fitting.
 
 ---
 
 ## Quick Commands
 
 ```bash
-# === Full pipeline (high-move) ===
-python3 -m scripts.full_pipeline_fix --input enriched_final.csv
-python3 -m scripts.full_pipeline_fix --input enriched_final.csv --skip-atr --skip-urls
-
-# === Low-move pipeline ===
-# Step 1: Add ATR to high-move data
-python3 -m scripts.fix_existing_data --input enriched_final.csv --output enriched_high_moves.csv
-
-# Step 2: Extract low-move candidates (ATR-normalized)
-python3 scripts/extract_low_move_clinical.py --input enriched_high_moves.csv
-
-# Step 3: Filter to Clinical Data via Perplexity
 export PERPLEXITY_API_KEY="$(grep PERPLEXITY_API_KEY .env | cut -d= -f2)"
-python3 scripts/filter_to_clinical.py --input low_move_candidates.csv --output low_move_clinical.csv
 
-# Step 4: Enrich (NCT + quality + ATR + financials + clinical fields)
-python3 -m scripts.fix_missing_nct --input low_move_clinical.csv --all-types
-python3 -m scripts.fix_existing_data --input low_move_clinical_nct_fixed.csv --output low_move_enriched.csv
-python3 -m scripts.backfill_financials --input low_move_enriched.csv --output low_move_enriched.csv
-python3 -u scripts/enrich_clinical_fields.py --input low_move_enriched.csv
+# === v3.3 Full Pipeline (Universe Expansion → Final Dataset) ===
 
-# Step 5: Create balanced ML dataset
+# Step 1: Expand biotech universe (fetches SPDR XBI + Nasdaq screener, validates with yfinance)
+python3 -m scripts.expand_company_universe --min-cap 50 --max-cap 10000
+
+# Step 2a: Find clinical events via CT.gov (news-first, all move sizes)
+python3 -m scripts.find_clinical_events --start 2023-01-01 --end 2025-12-31
+
+# Step 2b: Scan universe for large moves (≥10%, skips already-known events)
+python3 -m scripts.scan_large_moves --min-move 10 --start 2023-01-01
+
+# Step 3: Filter large moves to confirmed clinical events via Perplexity
+python3 -u -m scripts.filter_to_clinical \
+  --input large_moves_filtered.csv --output large_moves_clinical.csv --target-count 400
+
+# Step 4a: Enrich CT.gov events
+python3 -u -m scripts.incremental_enrich \
+  --new clinical_events_new.csv --existing enriched_high_moves.csv \
+  --output enriched_clinical_events.csv
+
+# Step 4b: Enrich confirmed large-move clinical events (merges with step 4a output)
+python3 -u -m scripts.incremental_enrich \
+  --new large_moves_clinical.csv --existing enriched_clinical_events.csv \
+  --output enriched_large_moves.csv
+
+# Step 5: Extract Clinical Data only
+python3 -c "
+import pandas as pd
+df = pd.read_csv('enriched_large_moves.csv')
+df[df['catalyst_type']=='Clinical Data'].to_csv('enriched_all_clinical.csv', index=False)
+print(f'Saved {len(df[df[\"catalyst_type\"]==\"Clinical Data\"])} Clinical Data events')
+"
+
+# === v3.1/v3.2 Legacy Pipeline ===
+python3 -m scripts.full_pipeline_fix --input enriched_final.csv
+python3 scripts/extract_low_move_clinical.py --input enriched_high_moves.csv
 python3 scripts/create_ml_dataset.py
 
 # === Individual tools ===
@@ -217,13 +294,51 @@ python3 -m scripts.fix_missing_nct --input <file.csv>
 python3 -m scripts.backfill_financials --input <file.csv> --output <file.csv>
 python3 -u scripts/enrich_clinical_fields.py --input <file.csv>
 python3 -m scripts.find_press_release_urls --input <file.csv>
-python3 -m scripts.extract_low_moves --min-move 3 --max-move 10  # legacy raw-pct version
 python3 batch_scanner.py --min-move 30 --start-date 2024-01-01
 ```
 
 ---
 
 ## Change Log
+
+### v3.3 — Universe Expansion + Full Dataset (2026-03-01)
+
+**What changed:** Expanded the biotech universe from 111 → 460 tickers and rebuilt the entire dataset collection pipeline to produce a 21× larger Clinical Data dataset.
+
+**Why:** The original dataset had only 104 Clinical Data events sourced from high-move scans of a small ticker universe. This severely limited ML training. Two structural problems were fixed:
+1. The universe was too small (111 tickers, manually curated) — missing hundreds of relevant small/mid-cap biotechs
+2. The scan-for-big-moves approach only captured positive examples (stocks that moved significantly) — it couldn't find events where clinical data was released but the stock barely moved
+
+**New scripts:**
+- `scripts/expand_company_universe.py` — Downloads live holdings from SPDR XBI XLSX and Nasdaq screener API (fallback for ARKG/IBB which block direct CSV access). Validates each ticker with yfinance. Produces `biotech_universe_expanded.csv` with 460 tickers, $50M–$10B market cap range.
+- `scripts/find_clinical_events.py` — News-first approach: fetches Phase 2/3 trial completions from CT.gov API v2, maps sponsor → ticker via universe name matching, then fetches the stock move around each completion date. Captures all move sizes (Low/Medium/High) from the same event type.
+- `scripts/scan_large_moves.py` — Scans all 460 universe tickers for ≥10% single-day moves not already in the dataset. Computes ATR and normalized move for each event. Output: 15,667 raw qualifying moves.
+- `scripts/incremental_enrich.py` — Unified enrichment: deduplicates on (ticker, event_date), enriches with CT.gov details + yfinance financials + ATR classification, partial-saves every N rows for crash recovery, supports resume from `_partial.csv`.
+
+**Modified scripts:**
+- `clients/financial_client.py` — New file: real `FinancialDataFetcher` using yfinance replacing the stub in `batch_enrichment.py`
+- `batch_enrichment.py` — Imports real `FinancialDataFetcher`; fetches financials for every event (was every 5th)
+- `utils/volatility.py` — Added `avg_daily_move` to `calculate_atr`; new `classify_move()` returns three classification columns: `move_class_abs` (VeryLow/Low/Medium/High/VeryHigh), `move_class_norm` (Normal/Elevated/High/Extreme), `move_class_combo` (the ML label: Low if <15% AND <2x ATR; High if ≥30% AND ≥3.5x ATR; else Medium)
+- `scripts/filter_to_clinical.py` — Fixed `row['date']` → `row['event_date']` column name bug; added timeout/network exception handling (no more crashes on slow Perplexity responses); added partial-save every 10 clinical hits; added `flush=True` for unbuffered log output
+
+**Results:**
+
+| Metric | Before (v3.2) | After (v3.3) |
+|--------|---------------|--------------|
+| Biotech universe | 111 tickers | 460 tickers |
+| Clinical Data events | 104 | 2,179 |
+| Low-move events | 105 | 1,602 |
+| High-move events | 105 | 375 |
+| Gainers/Losers balance | skewed | 1,121 / 1,058 |
+| Market cap coverage | 98% | 99.7% |
+
+**Key design decisions:**
+- CT.gov `filter.advanced=AREA[CompletionDate]RANGE[start,end]` (not `filter.completionDate` which doesn't exist in API v2)
+- `nextPageToken` pagination loop to handle >1,000 CT.gov results
+- Pre-filter large_moves_new.csv to 15–200% range before Perplexity (reduces API calls from 15k → 5.6k)
+- `move_class_combo` as the primary ML label: combines absolute and ATR-normalized thresholds so volatility-adjusted signals aren't thrown away
+
+---
 
 ### v3.2.1 — Low-Move Enrichment Fix (2026-02-21)
 
