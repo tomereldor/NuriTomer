@@ -1,0 +1,461 @@
+ticker,name,market_cap_m,current_price,sector,industry,employees,country,is_existing
+MDGL,"Madrigal Pharmaceuticals, Inc.",9811.3,432.0,Healthcare,Biotechnology,915,United States,False
+IBRX,"ImmunityBio, Inc.",9633.0,9.78,Healthcare,Biotechnology,684,United States,True
+ABVX,Abivax SA,9589.9,121.28,Healthcare,Biotechnology,67,France,False
+MASI,Masimo Corporation,9418.7,175.35,Healthcare,Medical Devices,0,United States,False
+PRAX,"Praxis Precision Medicines, Inc",9341.1,336.75,Healthcare,Biotechnology,168,United States,True
+TECH,Bio-Techne Corp,9230.7,59.0,Healthcare,Biotechnology,3100,United States,False
+PCVX,"Vaxcyte, Inc.",8965.0,61.74,Healthcare,Biotechnology,507,United States,True
+CRL,Charles River Laboratories Inte,8784.5,178.49,Healthcare,Diagnostics & Research,18300,United States,False
+AXSM,"Axsome Therapeutics, Inc.",8383.5,163.89,Healthcare,Biotechnology,925,United States,False
+HALO,"Halozyme Therapeutics, Inc.",8205.7,69.53,Healthcare,Biotechnology,423,United States,False
+KRYS,"Krystal Biotech, Inc.",8057.6,275.64,Healthcare,Biotechnology,295,United States,True
+NUVL,"Nuvalent, Inc.",7917.2,101.95,Healthcare,Biotechnology,0,United States,False
+CYTK,"Cytokinetics, Incorporated",7607.3,62.22,Healthcare,Biotechnology,0,United States,True
+BIO,"Bio-Rad Laboratories, Inc.",7515.2,278.44,Healthcare,Medical Devices,7450,United States,False
+GRFS,"Grifols, S.A.",7507.9,9.1,Healthcare,Drug Manufacturers - General,0,Spain,False
+KYMR,"Kymera Therapeutics, Inc.",7307.9,91.35,Healthcare,Biotechnology,0,United States,True
+RGEN,Repligen Corporation,7250.8,128.73,Healthcare,Medical Instruments & Supplies,0,United States,False
+BLTE,"Belite Bio, Inc",7139.0,190.3,Healthcare,Biotechnology,25,United States,False
+MRUS,Merus N.V.,6826.2,90.0,Healthcare,Biotechnology,260,Netherlands,True
+ACLX,"Arcellx, Inc.",6579.7,113.79,Healthcare,Biotechnology,0,United States,False
+COGT,"Cogent Biosciences, Inc.",6305.7,38.85,Healthcare,Biotechnology,258,United States,True
+RYTM,"Rhythm Pharmaceuticals, Inc.",6188.4,92.73,Healthcare,Biotechnology,0,United States,True
+CRSP,CRISPR Therapeutics AG,5772.6,60.14,Healthcare,Biotechnology,0,Switzerland,False
+PTGX,"Protagonist Therapeutics, Inc.",5756.4,92.08,Healthcare,Biotechnology,0,United States,True
+IMVT,"Immunovant, Inc.",5643.9,27.73,Healthcare,Biotechnology,362,United States,False
+MIRM,"Mirum Pharmaceuticals, Inc.",5526.3,92.29,Healthcare,Biotechnology,0,United States,False
+PTCT,"PTC Therapeutics, Inc.",5474.9,68.19,Healthcare,Biotechnology,991,United States,False
+CELC,Celcuity Inc.,5169.0,111.71,Healthcare,Biotechnology,87,United States,True
+LNTH,"Lantheus Holdings, Inc.",5093.4,74.91,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+ALKS,Alkermes plc,4970.0,30.1,Healthcare,Drug Manufacturers - Specialty & Generic,2050,Ireland,False
+TMDX,"TransMedics Group, Inc.",4964.2,145.26,Healthcare,Medical Devices,898,United States,False
+CGON,"CG Oncology, Inc.",4858.3,58.8,Healthcare,Biotechnology,0,United States,False
+APGE,"Apogee Therapeutics, Inc.",4782.4,70.0,Healthcare,Biotechnology,196,United States,True
+TGTX,"TG Therapeutics, Inc.",4777.1,30.09,Healthcare,Biotechnology,0,United States,False
+SHC,Sotera Health Company,4621.4,16.25,Healthcare,Diagnostics & Research,3000,United States,False
+TERN,"Terns Pharmaceuticals, Inc.",4581.3,42.12,Healthcare,Biotechnology,59,United States,True
+SRRK,Scholar Rock Holding Corporatio,4515.9,44.27,Healthcare,Biotechnology,128,United States,False
+FOLD,"Amicus Therapeutics, Inc.",4507.9,14.37,Healthcare,Biotechnology,511,United States,True
+AMRX,"Amneal Pharmaceuticals, Inc.",4341.4,13.81,Healthcare,Drug Manufacturers - Specialty & Generic,8300,United States,False
+ERAS,"Erasca, Inc.",4229.0,13.66,Healthcare,Biotechnology,103,United States,True
+CRNX,"Crinetics Pharmaceuticals, Inc.",4213.2,41.1,Healthcare,Biotechnology,0,United States,False
+ACAD,ACADIA Pharmaceuticals Inc.,4155.1,24.56,Healthcare,Biotechnology,0,United States,False
+INDV,"Indivior Pharmaceuticals, Inc.",4090.8,32.72,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+NAMS,NewAmsterdam Pharma Company N.V,4077.0,35.46,Healthcare,Biotechnology,100,Netherlands,False
+CNTA,Centessa Pharmaceuticals plc,3970.4,26.86,Healthcare,Biotechnology,114,United Kingdom,False
+VKTX,"Viking Therapeutics, Inc.",3910.4,33.84,Healthcare,Biotechnology,53,United States,True
+LGND,Ligand Pharmaceuticals Incorpor,3903.1,198.31,Healthcare,Biotechnology,0,United States,False
+LIVN,LivaNova PLC,3855.2,70.6,Healthcare,Medical Devices,3300,United Kingdom,False
+CORT,Corcept Therapeutics Incorporat,3797.6,35.7,Healthcare,Biotechnology,730,United States,False
+ADMA,ADMA Biologics Inc,3715.5,15.57,Healthcare,Biotechnology,0,United States,True
+ALMS,Alumis Inc.,3702.1,29.69,Healthcare,Biotechnology,221,United States,False
+LEGN,Legend Biotech Corporation,3509.1,19.0,Healthcare,Biotechnology,2900,United States,False
+SYRE,"Spyre Therapeutics, Inc.",3378.0,43.01,Healthcare,Biotechnology,102,United States,False
+KNSA,Kiniksa Pharmaceuticals Interna,3372.2,44.49,Healthcare,Drug Manufacturers - Specialty & Generic,366,United Kingdom,False
+XENE,Xenon Pharmaceuticals Inc.,3340.6,43.23,Healthcare,Biotechnology,0,Canada,False
+PBH,Prestige Consumer Healthcare In,3332.2,69.3,Healthcare,Drug Manufacturers - Specialty & Generic,600,United States,False
+DNLI,Denali Therapeutics Inc.,3307.4,21.18,Healthcare,Biotechnology,0,United States,True
+ARQT,"Arcutis Biotherapeutics, Inc.",3303.6,26.97,Healthcare,Biotechnology,0,United States,False
+EWTX,"Edgewise Therapeutics, Inc.",3222.6,30.44,Healthcare,Biotechnology,0,United States,False
+TARS,"Tarsus Pharmaceuticals, Inc.",3213.9,75.52,Healthcare,Biotechnology,370,United States,False
+SUPN,"Supernus Pharmaceuticals, Inc.",3144.6,54.73,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+TXG,"10x Genomics, Inc.",2944.7,23.05,Healthcare,Health Information Services,1178,United States,False
+VERA,"Vera Therapeutics, Inc.",2895.6,40.79,Healthcare,Biotechnology,224,United States,True
+VCYT,"Veracyte, Inc.",2892.4,36.59,Healthcare,Diagnostics & Research,0,United States,False
+BEAM,Beam Therapeutics Inc.,2888.0,28.46,Healthcare,Biotechnology,511,United States,False
+TWST,Twist Bioscience Corporation,2876.7,46.92,Healthcare,Diagnostics & Research,979,United States,False
+CPRX,"Catalyst Pharmaceuticals, Inc.",2836.8,23.08,Healthcare,Biotechnology,182,United States,False
+IDYA,"IDEAYA Biosciences, Inc.",2827.6,32.2,Healthcare,Biotechnology,145,United States,False
+VRDN,"Viridian Therapeutics, Inc.",2804.1,29.38,Healthcare,Biotechnology,0,United States,True
+LQDA,Liquidia Corporation,2698.6,31.02,Healthcare,Biotechnology,170,United States,False
+APLS,"Apellis Pharmaceuticals, Inc.",2679.3,20.96,Healthcare,Biotechnology,733,United States,True
+TVTX,"Travere Therapeutics, Inc.",2665.4,29.79,Healthcare,Biotechnology,497,United States,False
+HCM,HUTCHMED (China) Limited,2588.0,14.33,Healthcare,Drug Manufacturers - Specialty & Generic,1780,Hong Kong,False
+WVE,Wave Life Sciences Ltd.,2587.6,13.93,Healthcare,Biotechnology,0,Singapore,False
+DYN,"Dyne Therapeutics, Inc.",2571.9,15.62,Healthcare,Biotechnology,240,United States,True
+RCUS,"Arcus Biosciences, Inc.",2520.4,20.37,Healthcare,Biotechnology,0,United States,False
+IRON,"Disc Medicine, Inc.",2514.9,66.62,Healthcare,Biotechnology,0,United States,True
+ADPT,Adaptive Biotechnologies Corpor,2463.5,16.02,Healthcare,Biotechnology,0,United States,False
+NEOG,Neogen Corporation,2442.8,11.23,Healthcare,Diagnostics & Research,2974,United States,False
+TLX,Telix Pharmaceuticals Limited,2426.8,7.25,Healthcare,Biotechnology,1120,Australia,False
+IMNM,"Immunome, Inc.",2411.9,21.86,Healthcare,Biotechnology,168,United States,True
+DNTH,"Dianthus Therapeutics, Inc.",2385.5,55.19,Healthcare,Biotechnology,78,United States,False
+MLYS,"Mineralys Therapeutics, Inc.",2315.6,29.26,Healthcare,Biotechnology,51,United States,True
+RNA,"Atrium Therapeutics, Inc. Common Stock",2278.6,14.75,Healthcare,Biotechnology,0,United States,True
+RARE,Ultragenyx Pharmaceutical Inc.,2260.2,23.39,Healthcare,Biotechnology,1371,United States,True
+AAPG,Ascentage Pharma Group Internat,2254.6,24.1,Healthcare,Biotechnology,605,China,False
+GLPG,Galapagos NV,2218.1,33.66,Healthcare,Biotechnology,0,Belgium,False
+PAHC,Phibro Animal Health Corporatio,2212.8,54.59,Healthcare,Drug Manufacturers - Specialty & Generic,2475,United States,False
+BHC,Bausch Health Companies Inc.,2201.5,5.93,Healthcare,Drug Manufacturers - Specialty & Generic,20300,Canada,False
+MAZE,"Maze Therapeutics, Inc.",2193.8,45.59,Healthcare,Biotechnology,125,United States,False
+BCRX,"BioCryst Pharmaceuticals, Inc.",2190.7,8.75,Healthcare,Drug Manufacturers - Specialty & Generic,580,United States,False
+ZLAB,Zai Lab Limited,2154.0,19.22,Healthcare,Biotechnology,0,China,False
+GRDN,"Guardian Pharmacy Services, Inc",2121.9,33.51,Healthcare,Medical Care Facilities,3400,United States,False
+MESO,Mesoblast Limited,2103.1,15.85,Healthcare,Biotechnology,81,Australia,False
+SLNO,"Soleno Therapeutics, Inc.",2098.5,39.07,Healthcare,Biotechnology,0,United States,True
+STOK,"Stoke Therapeutics, Inc.",2079.6,36.41,Healthcare,Biotechnology,128,United States,True
+GRAL,"GRAIL, Inc.",2075.0,53.23,Healthcare,Diagnostics & Research,0,United States,True
+NUVB,Nuvation Bio Inc.,2026.1,5.91,Healthcare,Biotechnology,291,United States,False
+CLDX,"Celldex Therapeutics, Inc.",1999.5,30.09,Healthcare,Biotechnology,186,United States,False
+OCUL,"Ocular Therapeutix, Inc.",1946.2,8.94,Healthcare,Biotechnology,325,United States,False
+OLMA,"Olema Pharmaceuticals, Inc.",1939.9,24.2,Healthcare,Biotechnology,122,United States,True
+NKTR,Nektar Therapeutics,1930.0,68.98,Healthcare,Biotechnology,61,United States,True
+RXRX,"Recursion Pharmaceuticals, Inc.",1913.0,3.67,Healthcare,Biotechnology,600,United States,False
+OGN,Organon & Co.,1897.7,7.29,Healthcare,Drug Manufacturers - General,10000,United States,False
+SNDX,"Syndax Pharmaceuticals, Inc.",1886.9,21.71,Healthcare,Biotechnology,298,United States,False
+AUPH,Aurinia Pharmaceuticals Inc,1868.2,14.17,Healthcare,Biotechnology,0,Canada,False
+PHVS,Pharvaris N.V.,1844.2,28.39,Healthcare,Biotechnology,118,Switzerland,False
+DVAX,Dynavax Technologies Corporatio,1820.1,15.5,Healthcare,Drug Manufacturers - Specialty & Generic,405,United States,True
+PRGO,Perrigo Company plc,1819.4,13.22,Healthcare,Drug Manufacturers - Specialty & Generic,0,Ireland,False
+VCEL,Vericel Corporation,1804.5,35.68,Healthcare,Biotechnology,0,United States,False
+GLTO,"Galecto, Inc.",1781.9,29.58,Healthcare,Biotechnology,5,Denmark,False
+RLAY,"Relay Therapeutics, Inc.",1778.3,10.26,Healthcare,Biotechnology,0,United States,True
+TYRA,"Tyra Biosciences, Inc.",1777.8,33.31,Healthcare,Biotechnology,60,United States,False
+ZYME,Zymeworks Inc.,1773.5,23.29,Healthcare,Biotechnology,263,United States,False
+AGIO,"Agios Pharmaceuticals, Inc.",1771.2,30.23,Healthcare,Biotechnology,539,United States,True
+ELVN,"Enliven Therapeutics, Inc.",1762.0,29.69,Healthcare,Biotechnology,65,United States,False
+SRPT,"Sarepta Therapeutics, Inc.",1756.2,16.76,Healthcare,Biotechnology,0,United States,True
+INVA,"Innoviva, Inc.",1716.7,22.96,Healthcare,Biotechnology,0,United States,False
+OCS,Oculis Holding AG,1700.1,29.41,Healthcare,Biotechnology,49,Switzerland,False
+RAPT,"RAPT Therapeutics, Inc.",1679.1,57.98,Healthcare,Biotechnology,60,United States,True
+AMLX,"Amylyx Pharmaceuticals, Inc.",1666.0,15.17,Healthcare,Drug Manufacturers - Specialty & Generic,123,United States,False
+ORKA,"Oruka Therapeutics, Inc.",1665.8,34.41,Healthcare,Biotechnology,28,United States,False
+ANIP,"ANI Pharmaceuticals, Inc.",1659.7,73.9,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+NVAX,"Novavax, Inc.",1647.7,10.14,Healthcare,Biotechnology,0,United States,True
+HRMY,"Harmony Biosciences Holdings, I",1643.8,28.54,Healthcare,Biotechnology,293,United States,False
+NRIX,"Nurix Therapeutics, Inc.",1642.4,15.97,Healthcare,Biotechnology,317,United States,False
+KOD,Kodiak Sciences Inc,1636.1,26.8,Healthcare,Biotechnology,123,United States,False
+SION,"Sionna Therapeutics, Inc.",1630.7,36.54,Healthcare,Biotechnology,41,United States,True
+MANE,"Veradermics, Incorporated",1608.3,45.85,Healthcare,Biotechnology,0,United States,False
+PVLA,"Palvella Therapeutics, Inc.",1598.2,135.02,Healthcare,Biotechnology,14,United States,True
+NTLA,"Intellia Therapeutics, Inc.",1596.1,13.78,Healthcare,Biotechnology,403,United States,True
+AXGN,"AxoGen, Inc.",1591.9,31.73,Healthcare,Medical Devices,622,United States,False
+ARDX,"Ardelyx, Inc.",1591.5,6.55,Healthcare,Biotechnology,489,United States,True
+QDEL,QuidelOrtho Corporation,1544.8,22.74,Healthcare,Medical Devices,6500,United States,False
+ANAB,"AnaptysBio, Inc.",1539.9,55.05,Healthcare,Biotechnology,136,United States,True
+IOVA,"Iovance Biotherapeutics, Inc.",1532.3,3.86,Healthcare,Biotechnology,975,United States,True
+CRVS,"Corvus Pharmaceuticals, Inc.",1529.6,18.26,Healthcare,Biotechnology,31,United States,True
+BHVN,Biohaven Ltd.,1528.6,11.52,Healthcare,Biotechnology,256,United States,True
+TRVI,"Trevi Therapeutics, Inc.",1528.5,11.92,Healthcare,Biotechnology,34,United States,False
+PGNY,"Progyny, Inc.",1525.1,17.69,Healthcare,Healthcare Plans,0,United States,False
+NBTX,Nanobiotix S.A.,1502.0,31.04,Healthcare,Biotechnology,103,France,False
+TNGX,"Tango Therapeutics, Inc.",1500.3,11.14,Healthcare,Biotechnology,155,United States,True
+MBX,"MBX Biosciences, Inc.",1461.6,32.55,Healthcare,Biotechnology,43,United States,False
+EYPT,"EyePoint, Inc.",1453.7,17.56,Healthcare,Biotechnology,165,United States,False
+CNMD,CONMED Corporation,1424.5,46.0,Healthcare,Medical Devices,3900,United States,False
+ZBIO,"Zenas BioPharma, Inc.",1414.4,26.35,Healthcare,Biotechnology,130,United States,False
+IMTX,Immatics N.V.,1386.2,10.34,Healthcare,Biotechnology,645,Germany,False
+RAPP,"Rapport Therapeutics, Inc.",1383.6,29.03,Healthcare,Biotechnology,69,United States,False
+GLUE,"Monte Rosa Therapeutics, Inc.",1353.3,17.75,Healthcare,Biotechnology,147,United States,True
+IVA,Inventiva S.A. - American Depos,1348.2,6.49,Healthcare,Biotechnology,84,France,False
+PGEN,"Precigen, Inc.",1341.0,3.79,Healthcare,Biotechnology,143,United States,True
+ATAI,AtaiBeckley Inc.,1318.5,3.63,Healthcare,Biotechnology,54,United States,False
+COLL,"Collegium Pharmaceutical, Inc.",1317.2,41.67,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+ORIC,"Oric Pharmaceuticals, Inc.",1309.9,13.45,Healthcare,Biotechnology,104,United States,True
+MRVI,"Maravai LifeSciences Holdings, ",1304.4,3.56,Healthcare,Biotechnology,0,United States,False
+SEPN,"Septerna, Inc.",1299.3,29.02,Healthcare,Biotechnology,75,United States,True
+VIR,"Vir Biotechnology, Inc.",1264.6,9.09,Healthcare,Biotechnology,367,United States,True
+ALVO,Alvotech,1243.3,3.99,Healthcare,Drug Manufacturers - Specialty & Generic,1012,Luxembourg,False
+TSHA,"Taysha Gene Therapies, Inc.",1240.9,4.53,Healthcare,Biotechnology,73,United States,True
+MLTX,MoonLake Immunotherapeutics,1240.5,17.51,Healthcare,Biotechnology,0,Switzerland,False
+SVRA,"Savara, Inc.",1224.9,6.02,Healthcare,Biotechnology,59,United States,True
+EVO,Evotec SE,1218.0,3.4,Healthcare,Drug Manufacturers - Specialty & Generic,4788,Germany,False
+BLFS,"BioLife Solutions, Inc.",1165.2,24.2,Healthcare,Medical Instruments & Supplies,0,United States,False
+DBVT,DBV Technologies S.A.,1153.6,20.99,Healthcare,Biotechnology,117,France,False
+NNNN,Anbio Biotechnology,1130.6,25.76,Healthcare,Medical Instruments & Supplies,27,Germany,False
+SANA,"Sana Biotechnology, Inc.",1121.4,4.21,Healthcare,Biotechnology,194,United States,True
+AKTS,"Aktis Oncology, Inc.",1110.6,20.13,Healthcare,Biotechnology,0,United States,False
+DAWN,"Day One Biopharmaceuticals, Inc",1088.4,10.6,Healthcare,Biotechnology,178,United States,False
+ABCL,AbCellera Biologics Inc.,1080.6,3.61,Healthcare,Biotechnology,0,Canada,False
+INBX,"Inhibrx Biosciences, Inc.",1078.1,74.13,Healthcare,Biotechnology,156,United States,False
+GERN,Geron Corporation,1072.4,1.68,Healthcare,Biotechnology,0,United States,True
+URGN,UroGen Pharma Ltd.,1015.8,21.7,Healthcare,Biotechnology,287,United States,False
+XERS,"Xeris Biopharma Holdings, Inc.",1015.5,6.12,Healthcare,Biotechnology,394,United States,False
+MNKD,MannKind Corporation,1007.2,3.28,Healthcare,Biotechnology,0,United States,False
+CMPX,"Compass Therapeutics, Inc.",1004.9,5.65,Healthcare,Biotechnology,35,United States,True
+VTYX,"Ventyx Biosciences, Inc.",1002.3,13.97,Healthcare,Biotechnology,83,United States,False
+CDNA,"CareDx, Inc.",998.5,18.76,Healthcare,Diagnostics & Research,0,United States,True
+PHAT,"Phathom Pharmaceuticals, Inc.",979.8,12.56,Healthcare,Biotechnology,0,United States,False
+ARVN,"Arvinas, Inc.",974.3,13.27,Healthcare,Biotechnology,0,United States,False
+QURE,uniQure N.V.,973.6,15.63,Healthcare,Biotechnology,209,Netherlands,True
+VALN,Valneva SE,963.5,11.09,Healthcare,Biotechnology,713,France,False
+OPK,"Opko Health, Inc.",952.5,1.2,Healthcare,Diagnostics & Research,0,United States,False
+AVBP,"ArriVent BioPharma, Inc.",948.2,22.97,Healthcare,Biotechnology,52,United States,False
+PCRX,"Pacira BioSciences, Inc.",942.6,21.91,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+AMPH,"Amphastar Pharmaceuticals, Inc.",940.6,20.23,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+BIOA,"BioAge Labs, Inc.",929.8,22.27,Healthcare,Drug Manufacturers - Specialty & Generic,62,United States,True
+TBPH,"Theravance Biopharma, Inc.",924.8,18.25,Healthcare,Biotechnology,97,United States,False
+GHRS,GH Research PLC,921.1,14.85,Healthcare,Biotechnology,50,Ireland,False
+BCAX,Bicara Therapeutics Inc.,919.2,16.78,Healthcare,Biotechnology,55,United States,False
+SPRY,"ARS Pharmaceuticals, Inc.",917.3,9.28,Healthcare,Biotechnology,162,United States,False
+CGEM,"Cullinan Therapeutics, Inc.",915.7,15.5,Healthcare,Biotechnology,111,United States,True
+CTMX,"CytomX Therapeutics, Inc.",909.9,5.37,Healthcare,Biotechnology,119,United States,True
+ABUS,Arbutus Biopharma Corporation,896.2,4.66,Healthcare,Biotechnology,44,United States,False
+INMD,InMode Ltd.,871.2,13.75,Healthcare,Medical Devices,660,Israel,False
+OMER,Omeros Corporation,854.4,12.05,Healthcare,Biotechnology,202,United States,True
+SLS,"SELLAS Life Sciences Group, Inc",839.5,4.93,Healthcare,Biotechnology,15,United States,False
+ANNX,"Annexon, Inc.",834.7,5.6,Healthcare,Biotechnology,99,United States,True
+PRME,"Prime Medicine, Inc.",834.0,4.62,Healthcare,Biotechnology,214,United States,False
+KALV,"KalVista Pharmaceuticals, Inc.",822.9,16.28,Healthcare,Biotechnology,270,United States,False
+DRUG,Bright Minds Biosciences Inc.,820.4,83.82,Healthcare,Biotechnology,26,United States,False
+EVMN,"Evommune, Inc.",819.6,26.0,Healthcare,Biotechnology,45,United States,False
+JANX,"Janux Therapeutics, Inc.",818.6,13.61,Healthcare,Biotechnology,109,United States,True
+BBOT,BridgeBio Oncology Therapeutics,802.3,10.03,Healthcare,Biotechnology,81,United States,False
+GYRE,"Gyre Therapeutics, Inc.",793.8,8.24,Healthcare,Biotechnology,579,United States,False
+MPLT,"MapLight Therapeutics, Inc.",783.6,17.27,Healthcare,Biotechnology,114,United States,False
+CMPS,COMPASS Pathways Plc - American,783.3,6.9,Healthcare,Medical Care Facilities,166,United Kingdom,True
+AGMB,AgomAb Therapeutics NV,780.8,16.02,Healthcare,Biotechnology,57,Belgium,False
+KURA,"Kura Oncology, Inc.",759.7,8.73,Healthcare,Biotechnology,192,United States,True
+EIKN,"Eikon Therapeutics, Inc.",743.9,13.78,Healthcare,Biotechnology,0,United States,False
+JBIO,"Jade Biosciences, Inc.",731.3,14.83,Healthcare,Biotechnology,30,United States,False
+MDXG,"MiMedx Group, Inc",724.2,4.89,Healthcare,Biotechnology,0,United States,False
+CBLL,"CeriBell, Inc.",692.6,18.67,Healthcare,Medical Devices,327,United States,False
+ENGN,enGene Holdings Inc.,677.2,10.11,Healthcare,Biotechnology,81,Canada,False
+PROK,ProKidney Corp.,673.9,2.24,Healthcare,Biotechnology,204,United States,False
+REPL,"Replimune Group, Inc.",631.7,7.65,Healthcare,Biotechnology,479,United States,True
+RIGL,"Rigel Pharmaceuticals, Inc.",630.6,34.74,Healthcare,Biotechnology,162,United States,True
+ZURA,Zura Bio Limited,628.1,6.62,Healthcare,Biotechnology,30,United States,False
+ALLO,"Allogene Therapeutics, Inc.",624.7,2.78,Healthcare,Biotechnology,226,United States,False
+LXRX,"Lexicon Pharmaceuticals, Inc.",614.3,1.47,Healthcare,Biotechnology,103,United States,False
+ANRO,"Alto Neuroscience, Inc.",611.7,19.69,Healthcare,Biotechnology,76,United States,True
+MGTX,MeiraGTx Holdings plc,608.5,7.56,Healthcare,Biotechnology,409,United States,False
+LBRX,LB Pharmaceuticals Inc,607.4,24.01,Healthcare,Biotechnology,16,United States,False
+OCGN,"Ocugen, Inc.",595.7,1.82,Healthcare,Biotechnology,95,United States,False
+DSGN,"Design Therapeutics, Inc.",594.7,10.44,Healthcare,Biotechnology,55,United States,False
+NMRA,"Neumora Therapeutics, Inc.",593.1,3.49,Healthcare,Biotechnology,95,United States,False
+CTKB,"Cytek Biosciences, Inc.",572.8,4.48,Healthcare,Medical Devices,0,United States,False
+CRMD,CorMedix Inc.,561.8,7.13,Healthcare,Biotechnology,64,United States,False
+CTNM,"Contineum Therapeutics, Inc.",560.4,15.34,Healthcare,Biotechnology,41,United States,False
+FULC,"Fulcrum Therapeutics, Inc.",558.1,8.38,Healthcare,Biotechnology,55,United States,True
+IRWD,"Ironwood Pharmaceuticals, Inc.",556.4,3.42,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,True
+FDMT,"4D Molecular Therapeutics, Inc.",551.9,9.66,Healthcare,Biotechnology,227,United States,True
+RCKT,"Rocket Pharmaceuticals, Inc.",542.2,5.01,Healthcare,Biotechnology,0,United States,True
+ALT,"Altimmune, Inc.",539.7,4.31,Healthcare,Biotechnology,59,United States,True
+VNDA,Vanda Pharmaceuticals Inc.,526.7,8.91,Healthcare,Biotechnology,533,United States,False
+LXEO,"Lexeo Therapeutics, Inc.",524.0,7.18,Healthcare,Biotechnology,61,United States,True
+LYEL,"Lyell Immunopharma, Inc.",509.9,24.0,Healthcare,Biotechnology,300,United States,False
+ADCT,ADC Therapeutics SA,507.9,4.1,Healthcare,Biotechnology,263,Switzerland,False
+PACB,Pacific Biosciences of Californ,507.2,1.68,Healthcare,Medical Devices,0,United States,False
+ZVRA,"Zevra Therapeutics, Inc.",502.7,8.93,Healthcare,Biotechnology,59,United States,False
+KMDA,Kamada Ltd.,501.8,8.7,Healthcare,Drug Manufacturers - Specialty & Generic,420,Israel,False
+KYTX,"Kyverna Therapeutics, Inc.",489.4,8.21,Healthcare,Biotechnology,129,United States,True
+AQST,"Aquestive Therapeutics, Inc.",488.0,4.0,Healthcare,Drug Manufacturers - Specialty & Generic,142,United States,False
+CLYM,"Climb Bio, Inc.",487.5,7.15,Healthcare,Biotechnology,17,United States,False
+SLDB,Solid Biosciences Inc.,483.8,6.21,Healthcare,Biotechnology,100,United States,False
+IVVD,"Invivyd, Inc.",476.6,1.69,Healthcare,Biotechnology,99,United States,True
+ASMB,"Assembly Biosciences, Inc.",472.0,29.84,Healthcare,Biotechnology,73,United States,False
+PRTA,Prothena Corporation plc,466.7,8.67,Healthcare,Biotechnology,0,Ireland,True
+SIGA,SIGA Technologies Inc.,463.3,6.47,Healthcare,Drug Manufacturers - Specialty & Generic,46,United States,False
+RGNX,REGENXBIO Inc.,457.6,9.04,Healthcare,Biotechnology,353,United States,False
+TRDA,"Entrada Therapeutics, Inc.",456.0,11.93,Healthcare,Biotechnology,183,United States,False
+ETON,"Eton Pharmaceuticals, Inc.",455.6,16.99,Healthcare,Drug Manufacturers - Specialty & Generic,31,United States,False
+AUTL,Autolus Therapeutics plc,455.1,1.71,Healthcare,Biotechnology,647,United Kingdom,False
+LCTX,"Lineage Cell Therapeutics, Inc.",442.2,1.92,Healthcare,Biotechnology,70,United States,False
+TECX,"Tectonic Therapeutic, Inc.",438.9,23.45,Healthcare,Biotechnology,0,United States,False
+EBS,Emergent BioSolutions Inc.,434.8,8.15,Healthcare,Drug Manufacturers - Specialty & Generic,900,United States,True
+LAB,Standard BioTools Inc.,434.6,1.13,Healthcare,Medical Devices,0,United States,False
+KROS,"Keros Therapeutics, Inc.",432.3,14.19,Healthcare,Biotechnology,82,United States,True
+VSTM,"Verastem, Inc.",430.8,5.72,Healthcare,Biotechnology,78,United States,True
+MYGN,"Myriad Genetics, Inc.",429.7,4.61,Healthcare,Diagnostics & Research,2700,United States,True
+PEPG,PepGen Inc.,427.6,6.22,Healthcare,Biotechnology,57,United States,False
+IMMX,"Immix Biopharma, Inc.",427.3,8.07,Healthcare,Biotechnology,18,United States,False
+EPRX,Eupraxia Pharmaceuticals Inc.,419.1,8.18,Healthcare,Biotechnology,33,Canada,False
+ENTA,"Enanta Pharmaceuticals, Inc.",415.0,14.3,Healthcare,Biotechnology,120,United States,True
+UPB,"Upstream Bio, Inc.",415.0,7.68,Healthcare,Biotechnology,52,United States,False
+DMAC,DiaMedica Therapeutics Inc.,414.0,7.95,Healthcare,Biotechnology,27,United States,False
+IMMP,Immutep Limited,412.1,2.8,Healthcare,Biotechnology,0,Australia,True
+ABSI,Absci Corporation,412.0,2.74,Healthcare,Biotechnology,156,United States,False
+AVXL,Anavex Life Sciences Corp.,410.5,4.43,Healthcare,Biotechnology,34,United States,True
+DNA,"Ginkgo Bioworks Holdings, Inc.",409.0,6.75,Healthcare,Biotechnology,0,United States,False
+ORGO,Organogenesis Holdings Inc.,407.4,3.21,Healthcare,Drug Manufacturers - Specialty & Generic,854,United States,False
+PRTC,PureTech Health plc,405.3,16.77,Healthcare,Biotechnology,56,United States,False
+BCYC,Bicycle Therapeutics plc,397.5,5.73,Healthcare,Biotechnology,305,United Kingdom,False
+ARMP,"Armata Pharmaceuticals, Inc.",391.7,10.76,Healthcare,Biotechnology,60,United States,False
+CLLS,Cellectis S.A.,390.3,3.88,Healthcare,Biotechnology,216,France,False
+GLSI,"Greenwich LifeSciences, Inc.",384.0,27.72,Healthcare,Biotechnology,4,United States,False
+FBRX,"Forte Biosciences, Inc.",378.6,30.22,Healthcare,Biotechnology,16,United States,False
+NBP,NovaBridge Biosciences,378.2,3.28,Healthcare,Biotechnology,32,United States,False
+AURA,"Aura Biosciences, Inc.",374.0,5.89,Healthcare,Biotechnology,106,United States,False
+BNTC,Benitec Biopharma Inc.,373.4,10.9,Healthcare,Biotechnology,19,United States,False
+CBIO,"Crescent Biopharma, Inc.",368.1,12.09,Healthcare,Biotechnology,0,United States,False
+HELP,Cybin Inc.,366.7,7.35,Healthcare,Biotechnology,50,Canada,False
+NGNE,Neurogene Inc.,363.9,23.49,Healthcare,Biotechnology,107,United States,False
+AKBA,"Akebia Therapeutics, Inc.",347.6,1.31,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,True
+KALA,"KALA BIO, Inc.",346.3,0.38,Healthcare,Biotechnology,38,United States,True
+TARA,"Protara Therapeutics, Inc.",340.8,6.36,Healthcare,Biotechnology,28,United States,False
+VMD,"Viemed Healthcare, Inc.",337.4,8.7,Healthcare,Medical Devices,1380,United States,False
+STRO,"Sutro Biopharma, Inc.",335.5,20.47,Healthcare,Biotechnology,178,United States,True
+RLMD,"Relmada Therapeutics, Inc.",334.4,4.56,Healthcare,Biotechnology,17,United States,False
+FHTX,Foghorn Therapeutics Inc.,332.7,5.68,Healthcare,Biotechnology,112,United States,False
+ALDX,"Aldeyra Therapeutics, Inc.",328.5,5.46,Healthcare,Biotechnology,8,United States,False
+AVTX,"Avalo Therapeutics, Inc.",324.0,17.5,Healthcare,Biotechnology,23,United States,False
+IMRX,Immuneering Corporation,322.2,4.99,Healthcare,Biotechnology,54,United States,True
+CABA,"Cabaletta Bio, Inc.",319.6,3.32,Healthcare,Biotechnology,148,United States,False
+XOMA,XOMA Royalty Corporation,316.1,25.53,Healthcare,Biotechnology,13,United States,False
+ACRS,"Aclaris Therapeutics, Inc.",311.0,2.87,Healthcare,Biotechnology,61,United States,False
+RZLT,"Rezolute, Inc.",307.2,3.21,Healthcare,Biotechnology,75,United States,True
+QTRX,Quanterix Corporation,306.0,6.55,Healthcare,Medical Devices,471,United States,False
+NAUT,"Nautilus Biotechnology, Inc.",305.7,2.42,Healthcare,Biotechnology,155,United States,False
+SOPH,SOPHiA GENETICS SA,305.3,4.5,Healthcare,Health Information Services,423,Switzerland,False
+NRC,National Research Corporation,303.8,13.41,Healthcare,Health Information Services,0,United States,False
+FENC,Fennec Pharmaceuticals Inc.,290.0,8.49,Healthcare,Biotechnology,32,United States,False
+ANL,Adlai Nortye Ltd.,290.0,7.86,Healthcare,Biotechnology,123,Cayman Islands,False
+CADL,"Candel Therapeutics, Inc.",288.2,5.25,Healthcare,Biotechnology,38,United States,False
+PBYI,Puma Biotechnology Inc,287.2,5.7,Healthcare,Biotechnology,0,United States,False
+AMRN,Amarin Corporation plc,286.9,13.8,Healthcare,Drug Manufacturers - General,0,Ireland,False
+IRD,"Opus Genetics, Inc.",286.9,4.16,Healthcare,Biotechnology,18,United States,False
+NERV,"Minerva Neurosciences, Inc",285.6,6.6,Healthcare,Biotechnology,8,United States,False
+EOLS,"Evolus, Inc. Common Stock",278.7,4.3,Healthcare,Drug Manufacturers - Specialty & Generic,329,United States,False
+ABEO,Abeona Therapeutics Inc.,277.5,5.12,Healthcare,Biotechnology,136,United States,False
+ALXO,ALX Oncology Holdings Inc.,276.8,2.11,Healthcare,Biotechnology,44,United States,False
+ENLV,Enlivex Therapeutics Ltd.,273.0,1.15,Healthcare,Biotechnology,0,Israel,False
+AARD,"Aardvark Therapeutics, Inc.",271.9,12.49,Healthcare,Biotechnology,33,United States,False
+DERM,Journey Medical Corporation,271.7,8.17,Healthcare,Drug Manufacturers - Specialty & Generic,41,United States,False
+ALEC,"Alector, Inc.",265.2,2.43,Healthcare,Biotechnology,156,United States,False
+PALI,"Palisade Bio, Inc.",264.1,1.77,Healthcare,Biotechnology,8,United States,False
+CCCC,"C4 Therapeutics, Inc.",261.7,2.7,Healthcare,Biotechnology,0,United States,False
+CV,"CapsoVision, Inc.",257.2,5.49,Healthcare,Medical Devices,90,United States,False
+SLN,Silence Therapeutics Plc - Amer,257.0,5.44,Healthcare,Biotechnology,116,United Kingdom,False
+MSLE,Satellos Bioscience Inc.,256.9,12.35,Healthcare,Biotechnology,14,Canada,False
+SLGL,Sol-Gel Technologies Ltd.,255.4,91.68,Healthcare,Biotechnology,34,Israel,False
+CHRS,"Coherus Oncology, Inc.",249.6,1.67,Healthcare,Biotechnology,158,United States,False
+IKT,"Inhibikase Therapeutics, Inc.",248.6,2.05,Healthcare,Biotechnology,15,United States,False
+STTK,"Shattuck Labs, Inc.",248.1,3.92,Healthcare,Biotechnology,44,United States,False
+OABI,"OmniAb, Inc.",247.6,1.72,Healthcare,Biotechnology,114,United States,False
+NTHI,"NeOnc Technologies Holdings, In",245.0,10.22,Healthcare,Biotechnology,0,United States,False
+AGL,"agilon health, inc.",244.3,0.59,Healthcare,Medical Care Facilities,0,United States,False
+ACHV,"Achieve Life Sciences, Inc.",242.7,4.56,Healthcare,Biotechnology,25,United States,False
+SRZN,"Surrozen, Inc.",238.3,27.8,Healthcare,Biotechnology,40,United States,False
+NVCT,"Nuvectis Pharma, Inc.",234.7,8.86,Healthcare,Biotechnology,13,United States,False
+ARCT,Arcturus Therapeutics Holdings ,233.8,8.23,Healthcare,Biotechnology,174,United States,False
+PLX,"Protalix BioTherapeutics, Inc. ",231.6,2.88,Healthcare,Biotechnology,213,United States,False
+ELTX,"Elicio Therapeutics, Inc.",224.2,12.99,Healthcare,Biotechnology,32,United States,False
+BGM,BGM Group Ltd.,222.7,1.11,Healthcare,Drug Manufacturers - Specialty & Generic,298,China,False
+HRTX,"Heron Therapeutics, Inc.",218.2,1.19,Healthcare,Biotechnology,0,United States,False
+HUMA,"Humacyte, Inc.",215.2,1.11,Healthcare,Biotechnology,218,United States,False
+EDIT,"Editas Medicine, Inc.",214.8,2.2,Healthcare,Biotechnology,246,United States,True
+ELDN,"Eledon Pharmaceuticals, Inc.",208.6,2.62,Healthcare,Biotechnology,31,United States,False
+CNTX,Context Therapeutics Inc.,206.7,2.25,Healthcare,Biotechnology,12,United States,False
+IPSC,"Century Therapeutics, Inc.",202.8,2.32,Healthcare,Biotechnology,140,United States,False
+STXS,"Stereotaxis, Inc.",201.6,2.16,Healthcare,Medical Instruments & Supplies,139,United States,False
+CNTN,"Canton Strategic Holdings, Inc.",200.4,5.07,Healthcare,Biotechnology,2,United States,False
+ELMD,"Electromed, Inc.",197.7,23.7,Healthcare,Medical Devices,177,United States,False
+RNAC,"Cartesian Therapeutics, Inc.",197.4,7.59,Healthcare,Biotechnology,66,United States,False
+KLRS,"Kalaris Therapeutics, Inc.",195.6,10.46,Healthcare,Biotechnology,14,United States,False
+SABS,"SAB Biotherapeutics, Inc.",195.2,4.1,Healthcare,Biotechnology,63,United States,False
+OGI,Organigram Global Inc.,193.6,1.43,Healthcare,Drug Manufacturers - Specialty & Generic,1137,Canada,False
+GALT,Galectin Therapeutics Inc.,192.1,2.98,Healthcare,Biotechnology,15,United States,False
+RPID,"Rapid Micro Biosystems, Inc.",191.9,4.33,Healthcare,Medical Devices,163,United States,True
+NKTX,"Nkarta, Inc.",191.8,2.7,Healthcare,Biotechnology,105,United States,False
+ABOS,"Acumen Pharmaceuticals, Inc.",190.2,3.14,Healthcare,Biotechnology,61,United States,False
+MOLN,Molecular Partners AG,187.8,5.02,Healthcare,Biotechnology,158,Switzerland,False
+SGMT,Sagimet Biosciences Inc. - Seri,185.7,5.71,Healthcare,Biotechnology,14,United States,False
+TLSA,Tiziana Life Sciences Ltd,184.5,1.45,Healthcare,Biotechnology,9,United Kingdom,False
+TNXP,Tonix Pharmaceuticals Holding C,178.6,13.97,Healthcare,Biotechnology,81,United States,False
+PRLD,Prelude Therapeutics Incorporat,173.5,2.76,Healthcare,Biotechnology,131,United States,False
+KPTI,Karyopharm Therapeutics Inc.,172.6,9.41,Healthcare,Biotechnology,228,United States,False
+IMDX,Insight Molecular Diagnostics I,172.4,6.01,Healthcare,Diagnostics & Research,46,United States,False
+FATE,"Fate Therapeutics, Inc.",170.7,1.48,Healthcare,Biotechnology,0,United States,False
+CGEN,Compugen Ltd.,170.4,1.81,Healthcare,Biotechnology,74,Israel,False
+RANI,"Rani Therapeutics Holdings, Inc",168.0,1.37,Healthcare,Biotechnology,105,United States,False
+WHWK,"Whitehawk Therapeutics, Inc.",165.4,3.51,Healthcare,Biotechnology,22,United States,False
+EDAP,EDAP TMS S.A.,163.4,4.37,Healthcare,Medical Distribution,310,France,False
+MENS,Jyong Biotech Ltd.,162.7,2.14,Healthcare,Biotechnology,0,Taiwan,False
+MBOT,Microbot Medical Inc.,161.9,2.41,Healthcare,Medical Instruments & Supplies,20,United States,False
+QIPT,Quipt Home Medical Corp.,161.4,3.63,Healthcare,Medical Distribution,1500,United States,False
+SGMO,"Sangamo Therapeutics, Inc.",160.7,0.43,Healthcare,Biotechnology,183,United States,True
+IPHA,Innate Pharma S.A.,160.7,1.72,Healthcare,Biotechnology,174,France,False
+EMIS,Emmis Acquisition Corp.,158.5,10.05,,,0,,False
+ZNTL,"Zentalis Pharmaceuticals, Inc.",154.8,2.39,Healthcare,Biotechnology,166,United States,True
+CRBP,Corbus Pharmaceuticals Holdings,150.4,8.57,Healthcare,Biotechnology,28,United States,False
+VTVT,vTv Therapeutics Inc.,150.3,38.16,Healthcare,Biotechnology,23,United States,False
+UNCY,"Unicycive Therapeutics, Inc.",148.9,6.93,Healthcare,Biotechnology,22,United States,False
+MIST,Milestone Pharmaceuticals Inc.,145.6,1.71,Healthcare,Biotechnology,33,Canada,True
+PLYX,"Polaryx Therapeutics, Inc.",144.4,3.05,Healthcare,Biotechnology,11,United States,False
+ARTV,"Artiva Biotherapeutics, Inc.",142.9,5.82,Healthcare,Biotechnology,106,United States,False
+BDTX,"Black Diamond Therapeutics, Inc",140.7,2.47,Healthcare,Biotechnology,24,United States,False
+ADAG,Adagene Inc.,139.5,2.96,Healthcare,Biotechnology,138,China,False
+TKNO,"Alpha Teknova, Inc.",138.1,2.58,Healthcare,Drug Manufacturers - Specialty & Generic,0,United States,False
+CNTB,Connect Biopharma Holdings Limi,138.1,2.47,Healthcare,Biotechnology,62,United States,False
+ORMP,Oramed Pharmaceuticals Inc.,136.1,3.42,Healthcare,Biotechnology,0,United States,False
+GNLX,Genelux Corporation,133.3,2.98,Healthcare,Biotechnology,24,United States,False
+CRDF,"Cardiff Oncology, Inc.",130.7,1.94,Healthcare,Biotechnology,30,United States,False
+MGNX,"MacroGenics, Inc.",125.9,1.99,Healthcare,Biotechnology,341,United States,True
+IMUX,"Immunic, Inc.",122.7,1.02,Healthcare,Biotechnology,0,United States,False
+SPRO,"Spero Therapeutics, Inc.",122.3,2.17,Healthcare,Biotechnology,32,United States,False
+ONCY,Oncolytics Biotech Inc.,121.6,1.13,Healthcare,Biotechnology,28,Canada,False
+TNYA,"Tenaya Therapeutics, Inc.",121.6,0.56,Healthcare,Biotechnology,97,United States,False
+AGEN,Agenus Inc.,120.4,3.33,Healthcare,Biotechnology,316,United States,False
+OVID,Ovid Therapeutics Inc.,116.1,1.63,Healthcare,Biotechnology,23,United States,False
+KRRO,"Korro Bio, Inc.",114.2,12.13,Healthcare,Biotechnology,87,United States,False
+CRDL,Cardiol Therapeutics Inc.,113.9,1.02,Healthcare,Drug Manufacturers - Specialty & Generic,18,Canada,False
+EQ,"Equillium, Inc.",110.8,1.82,Healthcare,Biotechnology,35,United States,False
+SAVA,"Cassava Sciences, Inc.",110.1,2.28,Healthcare,Biotechnology,30,United States,True
+FBIO,"Fortress Biotech, Inc.",106.1,3.42,Healthcare,Biotechnology,101,United States,False
+TTRX,Turn Therapeutics Inc.,106.0,3.6,Healthcare,Biotechnology,0,United States,False
+COYA,"Coya Therapeutics, Inc.",103.8,4.96,Healthcare,Biotechnology,8,United States,False
+DTIL,"Precision BioSciences, Inc.",101.1,4.2,Healthcare,Biotechnology,67,United States,False
+GANX,"Gain Therapeutics, Inc.",100.4,2.61,Healthcare,Biotechnology,23,United States,False
+VANI,"Vivani Medical, Inc.",99.9,1.23,Healthcare,Biotechnology,37,United States,False
+ANIX,"Anixa Biosciences, Inc.",99.5,2.98,Healthcare,Biotechnology,4,United States,False
+GOSS,"Gossamer Bio, Inc.",98.3,0.42,Healthcare,Biotechnology,144,United States,False
+IBIO,"iBio, Inc.",97.4,2.82,Healthcare,Biotechnology,20,United States,False
+BMEA,"Biomea Fusion, Inc.",96.9,1.37,Healthcare,Biotechnology,42,United States,True
+CGTX,"Cognition Therapeutics, Inc.",96.2,1.09,Healthcare,Biotechnology,25,United States,False
+KZIA,Kazia Therapeutics Limited,95.8,8.45,Healthcare,Biotechnology,6,Australia,False
+HURA,"TuHURA Biosciences, Inc.",94.3,1.67,Healthcare,Biotechnology,19,United States,False
+PYXS,"Pyxis Oncology, Inc.",91.5,1.47,Healthcare,Biotechnology,44,United States,False
+DWTX,"Dogwood Therapeutics, Inc.",91.4,2.85,Healthcare,Biotechnology,12,United States,False
+PMVP,"PMV Pharmaceuticals, Inc.",90.5,1.7,Healthcare,Biotechnology,47,United States,False
+OKYO,OKYO Pharma Limited,87.8,1.71,Healthcare,Biotechnology,4,United Kingdom,False
+VRCA,Verrica Pharmaceuticals Inc.,87.5,5.47,Healthcare,Biotechnology,71,United States,True
+MXCT,"MaxCyte, Inc.",86.5,0.81,Healthcare,Medical Devices,114,United States,False
+PTHS,Pelthos Therapeutics Inc.,85.3,26.36,Healthcare,Biotechnology,4,United States,False
+MAIA,"MAIA Biotechnology, Inc.",83.7,2.26,Healthcare,Biotechnology,13,United States,False
+PLRX,"Pliant Therapeutics, Inc.",79.9,1.3,Healthcare,Biotechnology,171,United States,False
+XTNT,"Xtant Medical Holdings, Inc.",79.8,0.57,Healthcare,Medical Devices,217,United States,False
+MCRB,"Seres Therapeutics, Inc.",79.1,8.74,Healthcare,Biotechnology,103,United States,False
+PYPD,PolyPid Ltd.,77.4,4.25,Healthcare,Biotechnology,0,Israel,False
+FBIOP,"Fortress Biotech, Inc. - 9.375%",77.3,14.4,Healthcare,Biotechnology,101,United States,False
+PARK,"Park Dental Partners, Inc.",77.2,18.86,Healthcare,Medical Care Facilities,1208,United States,False
+IMA,"ImageneBio, Inc.",75.1,6.72,Healthcare,Biotechnology,0,United States,False
+TENX,"Tenax Therapeutics, Inc.",74.9,12.0,Healthcare,Biotechnology,4,United States,True
+ASRT,"Assertio Holdings, Inc.",74.8,11.66,Healthcare,Drug Manufacturers - Specialty & Generic,58,United States,False
+CPIX,Cumberland Pharmaceuticals Inc.,73.6,4.92,Healthcare,Drug Manufacturers - Specialty & Generic,91,United States,False
+QTI,"QT Imaging Holdings, Inc.",71.6,6.0,Healthcare,Medical Devices,0,United States,False
+MNOV,"MediciNova, Inc.",71.3,1.45,Healthcare,Biotechnology,0,United States,False
+ANVS,"Annovis Bio, Inc.",71.0,2.68,Healthcare,Biotechnology,8,United States,False
+ACET,"Adicet Bio, Inc.",69.6,7.25,Healthcare,Biotechnology,152,United States,False
+COEP,"Coeptis Therapeutics Holdings, ",69.3,12.04,Healthcare,Biotechnology,5,United States,False
+XBIT,XBiotech Inc.,68.9,2.26,Healthcare,Biotechnology,88,United States,False
+YI,"111, Inc.",68.6,7.91,Healthcare,Medical Distribution,1238,China,False
+GRCE,"Grace Therapeutics, Inc.",66.4,4.29,Healthcare,Biotechnology,6,United States,False
+NRXS,"Neuraxis, Inc.",63.9,6.0,Healthcare,Biotechnology,21,United States,False
+OM,"Outset Medical, Inc.",63.9,3.49,Healthcare,Medical Devices,310,United States,False
+ENTX,Entera Bio Ltd.,63.7,1.39,Healthcare,Biotechnology,20,Israel,False
+ATHE,Alterity Therapeutics Limited,62.4,3.44,Healthcare,Biotechnology,9,Australia,False
+IFRX,InflaRx N.V.,62.3,0.92,Healthcare,Biotechnology,74,Germany,False
+TIL,"Instil Bio, Inc.",60.4,8.9,Healthcare,Biotechnology,14,United States,False
+TCRX,"TScan Therapeutics, Inc.",60.2,1.06,Healthcare,Biotechnology,146,United States,False
+ICCC,ImmuCell Corporation,59.4,6.57,Healthcare,Biotechnology,77,United States,False
+MREO,Mereo BioPharma Group plc,59.0,0.37,Healthcare,Biotechnology,36,United Kingdom,False
+SPRB,"Spruce Biosciences, Inc.",58.8,54.94,Healthcare,Biotechnology,9,United States,False
+PETS,"PetMed Express, Inc.",58.6,2.74,Healthcare,Pharmaceutical Retailers,173,United States,False
+SCLX,Scilex Holding Company,57.7,8.21,Healthcare,Drug Manufacturers - General,30,United States,False
+MGX,"Metagenomi Therapeutics, Inc.",57.1,1.52,Healthcare,Biotechnology,124,United States,False
+NSRX,Nasus Pharma Ltd.,56.3,4.79,Healthcare,Drug Manufacturers - General,1,Israel,False
+QTTB,Q32 Bio Inc.,56.1,4.56,Healthcare,Biotechnology,26,United States,False
+BYSI,"BeyondSpring, Inc.",55.5,1.35,Healthcare,Biotechnology,40,United States,False
+LPCN,Lipocine Inc.,55.3,9.96,Healthcare,Biotechnology,16,United States,False
+NRXP,"NRX Pharmaceuticals, Inc.",55.1,1.86,Healthcare,Biotechnology,0,United States,False
+TVGN,Tevogen Bio Holdings Inc.,53.2,0.26,Healthcare,Biotechnology,18,United States,False
+MIRA,"MIRA Pharmaceuticals, Inc.",53.2,1.27,Healthcare,Drug Manufacturers - General,0,United States,False
+HYFT,MindWalk Holdings Corp.,52.8,1.13,Healthcare,Biotechnology,81,United States,False
+LONA,"LeonaBio, Inc.",52.6,5.63,Healthcare,Biotechnology,26,United States,False
+ONMD,OneMedNet Corp,52.2,1.02,Healthcare,Health Information Services,22,United States,False
+OSTX,OS Therapies Incorporated,51.8,1.47,Healthcare,Biotechnology,4,United States,False
+INKT,"MiNK Therapeutics, Inc.",51.4,10.95,Healthcare,Biotechnology,23,United States,False
+ESLA,"Estrella Immunopharma, Inc.",51.3,1.22,Healthcare,Biotechnology,0,United States,False
+IXHL,Incannex Healthcare Inc.,50.6,4.24,Healthcare,Drug Manufacturers - Specialty & Generic,12,Australia,False
+PMN,ProMIS Neurosciences Inc.,50.6,23.51,Healthcare,Biotechnology,7,Canada,False

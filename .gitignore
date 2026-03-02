@@ -69,7 +69,6 @@ dmypy.json
 *.log
 
 # Data files (generated, too large for git)
-*.csv
 *.json
 !package.json
 !package-lock.json
