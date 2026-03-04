@@ -19,12 +19,14 @@ import sys
 import time
 import argparse
 import pandas as pd
+from datetime import timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from clients.clinicaltrials_client import ClinicalTrialsClient
 from clients.financial_client import FinancialDataFetcher
-from utils.volatility import calculate_atr, classify_move
+from utils.volatility import compute_atr_for_ticker, classify_move
+from utils.ohlc_cache import load_ohlc_bulk, date_range_for_events
 from utils.data_quality import add_quality_threshold, fix_catalyst_type
 
 
@@ -32,7 +34,12 @@ from utils.data_quality import add_quality_threshold, fix_catalyst_type
 # Single-event enrichment
 # ---------------------------------------------------------------------------
 
-def enrich_event(row: pd.Series, ct_client: ClinicalTrialsClient, fin_fetcher: FinancialDataFetcher) -> dict:
+def enrich_event(
+    row: pd.Series,
+    ct_client: ClinicalTrialsClient,
+    fin_fetcher: FinancialDataFetcher,
+    ohlc_cache: "dict | None" = None,
+) -> dict:
     """Enrich one event row with CT.gov, financial, and ATR data."""
     result = row.to_dict()
 
@@ -82,15 +89,23 @@ def enrich_event(row: pd.Series, ct_client: ClinicalTrialsClient, fin_fetcher: F
         result["errors"] = f"{result['errors']}; Fin error: {str(e)[:60]}".strip("; ")
 
     # ------------------------------------------------------------------
-    # ATR normalization
+    # ATR normalization (uses pre-fetched OHLC cache — no yfinance call)
     # ------------------------------------------------------------------
     event_date = str(result.get("event_trading_date") or result.get("event_date") or "")
     move_pct = result.get("move_pct")
 
     if event_date and pd.notna(move_pct):
         try:
-            atr = calculate_atr(ticker, event_date)
+            ohlc = (ohlc_cache or {}).get(ticker)
+            if ohlc is not None:
+                atr = compute_atr_for_ticker(ohlc, event_date)
+            else:
+                # Fallback: single-ticker download (slow, avoid in bulk runs)
+                from utils.volatility import calculate_atr as _calc_atr
+                atr = _calc_atr(ticker, event_date)
+
             result["atr_pct"] = atr.get("atr_pct")
+            result["atr_value"] = atr.get("atr_value")
             result["avg_daily_move"] = atr.get("avg_daily_move")
 
             if atr.get("atr_pct"):
@@ -191,7 +206,15 @@ def incremental_enrich(
     fin_fetcher = FinancialDataFetcher()
 
     # ------------------------------------------------------------------
-    # Enrich row by row
+    # Bulk OHLC download — one call covers all tickers × full date range
+    # ------------------------------------------------------------------
+    ohlc_start, ohlc_end = date_range_for_events(truly_new)
+    all_tickers = truly_new["ticker"].str.upper().unique().tolist()
+    print(f"Pre-fetching OHLC for {len(all_tickers)} tickers ({ohlc_start} → {ohlc_end})...")
+    ohlc_cache = load_ohlc_bulk(all_tickers, ohlc_start, ohlc_end, events_df=truly_new)
+
+    # ------------------------------------------------------------------
+    # Enrich row by row (ATR comes from cache, no per-row yfinance call)
     # ------------------------------------------------------------------
     enriched = list(partial_results)
     skipped_partial = 0
@@ -207,7 +230,7 @@ def incremental_enrich(
         if (i + 1) % 10 == 0:
             print(f"  Enriching {i+1}/{len(truly_new)} | done: {len(enriched) - skipped_partial}")
 
-        result = enrich_event(row, ct_client, fin_fetcher)
+        result = enrich_event(row, ct_client, fin_fetcher, ohlc_cache)
         enriched.append(result)
         time.sleep(delay)
 
