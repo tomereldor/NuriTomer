@@ -1,0 +1,402 @@
+ticker,event_date,drug_name,nct_id_found,result,rejection_reason,queries_tried,final_candidates
+SEPN,2025-02-18,SEP-786,,no_candidates,"No trials found for 'SEP-786' or variations ['SEP786', 'SEP-786']",4,0
+IVVD,2025-02-03,VYD2311,NCT06523153,best_match,,1,1
+CBIO,2024-10-29,CUE-101 and CUE-102,NCT03978689,best_match,,2,1
+TSHA,2023-08-14,TSHA-102,NCT05606614,best_match,,1,2
+TVGN,2024-10-14,TVGN 489,,no_candidates,No trials found for 'TVGN 489' or variations ['TVGN'],2,0
+PRAX,2025-10-16,ulixacaltamide,NCT06087276,single_match,,1,1
+EYPT,2023-12-04,EYP-1901,NCT05381948,best_match,,1,3
+CLLS,2023-11-01,UCART22 and UCART20x22,NCT04150497,single_match,,2,1
+SGMT,2024-01-22,denifanstat,NCT06248008,best_match,,1,1
+CELC,2025-07-28,gedatolisib,NCT06757634,best_match,,1,2
+SANA,2025-01-08,UP421,NCT06239636,single_match,,1,1
+PMN,2025-07-21,PMN310,NCT06750432,best_match,,1,2
+UNCY,2023-03-06,Renazorb,NCT01560884,single_match,,1,1
+WVE,2025-12-08,WVE-007,NCT06842186,single_match,,1,1
+NERV,2025-10-21,NVG-291,NCT05965700,best_match,,1,1
+CCCC,2023-12-13,cemsidomide,NCT04756726,best_match,,1,3
+DRUG,2024-10-14,Omvoh,NCT06249555,best_match,,1,4
+STTK,2023-12-13,SL-172154,NCT05275439,best_match,,1,4
+PEPG,2025-09-25,PGN-EDODM1,NCT06204809,best_match,,1,1
+VKTX,2024-02-27,VK2735,NCT06828055,best_match,,1,2
+PMN,2023-07-17,PMN310,NCT06750432,best_match,,1,2
+IVVD,2023-12-18,VYD222,NCT06039449,best_match,,1,1
+RAPP,2025-09-08,RAP-219,NCT07046494,best_match,,1,2
+COGT,2025-11-10,bezuclastinib,NCT05208047,best_match,,1,1
+DRUG,2024-10-18,GMRx2,NCT04518306,best_match,,1,2
+TECX,2025-01-30,TX45,,no_candidates,No trials found for 'TX45',1,0
+CORT,2025-03-31,relacorilant,NCT05257408,best_match,,1,4
+TNGX,2023-08-09,TNG908,NCT05275478,single_match,,1,1
+ARMP,2025-10-22,AP-SA02,NCT05184764,single_match,,1,1
+INBX,2025-10-24,ozekibart (INBRX-109),NCT04950075,best_match,,2,2
+MBX,2025-09-22,canvuparatide,,no_candidates,No trials found for 'canvuparatide',1,0
+SABS,2023-04-13,SAB-185,NCT04518410,best_match,,1,1
+SHC,2023-01-10,LP-10,NCT06233591,best_match,,1,4
+BMEA,2023-03-28,BMF-219,NCT05731544,best_match,,1,5
+SPRB,2025-08-05,tralesinidase alfa (TA-ERT),,no_candidates,No trials found for 'tralesinidase alfa (TA-ERT)' or variations ['tralesinidase'],2,0
+CCCC,2023-12-12,CFT7455,NCT04756726,best_match,,1,2
+IMVT,2023-09-26,IMVT-1402,NCT07039916,best_match,,1,5
+IPHA,2024-12-13,SAR443579/IPH6101,,no_candidates,No trials found for 'SAR443579/IPH6101',1,0
+KRRO,2024-10-16,KRRO-110,NCT06677307,single_match,,1,1
+NKTR,2023-08-07,rezpegaldesleukin,NCT06136741,best_match,,1,4
+TECX,2024-06-21,TX45,,no_candidates,No trials found for 'TX45',1,0
+ARTV,2025-12-15,AlloNK,NCT06265220,best_match,,1,1
+MLTX,2025-09-29,sonelokimab,NCT06641076,best_match,,1,5
+AVTX,2023-06-26,AVTX-002,NCT05288504,best_match,,1,1
+MBOT,2025-01-03,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+MREO,2025-12-29,setrusumab (UX143),NCT05125809,best_match,,1,3
+ACRS,2023-11-13,zunsemetinib,NCT05279417,best_match,,1,3
+KZIA,2024-07-11,paxalisib,NCT03970447,best_match,,1,5
+PALI,2024-01-29,PALI-2108,NCT07428096,best_match,,1,2
+SPRB,2024-03-14,tralesinidase alfa (TA-ERT),,no_candidates,No trials found for 'tralesinidase alfa (TA-ERT)' or variations ['tralesinidase'],2,0
+CYTK,2023-12-27,aficamten,NCT06081894,best_match,,1,5
+RLMD,2025-04-23,NDV-01,NCT07313891,best_match,,1,3
+AMLX,2024-03-08,AMX0035 (Relyvrio),NCT05619783,single_match,,1,1
+TIL,2024-09-13,"BRG01, BST02, BRL03",NCT05864924,single_match,,2,1
+ELTX,2023-06-02,ELI-002,NCT05726864,best_match,,1,2
+NMRA,2025-01-02,navacaprant,NCT06058039,best_match,,1,3
+AVTX,2023-09-13,AVTX-002,NCT05288504,best_match,,1,1
+VTYX,2023-11-07,VTX958,NCT05655299,best_match,,1,3
+HURA,2023-10-31,VAL-083,NCT03970447,best_match,,1,1
+KRRO,2025-11-13,KRRO-110,NCT06677307,single_match,,1,1
+MESO,2024-03-26,ADI-PEG 20 (pegargiminase),NCT06034977,best_match,,1,5
+LONA,2024-09-04,laromestrocel,,no_candidates,No trials found for 'laromestrocel',1,0
+SPRY,2023-05-12,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+MLTX,2023-06-26,sonelokimab,NCT03384745,best_match,,1,3
+RLMD,2024-12-04,REL-1017,NCT04855760,best_match,,1,5
+BIOA,2024-12-09,azelaprag,NCT06515418,best_match,,1,1
+CPIX,2025-02-04,ifetroban,NCT02682511,best_match,,1,2
+ORMP,2023-01-12,ORMD-0801,NCT06731075,best_match,,1,4
+ANVS,2024-07-02,buntanetap,NCT06709014,best_match,,1,4
+OVID,2024-06-17,soticlestat,NCT05163314,best_match,,1,2
+QTTB,2024-12-11,bempikibart,NCT06018428,single_match,,1,1
+ARMP,2025-05-19,AP-SA02,NCT05184764,single_match,,1,1
+QTTB,2025-12-01,bempikibart,NCT06018428,single_match,,1,1
+WVE,2024-10-16,WVE-006,NCT06186492,best_match,,1,1
+ENGN,2023-10-24,ENGN (EG-70/detalimogene voraplasmid),NCT04752722,best_match,,2,1
+MIRA,2023-11-15,sonelokimab,NCT03384745,best_match,,1,3
+GLTO,2023-08-15,GB0139,NCT03832946,single_match,,1,1
+VTYX,2025-10-23,VTX3232,NCT06771115,best_match,,1,2
+TARA,2024-12-05,TARA-002,NCT05951179,best_match,,1,3
+GHRS,2025-02-03,GH001,NCT05800860,best_match,,1,4
+VKTX,2023-03-28,VK2735,NCT05203237,best_match,,1,1
+LYEL,2025-06-04,LYL273,,no_candidates,No trials found for 'LYL273',1,0
+PALI,2024-12-12,PALI-2108,NCT07428096,best_match,,1,2
+OM,2024-08-08,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+PETS,2025-12-11,OKV-119,,no_candidates,No trials found for 'OKV-119' or variations ['OKV-119'],2,0
+CADL,2024-12-11,CAN-2409,NCT01436968,best_match,,1,5
+PEPG,2025-02-24,PGN-EDODM1,NCT06204809,best_match,,1,1
+ALDX,2023-10-16,reproxalap,NCT03879863,best_match,,1,5
+PRAX,2023-03-03,ulixacaltamide (PRAX-944),NCT06087276,single_match,,1,1
+MIRA,2024-03-08,sonelokimab,NCT06641076,best_match,,1,5
+IXHL,2025-07-18,IHL-42X,NCT06146101,best_match,,1,1
+IMMP,2023-05-17,eftilagimod alpha (efti),NCT05747794,best_match,,1,2
+VERA,2023-01-04,atacicept,NCT04716231,best_match,,1,5
+KALA,2023-03-03,KPI-012,NCT05727878,single_match,,1,1
+CRDF,2024-03-01,onvansertib,NCT06106308,best_match,,1,5
+ENGN,2023-12-04,EG-70 (detalimogene voraplasmid),NCT04752722,best_match,,2,1
+CRNX,2023-09-11,paltusotine,NCT07087054,best_match,,1,1
+ADCT,2023-12-13,ZYNLONTA,NCT05672251,best_match,,1,5
+ADCT,2024-12-06,ZYNLONTA,NCT04970901,best_match,,1,5
+PALI,2023-08-09,PALI-2108,NCT07428096,best_match,,1,1
+VRCA,2023-12-15,TO-208,NCT02641392,best_match,,1,1
+IFRX,2023-04-05,vilobelimab,NCT06703073,best_match,,1,5
+IXHL,2025-05-15,IHL-42X,NCT06146101,best_match,,1,1
+IXHL,2025-07-24,IHL-42X,NCT06146101,best_match,,1,1
+KZIA,2024-10-17,paxalisib,NCT05009992,best_match,,1,4
+PLRX,2025-02-10,bexotegrast,NCT06097260,single_match,,1,1
+PLRX,2025-03-03,bexotegrast,NCT06097260,single_match,,1,1
+IFRX,2025-05-28,vilobelimab,NCT06703073,best_match,,1,5
+ANVS,2024-04-29,buntanetap,NCT06709014,best_match,,1,3
+ANNX,2023-05-25,ANX007,NCT04656561,best_match,,1,1
+OSTX,2024-08-02,OST-HER2,,no_candidates,No trials found for 'OST-HER2',1,0
+ENGN,2023-10-27,EG-70,NCT04752722,best_match,,1,1
+MESO,2023-08-04,remestemcel-L,NCT04371393,best_match,,1,1
+AGEN,2024-07-18,botensilimab (BOT) and balstilimab (BAL),NCT05864534,best_match,,1,1
+NERV,2024-02-27,NVG-291,NCT05965700,best_match,,1,1
+DBVT,2025-03-28,VIASKIN Peanut patch,NCT07003919,best_match,,1,3
+LXRX,2025-03-03,pilavapadin (LX9211),NCT06203002,best_match,,2,3
+EYPT,2023-04-21,DURAVYU,,no_candidates,No trials found for 'DURAVYU',1,0
+NTHI,2025-07-02,NEO100,NCT06047379,best_match,,1,4
+PALI,2023-03-30,PALI-2108,NCT07428096,best_match,,1,2
+DWTX,2023-11-02,IMC-2,NCT06316843,single_match,,1,1
+ATHE,2025-01-30,ATH434,NCT05864365,best_match,,1,1
+OVID,2025-08-13,OV350,,no_candidates,No trials found for 'OV350',1,0
+ALXO,2023-10-03,evorpacept,NCT05002127,best_match,,1,5
+FULC,2023-02-24,FTX-6058,NCT07431398,best_match,,1,3
+TNXP,2025-02-03,TNX-1500,NCT07204080,single_match,,1,1
+CRDF,2024-12-10,onvansertib,NCT06106308,best_match,,1,5
+MAZE,2025-09-11,MZE782,,no_candidates,No trials found for 'MZE782',1,0
+ABOS,2023-07-17,ACU193,NCT04931459,best_match,,1,2
+EWTX,2024-09-19,EDG-7500,NCT07034768,best_match,,1,4
+TIL,2024-09-09,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+TVGN,2024-10-23,TVGN 489,,no_candidates,No trials found for 'TVGN 489' or variations ['TVGN'],2,0
+ENLV,2024-04-11,Allocetra,NCT06233474,best_match,,1,5
+EQ,2024-02-06,EQU-001,NCT05473442,best_match,,1,1
+TNYA,2025-03-04,TN-201,NCT05836259,single_match,,1,1
+WVE,2024-09-24,WVE-N531,NCT07209332,best_match,,1,1
+COGT,2023-12-11,bezuclastinib,NCT05186753,best_match,,1,3
+ARVN,2025-03-11,vepdegestrant,NCT05654623,best_match,,1,5
+DWTX,2025-01-27,Halneuron,NCT05359133,best_match,,1,1
+CADL,2024-12-19,CAN-2409,NCT01436968,best_match,,1,5
+SABS,2025-01-28,SAB-142,NCT07187531,single_match,,1,1
+PALI,2025-10-01,PALI-2108,NCT07428096,best_match,,1,2
+PTGX,2023-03-07,JNJ-2113,,no_candidates,No trials found for 'JNJ-2113' or variations ['JNJ-2113'],2,0
+TIL,2025-05-22,Amtagvi (lifileucel),NCT06743126,best_match,,1,1
+KZIA,2025-11-25,paxalisib,NCT03970447,best_match,,1,5
+TNYA,2024-12-17,TN-201,NCT05836259,single_match,,1,1
+ARCT,2025-10-22,ARCT-032,NCT06747858,best_match,,1,1
+OM,2023-10-13,OCS-01,NCT06172257,best_match,,1,4
+ALEC,2025-10-22,latozinemab (AL001),NCT06111014,single_match,,1,1
+ELDN,2025-11-07,tegoprubart,NCT05983770,best_match,,1,2
+NKTR,2023-02-24,rezpegaldesleukin,NCT06136741,best_match,,1,4
+NUVB,2025-11-19,IBTROZI (taletrectinib),,no_candidates,No trials found for 'IBTROZI (taletrectinib)' or variations ['IBTROZI'],2,0
+MIRA,2024-07-23,Ketamir-2,,no_candidates,No trials found for 'Ketamir-2',1,0
+PYXS,2025-12-18,MICVO,,no_candidates,No trials found for 'MICVO',1,0
+ENGN,2023-10-26,EG-70,NCT04752722,best_match,,1,1
+IXHL,2024-02-28,IHL-42X,NCT06146101,best_match,,1,1
+SABS,2024-12-09,"palbociclib, olaparib, ribociclib, inavolisib, niraparib",NCT07005557,best_match,,2,5
+OM,2025-11-11,detalimogene,,no_candidates,No trials found for 'detalimogene',1,0
+GALT,2024-12-20,belapectin,NCT02462967,best_match,,1,5
+TNXP,2024-06-12,TNX-102 SL (Tonmya),NCT03841773,single_match,,1,1
+PMVP,2023-10-12,PC14586,NCT04585750,best_match,,1,5
+OSTX,2024-12-11,OST-HER2,,no_candidates,No trials found for 'OST-HER2',1,0
+ENGN,2025-11-11,detalimogene voraplasmid,,no_candidates,No trials found for 'detalimogene voraplasmid' or variations ['detalimogene'],2,0
+PTHS,2025-04-17,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+PRLD,2024-12-20,PRT2527,NCT05665530,best_match,,1,2
+NVCT,2024-11-14,NXP800,NCT05226507,best_match,,1,2
+CABA,2025-10-31,rese-cel (formerly CABA-201),NCT06154252,best_match,,2,5
+NBP,2025-06-03,NBP (NovaBridge Biosciences' givastomig and ragistomig),NCT05976152,best_match,,2,5
+MIRA,2024-02-05,Ketamir-2,,no_candidates,No trials found for 'Ketamir-2',1,0
+KOD,2023-07-24,tarcocimab tedromer,NCT06556368,best_match,,1,2
+NRXP,2024-05-06,NRX-101,NCT07227103,best_match,,1,5
+PROK,2023-11-20,Rilparencel,NCT02836574,best_match,,1,1
+REPL,2023-12-05,RP1,NCT06264180,best_match,,1,5
+PYXS,2024-11-21,MICVO,,no_candidates,No trials found for 'MICVO',1,0
+STTK,2024-10-01,SL-172154,NCT05275439,best_match,,1,4
+VIR,2023-07-20,VIR-2482,NCT05567783,best_match,,1,1
+ORGO,2025-11-07,ReNu,NCT00929487,best_match,,1,5
+HURA,2024-11-27,HURA,,no_candidates,No trials found for 'HURA',1,0
+ACRS,2023-03-06,zunsemetinib,NCT05279417,best_match,,1,3
+RLMD,2025-04-28,NDV-01,NCT07313891,best_match,,1,3
+TRVI,2024-12-12,Haduvio,,no_candidates,No trials found for 'Haduvio',1,0
+GANX,2025-12-18,GT-02287,NCT07280299,best_match,,1,2
+NGNE,2024-11-12,NGN-401,NCT05898620,single_match,,1,1
+IXHL,2025-07-15,IHL-42X,NCT06146101,best_match,,1,1
+CGTX,2024-07-29,CT1812,NCT05531656,best_match,,1,5
+IXHL,2024-02-21,IHL-42X,NCT06146101,best_match,,1,1
+MESO,2024-03-28,ADI-PEG20,NCT03449901,best_match,,1,4
+TVGN,2024-04-25,TVGN 489,,no_candidates,No trials found for 'TVGN 489' or variations ['TVGN'],2,0
+NGNE,2024-11-04,NGN-401,NCT05898620,single_match,,1,1
+EYPT,2024-05-06,DURAVYU,,no_candidates,No trials found for 'DURAVYU',1,0
+STTK,2023-12-14,SL-172154,NCT05275439,best_match,,1,4
+CGTX,2025-07-07,CT1812 (zervimesine),NCT03507790,best_match,,1,1
+KZIA,2024-12-31,paxalisib,NCT05009992,best_match,,1,3
+NBP,2025-04-14,DL-3-n-butylphthalide (NBP),NCT05976152,best_match,,1,5
+CADL,2024-04-11,CAN-2409,NCT07332000,best_match,,1,1
+ORGO,2025-05-09,ReNu®,NCT05565937,best_match,,1,5
+PRLD,2024-09-13,PRT3789,NCT05639751,best_match,,1,1
+NGNE,2024-11-18,NGN-401,NCT05898620,single_match,,1,1
+PALI,2024-04-16,PALI-2108,NCT07428096,best_match,,1,2
+MREO,2025-07-10,setrusumab,NCT05125809,best_match,,1,3
+BNTC,2024-04-18,BB-301,NCT06185673,single_match,,1,1
+TSHA,2023-08-29,TSHA-102,NCT05606614,best_match,,1,2
+ALXO,2024-08-01,evorpacept,NCT04643002,best_match,,1,5
+SABS,2023-04-18,SAB-185,NCT04518410,best_match,,1,4
+NAMS,2024-12-10,EB613,,no_candidates,No trials found for 'EB613',1,0
+MSLE,2023-01-27,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+IBRX,2023-05-15,ANKTIVA,NCT07123727,best_match,,1,5
+SCLX,2024-03-01,SP-102 (SEMDEXA),NCT03372161,best_match,,2,2
+TRVI,2025-03-10,Haduvio,,no_candidates,No trials found for 'Haduvio',1,0
+RIGL,2023-05-17,REZLIDHIA (olutasidenib),NCT05564390,best_match,,1,3
+SPRB,2025-09-12,TA-ERT,NCT02317640,single_match,,1,1
+BCAX,2025-05-23,ficerafusp alfa,NCT04429542,best_match,,1,1
+TVTX,2023-09-21,FILSPARI (sparsentan),NCT05856760,single_match,,1,1
+DWTX,2024-11-19,IMC-2,NCT06316843,single_match,,1,1
+ANL,2024-11-08,anlotinib,NCT07294261,best_match,,1,5
+ELTX,2024-06-28,ELI-002,NCT05726864,best_match,,1,2
+QURE,2023-06-21,AMT-130,NCT04120493,best_match,,1,2
+MIRA,2023-11-20,sonelokimab,NCT06641076,best_match,,1,5
+SPRB,2025-10-07,tralesinidase alfa (TA-ERT),,no_candidates,No trials found for 'tralesinidase alfa (TA-ERT)' or variations ['tralesinidase'],2,0
+TNXP,2023-07-28,TNX-102 SL,NCT02436096,best_match,,1,5
+NAMS,2024-01-10,obicetrapib,NCT05202509,best_match,,1,5
+FBIOP,2023-08-17,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+SLS,2025-01-27,SLS009,NCT04588922,single_match,,1,1
+KZIA,2025-07-09,Paxalisib,NCT05009992,best_match,,1,4
+HELP,2023-09-18,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+ANVS,2024-07-08,buntanetap,NCT06709014,best_match,,1,4
+NNNN,2025-06-20,CT-868,NCT06062069,best_match,,1,1
+CABA,2025-05-15,rese-cel (resecabtagene autoleucel),NCT06154252,best_match,,1,3
+ALLO,2025-02-18,ALLO-329,NCT07085104,single_match,,1,1
+INKT,2023-05-01,agenT-797,NCT05108623,best_match,,1,2
+SGMT,2025-06-12,SGMT,NCT02599298,single_match,,1,1
+NAUT,2025-11-03,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+INKT,2024-04-04,agenT-797,NCT05108623,best_match,,1,2
+RCKT,2023-09-13,RP-L301,NCT06422351,best_match,,1,1
+CRDF,2023-08-08,onvansertib,NCT06106308,best_match,,1,5
+CNTB,2023-11-21,rademikibart,NCT06940141,best_match,,1,5
+KZIA,2025-03-07,paxalisib,NCT05009992,best_match,,1,3
+ELVN,2024-03-19,ELVN-001,NCT05304377,best_match,,1,2
+DWTX,2025-04-15,Halneuron,NCT05359133,best_match,,1,1
+SGMO,2025-05-13,ST-920,NCT04046224,best_match,,1,1
+FULC,2023-08-22,FTX-6058,NCT07431398,best_match,,1,3
+PTHS,2024-04-18,NNZ-2591,NCT07281079,best_match,,1,5
+IMA,2025-09-04,HLX43,NCT06907615,best_match,,1,5
+PTHS,2024-05-13,NNZ-2591,NCT07281079,best_match,,1,5
+AVTX,2023-09-15,AVTX-002,NCT05288504,best_match,,1,1
+MBOT,2024-06-03,LIBERTY Endovascular Robotic Surgical System,NCT07301190,best_match,,2,5
+NKTX,2023-06-27,NKX101,NCT04623944,single_match,,1,1
+PROK,2025-09-11,rilparencel,NCT02836574,best_match,,1,1
+CRBP,2023-11-30,CRB-913,NCT07310901,single_match,,1,1
+NTHI,2025-04-02,NEO212,NCT06047379,single_match,,1,1
+KZIA,2024-07-15,paxalisib,NCT05009992,best_match,,1,3
+CADL,2023-11-06,CAN-2409,NCT01436968,best_match,,1,5
+DWTX,2024-11-18,IMC-2,NCT06316843,single_match,,1,1
+IKT,2024-01-24,Risvodetinib,NCT05424276,single_match,,1,1
+GALT,2025-06-18,belapectin,NCT02462967,best_match,,1,5
+URGN,2024-06-13,UGN-102,NCT05243550,best_match,,1,4
+CGTX,2023-12-14,CT1812 (zervimesine),NCT03507790,best_match,,1,1
+TNYA,2025-12-12,TN-401,NCT06228924,single_match,,1,1
+HURA,2025-03-19,IFx-Hu2.0,NCT04160065,best_match,,1,1
+SRPT,2023-10-31,Elevidys,NCT05881408,best_match,,1,3
+SOPH,2023-03-14,margetuximab,NCT02492711,best_match,,1,1
+ANVS,2024-07-05,buntanetap,NCT06709014,best_match,,1,4
+ADCT,2025-05-14,ZYNLONTA (loncastuximab tesirine-lpyl),NCT05270057,best_match,,1,1
+KOD,2023-11-02,KSI-101,NCT06990399,best_match,,1,2
+AVTX,2023-09-25,AVTX-002,NCT05288504,best_match,,1,1
+CRBP,2024-01-29,CRB-701,NCT06265727,single_match,,1,1
+SLN,2024-11-19,zerlasiran,NCT05537571,single_match,,1,1
+IFRX,2025-08-29,vilobelimab,NCT06703073,best_match,,1,5
+INKT,2025-07-14,iNKT cell therapy (MiNK Therapeutics),NCT07209813,best_match,,2,5
+CRVS,2023-05-17,soquelitinib,NCT06345404,best_match,,1,1
+IXHL,2023-12-04,IHL-42X,NCT06146101,best_match,,1,1
+TNXP,2023-12-20,TNX-102 SL,NCT04172831,best_match,,1,5
+EQ,2024-02-16,EQ101,NCT05589610,single_match,,1,1
+PEPG,2025-09-24,PGN-EDODM1,NCT07220603,best_match,,1,3
+ACHV,2025-10-17,cytisinicline,NCT05766046,best_match,,1,5
+SLS,2024-01-04,SLS009,NCT04588922,single_match,,1,1
+RLAY,2023-04-18,RLY-2608,NCT06982521,best_match,,1,3
+IMMX,2023-12-14,NXC-201,NCT06971380,best_match,,1,3
+ADCT,2024-12-11,ZYNLONTA,NCT04970901,best_match,,1,5
+SGMT,2024-01-11,SGMT,NCT02599298,single_match,,1,1
+IPSC,2023-12-06,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+LYEL,2024-06-26,LYL797,NCT05274451,single_match,,1,1
+TVGN,2024-11-12,TVGN 489,,no_candidates,No trials found for 'TVGN 489' or variations ['TVGN'],2,0
+ALMS,2025-04-02,envudeucitinib,,no_candidates,No trials found for 'envudeucitinib',1,0
+PETS,2025-12-16,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+PTHS,2024-09-26,NNZ-2591,NCT07281079,best_match,,1,5
+SRZN,2024-04-01,SZN-043,,no_candidates,No trials found for 'SZN-043' or variations ['SZN-043'],2,0
+ANNX,2023-05-26,ANX005,NCT04701164,best_match,,1,1
+IDYA,2023-04-24,darovasertib,NCT05987332,best_match,,1,2
+IXHL,2025-07-25,IHL-42X,NCT06146101,best_match,,1,1
+NUVL,2023-10-04,NVL-655,NCT05384626,best_match,,1,1
+EQ,2025-03-27,Itolizumab,NCT05263999,best_match,,1,2
+ARMP,2023-01-04,AP-PA02,NCT04596319,best_match,,1,1
+PALI,2024-01-30,PALI-2108,NCT07428096,best_match,,1,2
+SLDB,2024-01-09,SGT-003,NCT06138639,best_match,,1,1
+OM,2025-05-08,OM,NCT06675526,best_match,,1,5
+CRBP,2024-01-30,CRB-701,NCT06265727,single_match,,1,1
+CPIX,2025-02-05,ifetroban,NCT02682511,best_match,,1,2
+ALEC,2024-11-26,AL002,NCT04592874,best_match,,1,1
+AVXL,2024-01-02,blarcamesine (ANAVEX 2-73),NCT04314934,best_match,,2,3
+RNAC,2024-07-02,Descartes-08,NCT07391605,best_match,,1,2
+TIL,2025-04-25,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+PLRX,2025-02-07,bexotegrast,NCT06097260,single_match,,1,1
+TECX,2025-09-02,TX45,,no_candidates,No trials found for 'TX45',1,0
+IXHL,2023-12-01,IHL-42X,NCT06146101,best_match,,1,1
+PLRX,2023-01-23,bexotegrast,NCT06097260,single_match,,1,1
+IXHL,2025-07-21,IHL-42X,NCT06146101,best_match,,1,1
+CABA,2024-08-08,CABA-201,NCT06154252,best_match,,1,5
+KZIA,2025-11-19,paxalisib,NCT05009992,best_match,,1,3
+IBIO,2025-02-27,ANKTIVA,NCT06061809,best_match,,1,5
+ESLA,2023-09-18,elacestrant,NCT07242352,best_match,,1,5
+NERV,2023-05-01,NVG-291,NCT05965700,best_match,,1,1
+CCCC,2025-09-15,cemsidomide,NCT04756726,best_match,,1,2
+HUMA,2024-12-20,Symvess,,no_candidates,No trials found for 'Symvess',1,0
+IXHL,2025-08-01,IHL-42X,NCT06146101,best_match,,1,1
+FBIO,2023-11-20,MB-106,NCT05360238,best_match,,1,1
+UNCY,2024-08-14,oxylanthanum carbonate (OLC),NCT06218290,single_match,,1,1
+ONMD,2024-05-30,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+PROK,2024-05-14,rilparencel,NCT05099770,best_match,,1,2
+DRUG,2023-04-18,trifluridine/tipiracil,NCT03869892,best_match,,1,5
+ADCT,2023-12-01,ZYNLONTA (loncastuximab tesirine-lpyl),NCT05672251,best_match,,1,2
+QTRX,2023-05-03,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+IXHL,2025-07-31,IHL-42X,NCT06146101,best_match,,1,1
+SLNO,2023-09-28,DCCR,NCT03440814,best_match,,1,5
+ANVS,2025-02-03,buntanetap,NCT06709014,best_match,,1,4
+KALA,2023-03-06,KPI-012,NCT05727878,single_match,,1,1
+DERM,2023-05-19,B-VEC (beremagene geperpavec),NCT04917874,best_match,,1,1
+OSTX,2024-12-26,OST-HER2,,no_candidates,No trials found for 'OST-HER2',1,0
+ORKA,2024-08-29,ORKA-002,NCT06944379,single_match,,1,1
+STXS,2023-05-19,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+ZBIO,2025-10-27,obexelimab,NCT06559163,best_match,,1,2
+ALT,2023-12-06,pemvidutide,NCT07009860,best_match,,1,5
+NNNN,2025-11-11,zelenectide pevedotin,NCT06225596,best_match,,1,3
+INKT,2025-01-31,agenT-797,NCT05108623,best_match,,1,2
+GERN,2023-01-04,imetelstat,NCT02598661,best_match,,1,3
+TNXP,2025-08-12,TNX-102 SL (Tonmya),NCT03841773,single_match,,1,1
+LPCN,2024-06-18,LPCN 1154,NCT02081300,best_match,,2,5
+PALI,2023-03-31,PALI-2108,NCT07428096,best_match,,1,2
+CRDF,2024-12-17,onvansertib,NCT06106308,best_match,,1,5
+CV,2025-12-10,tirzepatide,NCT04255433,best_match,,1,1
+PEPG,2024-07-31,PGN-EDO51,NCT06079736,best_match,,1,2
+TVGN,2024-10-17,TVGN 489,,no_candidates,No trials found for 'TVGN 489' or variations ['TVGN'],2,0
+TVGN,2024-08-07,TVGN 489,,no_candidates,No trials found for 'TVGN 489' or variations ['TVGN'],2,0
+AURA,2023-11-07,belzupacap sarotalocan (bel-sar),NCT06007690,best_match,,1,1
+ANVS,2024-04-26,buntanetap,NCT06709014,best_match,,1,4
+EQ,2025-02-06,itolizumab,NCT04475588,best_match,,1,5
+ALEC,2023-08-04,Alecensa (alectinib),NCT06765109,best_match,,1,5
+ENLV,2023-04-04,Allocetra,NCT06233474,best_match,,1,5
+OSTX,2024-12-13,OST-HER2,,no_candidates,No trials found for 'OST-HER2',1,0
+LPCN,2023-05-23,LPCN 1154,NCT02081300,best_match,,2,5
+NNNN,2025-06-25,CT-868,NCT06062069,best_match,,1,1
+GALT,2024-12-27,belapectin,NCT02462967,best_match,,1,5
+PYXS,2023-03-30,PYX-201,NCT06795412,best_match,,1,2
+OMER,2023-10-16,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+SCLX,2025-07-17,SP-102 (SEMDEXA),NCT03372161,best_match,,2,2
+STOK,2023-07-25,STK-001,NCT04740476,best_match,,1,2
+CRVS,2023-05-10,CPI-818,NCT03952078,best_match,,1,1
+GOSS,2023-07-20,seralutinib,NCT07181382,best_match,,1,3
+TRDA,2023-11-22,retatrutide,NCT07165028,best_match,,1,4
+ONMD,2023-11-08,Paradise system (Recor Medical),NCT05027685,best_match,,1,5
+KALA,2023-01-04,KPI-012,NCT05727878,single_match,,1,1
+KZIA,2025-12-03,paxalisib,NCT05009992,best_match,,1,3
+EVO,2024-04-24,EVO ICL,NCT06700460,best_match,,1,5
+CCCC,2025-08-07,cemsidomide,NCT04756726,best_match,,1,2
+PYXS,2025-10-09,PYX-201,NCT06795412,best_match,,1,2
+CGTX,2025-07-10,CT1812 (zervimesine),NCT03507790,best_match,,1,1
+BGM,2025-09-23,BGM0504,NCT06704581,best_match,,1,4
+SLDB,2025-02-18,SGT-003,NCT07160634,best_match,,1,2
+INKT,2023-05-03,botensilimab,NCT03860272,best_match,,1,5
+PBYI,2025-08-11,alisertib,NCT02109328,best_match,,1,2
+IKT,2025-01-30,risvodetinib,NCT05424276,single_match,,1,1
+UNCY,2024-08-13,UNI-494,,no_candidates,No trials found for 'UNI-494' or variations ['UNI-494'],2,0
+TVGN,2024-01-26,TVGN-489,,no_candidates,No trials found for 'TVGN-489' or variations ['TVGN-489'],2,0
+TNXP,2023-05-09,TNX-102 SL,NCT02436096,best_match,,1,5
+BCYC,2024-12-13,zelenectide pevedotin,NCT06225596,best_match,,1,3
+ENLV,2025-08-18,Allocetra,NCT06233474,best_match,,1,5
+DWTX,2023-08-10,IMC-1,NCT04748705,best_match,,1,2
+TIL,2024-07-12,lifileucel,NCT06743126,best_match,,1,1
+PMVP,2023-11-01,rezatapopt,NCT04585750,best_match,,1,3
+CADL,2024-12-13,CAN-2409,NCT01436968,best_match,,1,5
+NTHI,2025-04-04,NEO100-01,,no_candidates,No trials found for 'NEO100-01',1,0
+PHAT,2023-01-04,vonoprazan,NCT07275827,best_match,,1,5
+INKT,2025-07-15,agenT-797,NCT05108623,best_match,,1,2
+ENGN,2023-11-03,EG-70 (detalimogene voraplasmid),NCT04752722,best_match,,2,1
+TNXP,2024-06-10,TNX-102 SL,NCT07413367,best_match,,1,1
+PMN,2023-08-16,obinutuzumab (Gazyva/Gazyvaro),NCT03701282,best_match,,1,5
+MIST,2023-12-26,etripamil,NCT05410860,best_match,,1,5
+PTHS,2025-07-11,,,no_drug_name,No drug name provided and no ticker fallback available,0,0
+ATAI,2023-01-06,PCN-101,NCT05414422,single_match,,1,1
+TVTX,2023-05-02,sparsentan,NCT03762850,best_match,,1,5
+ARVN,2023-12-06,vepdegestrant,NCT04072952,best_match,,1,5
+AVTX,2023-04-10,AVTX-002 (quisovalimab),NCT05288504,best_match,,2,1
+ARCT,2025-08-12,ARCT-2138 and ARCT-2304,NCT06125691,single_match,,2,1
+SANA,2023-04-13,UP421,NCT06239636,single_match,,1,1
+PRLD,2024-08-13,PRT3789,NCT05639751,best_match,,1,1
+HUMA,2025-03-26,V007,,no_candidates,No trials found for 'V007',1,0
+WVE,2023-12-07,WVE-N531,NCT07209332,best_match,,1,2
+CTNM,2025-06-20,PIPE-791,NCT06810245,best_match,,1,3
+OM,2024-12-03,ADSTILADRIN (nadofaragene firadenovec-vncg),NCT06545955,best_match,,2,5
+NBP,2025-08-01,Givastomig,NCT07432295,best_match,,1,2
+BMEA,2023-12-11,BMF-219,NCT05731544,best_match,,1,5
