@@ -552,7 +552,25 @@ V_COLS = [
     "v_is_verified", "v_actual_date",
     "v_pr_link", "v_pr_date", "v_pr_title", "v_pr_key_info",
     "v_is_material", "v_confidence", "v_summary", "v_error",
+    "v_action",   # recommended remediation action (see fix_validated_rows.py)
 ]
+
+# v_action values
+#   OK                  — verified, no action needed
+#   FIX_DATE            — real event but wrong date; re-fetch prices + recompute ATR
+#   FLAG_FALSE_POSITIVE — no clinical news found; mark data_complete=False (or remove)
+#   FLAG_ERROR          — API/fetch error; retry later
+
+
+def _determine_action(result: "ValidationResult", event_date: str) -> str:
+    """Map a ValidationResult to a remediation action string."""
+    if result.is_verified:
+        return "OK"
+    if result.actual_date and result.actual_date != str(event_date):
+        return "FIX_DATE"
+    if result.error and not result.actual_date:
+        return "FLAG_ERROR"
+    return "FLAG_FALSE_POSITIVE"
 
 
 def validate_dataset(
@@ -614,6 +632,8 @@ def validate_dataset(
 
         result = verify_row(row)
 
+        action = _determine_action(result, date)
+
         df.at[idx, "v_is_verified"] = result.is_verified
         df.at[idx, "v_actual_date"] = result.actual_date
         df.at[idx, "v_pr_link"]     = result.pr_link
@@ -624,20 +644,21 @@ def validate_dataset(
         df.at[idx, "v_confidence"]  = result.confidence
         df.at[idx, "v_summary"]     = result.summary
         df.at[idx, "v_error"]       = result.error
+        df.at[idx, "v_action"]      = action
 
         if result.pr_link:
             pr_fetched += 1
 
-        if result.error and not result.is_verified:
-            error_count += 1
-            status = f"ERROR: {result.error[:40]}"
-        elif result.is_verified:
+        if action == "OK":
             verified_count += 1
-            pr_info = f" | PR: {result.pr_title[:40]}..." if result.pr_title else ""
+            pr_info = f" | PR: {result.pr_title[:50]}..." if result.pr_title else ""
             status  = f"VERIFIED ({result.confidence}){pr_info}"
-        elif result.actual_date and result.actual_date != str(date):
+        elif action == "FIX_DATE":
             date_fix_count += 1
-            status = f"WRONG DATE -> {result.actual_date}"
+            status = f"FIX_DATE -> {result.actual_date}"
+        elif action == "FLAG_ERROR":
+            error_count += 1
+            status = f"ERROR: {result.error[:50]}"
         else:
             false_pos_count += 1
             status = "FALSE POSITIVE"
@@ -694,18 +715,21 @@ def generate_cleanup_report(df: pd.DataFrame,
     ].copy()
 
     show = [c for c in ["ticker", date_col, "move_pct", "atr_pct", "move_class_norm",
-                         "drug_name", "v_is_verified", "v_actual_date",
+                         "drug_name", "v_action", "v_is_verified", "v_actual_date",
                          "v_pr_link", "v_pr_date", "v_pr_title", "v_pr_key_info",
-                         "v_summary"]
+                         "v_summary", "v_error"]
             if c in df.columns]
 
-    fp = false_positives[show].copy();  fp["action"] = "REMOVE_OR_REVIEW"
-    dc = date_corrections[show].copy(); dc["action"] = "FIX_DATE"
+    needs_fix = df[df.get("v_action", pd.Series(dtype=str)).isin(
+        ["FIX_DATE", "FLAG_FALSE_POSITIVE", "FLAG_ERROR"]
+    )][show].copy()
 
-    pd.concat([fp, dc], ignore_index=True).to_csv(output_path, index=False)
+    needs_fix.to_csv(output_path, index=False)
     print(f"\nCleanup report -> {output_path}")
-    print(f"  False positives to remove: {len(false_positives):,}")
-    print(f"  Date corrections needed:   {len(date_corrections):,}")
+    print(f"  FIX_DATE rows:             {len(date_corrections):,}")
+    print(f"  FLAG_FALSE_POSITIVE rows:  {len(false_positives):,}")
+    print(f"  Total needing action:      {len(needs_fix):,}")
+    print(f"\nRun fix_validated_rows.py to apply corrections automatically.")
 
 
 # ============================================================================
