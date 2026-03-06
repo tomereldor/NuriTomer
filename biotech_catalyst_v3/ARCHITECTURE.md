@@ -82,6 +82,9 @@ biotech_catalyst_v3/
 │   ├── enrich_clinical_fields.py     #   [Legacy v3.2] Enrich indication/phase/endpoint
 │   ├── backfill_financials.py        #   Backfill missing financial data via yfinance
 │   ├── create_ml_dataset.py          #   Combine high+low into balanced ML dataset
+│   ├── cleanup_columns.py            #   [Post v3.3] Drop redundant cols, normalize ct_phase, derive drug_name/indication
+│   ├── backfill_price_at_event.py    #   Backfill price_at_event/price_before/price_after/move_2d_pct via yfinance
+│   ├── validate_catalysts.py         #   Validate noise rows via Perplexity (detect hallucinated catalysts)
 │   └── extract_low_moves.py          #   [Legacy v3.1] Extract 3-10% moves by raw percentage
 │
 ├── batch_scanner.py                  # Market scanner (yfinance batch download)
@@ -199,28 +202,93 @@ enriched_high_moves.csv          low_move_enriched.csv
 
 ## Key Columns in the Output
 
+### Event Identification
+
 | Column | What It Means |
 |--------|---------------|
 | `ticker` | Stock symbol (e.g., SRRK, VKTX) |
-| `event_date` | When the move happened |
-| `move_pct` | How much the stock moved (e.g., +165%, -3%) |
-| `move_class` | **ML target**: `High` (>3x ATR) or `Low` (<1.5x ATR) |
-| `catalyst_type` | Why it moved (all rows = Clinical Data in ML dataset) |
-| `catalyst_summary` | Plain-English description of the event |
-| `drug_name` | The drug involved |
-| `nct_id` | ClinicalTrials.gov trial ID (e.g., NCT04120493) |
-| `phase` / `ct_phase` | Clinical trial phase |
+| `event_date` | Calendar date of the clinical news |
+| `event_trading_date` | Actual trading day (next open if news released after hours) |
+| `event_type` | `Gainer` or `Loser` |
+| `catalyst_type` | All rows = `Clinical Data` in this dataset |
+| `catalyst_summary` | Plain-English description (~22% fill; only Perplexity-sourced rows) |
+
+### Price & Move Columns
+
+| Column | What It Means |
+|--------|---------------|
+| `move_pct` | Signed % move on event trading day (e.g., +165%, -3%) |
+| `price_at_event` | Closing price on `event_trading_date` |
+| `price_before` | Last closing price strictly before the event |
+| `price_after` | First closing price strictly after the event |
+| `move_2d_pct` | `(price_after − price_before) / price_before × 100` — 2-day window move |
+
+### ATR Columns (volatility.py — Wilder's 20-day RMA)
+
+ATR = **Average True Range**, computed using **Wilder's smoothed moving average** (RMA):
+`ewm(alpha=1/20, adjust=False)` — identical to TradingView's ATR indicator.
+**Lookback: 20 trading days** (≈ 1 calendar month) of data **strictly before** the event (no look-ahead bias).
+Requires ≥ 20 pre-event trading days; rows with fewer data points have `atr_pct = NaN`.
+
+| Column | What It Means |
+|--------|---------------|
+| `atr_pct` | ATR as % of closing price: `(ATR value / last pre-event close) × 100`. Represents the stock's typical daily price swing as a percentage. |
+| `avg_daily_move` | Mean of `|daily return|` over the 20-day lookback window (simpler volatility proxy). |
+| `stock_movement_atr_normalized` | `abs(move_pct) / atr_pct` — how many "normal days" the event move represents. The primary size signal. |
+
+### Move Classification Columns
+
+Three complementary classification columns, all computed in `utils/volatility.py`:
+
+| Column | Scale | Thresholds | Use |
+|--------|-------|------------|-----|
+| `move_class_norm` | 5-level ATR-normalized | Noise <1.5× · Low 1.5–3× · Medium 3–5× · High 5–8× · Extreme ≥8× | Best for comparing across stocks (volatility-adjusted) |
+| `move_class_abs` | 5-level absolute % | VeryLow <10% · Low 10–15% · Medium 15–30% · High 30–50% · VeryHigh ≥50% | Backward compat with v3.1 |
+| `move_class_combo` | **3-level ML label** | Low: abs<15% AND norm<2.5× · High: abs≥20% AND norm≥3.5× · Medium: else | **Primary ML target** — dual AND requirement avoids edge cases |
+| `stock_relative_move` | Continuous | `move_pct / avg_daily_move` | Deprecated — circular with normalized_move; do not use as feature |
+
+### Clinical Trial Columns (from ClinicalTrials.gov API)
+
+| Column | What It Means |
+|--------|---------------|
+| `nct_id` | ClinicalTrials.gov trial ID (e.g., `NCT04120493`) |
+| `ct_official_title` | Full official trial title |
+| `ct_phase` | Trial phase: Phase 1 / Phase 1/2 / Phase 2 / Phase 2/3 / Phase 3 / Phase 4 |
+| `ct_enrollment` | Target patient enrollment |
+| `ct_conditions` | Disease / indication (semicolon-separated) |
+| `ct_sponsor` | Trial sponsor organization |
+| `ct_status` | Trial status at time of enrichment |
+| `ct_allocation` | `RANDOMIZED` / `NON_RANDOMIZED` |
+| `ct_primary_completion` | Primary completion date |
+
+### AI-Researched Clinical Fields (Perplexity — ~22% fill)
+
+| Column | What It Means |
+|--------|---------------|
+| `drug_name` | Drug/compound name (~99% fill after derivation from `ct_conditions`) |
+| `indication` | Disease indication (~97% fill after derivation from `ct_conditions`) |
 | `is_pivotal` | Is this a pivotal/registrational trial? |
-| `ct_sponsor` | Who runs the trial |
-| `ct_enrollment` | How many patients in the trial |
-| `ct_conditions` | Disease/indication |
-| `ct_allocation` | Randomized vs non-randomized |
-| `market_cap_m` | Company size in millions |
-| `cash_position_m` | Cash on hand in millions |
-| `atr_pct` | Average True Range as % (stock's normal daily volatility) |
-| `normalized_move` | Move size / ATR (how many "normal days" this move equals) |
-| `move_magnitude` | Low (<1.5x ATR), Medium (1.5-3x), High (>3x) |
-| `data_quality_score` | 0-1 score of how complete the data is |
+| `pivotal_evidence` | Evidence supporting the pivotal classification |
+| `primary_endpoint_met` | Whether the primary endpoint was met (Yes/No/Unclear) |
+| `primary_endpoint_result` | Brief description of endpoint results |
+
+### Financial Columns (yfinance — current snapshot, not historical)
+
+| Column | What It Means |
+|--------|---------------|
+| `market_cap_m` | Market cap in $M at time of enrichment (99.7% fill) |
+| `current_price` | Stock price at time of enrichment |
+| `cash_position_m` | Cash & equivalents in $M |
+| `short_percent` | % of float sold short (current, not historical — treat as controversy proxy) |
+| `institutional_ownership` | % held by institutions |
+| `analyst_target` | Consensus analyst price target |
+| `analyst_rating` | Consensus analyst recommendation |
+
+### Quality & Metadata
+
+| Column | What It Means |
+|--------|---------------|
+| `data_complete` | Boolean — row has all minimum required fields for ML use |
 
 ---
 
@@ -288,6 +356,15 @@ print(f'Saved {len(df[df[\"catalyst_type\"]==\"Clinical Data\"])} Clinical Data 
 python3 -m scripts.full_pipeline_fix --input enriched_final.csv
 python3 scripts/extract_low_move_clinical.py --input enriched_high_moves.csv
 python3 scripts/create_ml_dataset.py
+
+# === Post-processing / data quality ===
+python3 -m scripts.cleanup_columns                              # normalize columns, drop redundant
+python3 -m scripts.backfill_price_at_event                      # fill price_before/after/move_2d_pct
+python3 -m scripts.validate_catalysts --dry-run                 # preview noise rows
+python3 -m scripts.validate_catalysts --limit 20                # test with 20 rows
+python3 -m scripts.validate_catalysts                           # full validation run
+python3 -m scripts.validate_catalysts --report                  # generate cleanup report from validated CSV
+python3 -m scripts.recompute_atr                                # recompute ATR + move classifications
 
 # === Individual tools ===
 python3 -m scripts.fix_missing_nct --input <file.csv>
