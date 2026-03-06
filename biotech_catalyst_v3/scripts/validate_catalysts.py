@@ -58,6 +58,27 @@ import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
+def _load_dotenv() -> None:
+    """Load key=value pairs from .env at the repo root into os.environ."""
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_path  = os.path.join(repo_root, ".env")
+    if not os.path.exists(env_path):
+        return
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:  # don't override real env vars
+                os.environ[key] = val
+
+_load_dotenv()
+
+
 # ============================================================================
 # Configuration
 # ============================================================================
