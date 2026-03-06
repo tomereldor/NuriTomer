@@ -74,3 +74,4 @@ dmypy.json
 !package-lock.json
 !tsconfig.json
 biotech_catalyst_v3/archive/
+*.bak.csv
