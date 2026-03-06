@@ -21,6 +21,8 @@ import yfinance as yf
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+ATR_LOOKBACK = 20
+
 
 def load_tickers(universe_file: str, existing_file: str):
     """
@@ -78,8 +80,8 @@ def scan_ticker(
                 abs(df["Low"] - df["prev_close"]),
             ),
         )
-        df["atr_14"] = df["TR"].rolling(14).mean()
-        df["atr_pct"] = df["atr_14"] / df["Close"] * 100
+        df["atr_20"] = df["TR"].rolling(ATR_LOOKBACK).mean()
+        df["atr_pct"] = df["atr_20"] / df["Close"] * 100
 
         large = df[df["return_pct"].abs() >= min_move].dropna(subset=["return_pct"])
 

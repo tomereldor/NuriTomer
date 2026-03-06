@@ -85,6 +85,7 @@ biotech_catalyst_v3/
 │   ├── cleanup_columns.py            #   [Post v3.3] Drop redundant cols, normalize ct_phase, derive drug_name/indication
 │   ├── backfill_price_at_event.py    #   Backfill price_at_event/price_before/price_after/move_2d_pct via yfinance
 │   ├── validate_catalysts.py         #   Validate noise rows via Perplexity (detect hallucinated catalysts)
+│   ├── fix_validated_rows.py         #   Apply v_action corrections: fix dates, flag/remove false positives
 │   └── extract_low_moves.py          #   [Legacy v3.1] Extract 3-10% moves by raw percentage
 │
 ├── batch_scanner.py                  # Market scanner (yfinance batch download)
@@ -290,6 +291,22 @@ Three complementary classification columns, all computed in `utils/volatility.py
 |--------|---------------|
 | `data_complete` | Boolean — row has all minimum required fields for ML use |
 
+### Validation Columns (validate_catalysts.py — added per row after running)
+
+| Column | What It Means |
+|--------|---------------|
+| `v_action` | Recommended action: `OK` · `FIX_DATE` · `FLAG_FALSE_POSITIVE` · `FLAG_ERROR` |
+| `v_is_verified` | Boolean — Perplexity confirmed clinical news on/near the event date |
+| `v_actual_date` | Correct date if `v_action=FIX_DATE` |
+| `v_pr_link` | URL of the primary press release found |
+| `v_pr_date` | Date extracted from the press release page |
+| `v_pr_title` | Title extracted from the press release page |
+| `v_pr_key_info` | Key excerpt from the press release (drug, trial, result) |
+| `v_is_material` | Boolean — Perplexity judged the news as market-moving |
+| `v_confidence` | Perplexity confidence: `High` / `Medium` / `Low` |
+| `v_summary` | Free-text summary from Perplexity explaining its finding |
+| `v_error` | Error message if `v_action=FLAG_ERROR` |
+
 ---
 
 ## What's Working vs What Needs Rebuilding
@@ -362,8 +379,18 @@ python3 -m scripts.cleanup_columns                              # normalize colu
 python3 -m scripts.backfill_price_at_event                      # fill price_before/after/move_2d_pct
 python3 -m scripts.validate_catalysts --dry-run                 # preview noise rows
 python3 -m scripts.validate_catalysts --limit 20                # test with 20 rows
-python3 -m scripts.validate_catalysts                           # full validation run
+python3 -m scripts.validate_catalysts                           # full validation run (~40 min for 1,571 rows)
 python3 -m scripts.validate_catalysts --report                  # generate cleanup report from validated CSV
+
+# Fix validated rows (run after validate_catalysts produces *_validated.csv)
+python3 -m scripts.fix_validated_rows \
+    --input enriched_all_clinical_validated.csv --dry-run       # preview what would change
+python3 -m scripts.fix_validated_rows \
+    --input enriched_all_clinical_validated.csv                 # apply date fixes + flag false positives
+python3 -m scripts.fix_validated_rows \
+    --input enriched_all_clinical_validated.csv \
+    --remove-false-positives                                    # delete false positives instead of flagging
+
 python3 -m scripts.recompute_atr                                # recompute ATR + move classifications
 
 # === Individual tools ===
@@ -377,6 +404,40 @@ python3 batch_scanner.py --min-move 30 --start-date 2024-01-01
 ---
 
 ## Change Log
+
+### v3.4 — Validation & Correction Pipeline (2026-03-06)
+
+**What changed:** Added an end-to-end pipeline to validate noise-class rows and automatically apply corrections.
+
+**Why:** 72.2% of rows (1,571/2,175) have `move_class_norm = Noise` (< 1.5× ATR). A large portion of these are suspected hallucinations — the Perplexity enrichment may have fabricated a clinical data catalyst when none occurred. Before using the dataset for ML, these rows need to be verified.
+
+**New scripts:**
+- `scripts/validate_catalysts.py` — Queries Perplexity for each noise-class row; fetches and parses the identified press release (BusinessWire, GlobeNewsWire, PRNewswire, SEC, generic fallback). Writes v_action + all v_* columns to `*_validated.csv`. Test run on 5 rows found 60% false positive rate.
+- `scripts/fix_validated_rows.py` — Reads `v_action` column and applies corrections:
+  - `FIX_DATE`: updates `event_date`/`event_trading_date`, re-fetches OHLC prices, recomputes `move_pct`, `move_2d_pct`, ATR stack, and all three move classification columns. Marks `v_action=DATE_FIXED`.
+  - `FLAG_FALSE_POSITIVE`: sets `data_complete=False` (or `--remove-false-positives` to delete the row).
+  - `FLAG_ERROR`: skipped (re-run validate_catalysts).
+
+**New columns:** `v_action`, `v_is_verified`, `v_actual_date`, `v_pr_link`, `v_pr_date`, `v_pr_title`, `v_pr_key_info`, `v_is_material`, `v_confidence`, `v_summary`, `v_error`
+
+**Workflow:**
+```
+enriched_all_clinical.csv
+        │
+        ▼
+validate_catalysts.py  (Perplexity + PR fetch per noise row)
+        │
+        ▼
+enriched_all_clinical_validated.csv  (+ v_action column)
+        │
+        ▼
+fix_validated_rows.py  (apply corrections in-place)
+        │
+        ▼
+enriched_all_clinical_validated.csv  (DATE_FIXED + data_complete=False rows)
+```
+
+---
 
 ### v3.3 — Universe Expansion + Full Dataset (2026-03-01)
 

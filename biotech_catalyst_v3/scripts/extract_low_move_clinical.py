@@ -10,8 +10,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+ATR_LOOKBACK = 20
 
-def calculate_atr(prices_df, period=14):
+
+def calculate_atr(prices_df, period=ATR_LOOKBACK):
     """Calculate ATR for a price dataframe."""
     df = prices_df.copy()
     df['prev_close'] = df['Close'].shift(1)
