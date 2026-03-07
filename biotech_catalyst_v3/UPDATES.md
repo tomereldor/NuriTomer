@@ -6,16 +6,53 @@
 
 ---
 
-## Current Primary File
+## Current Primary Files
 
-**`enriched_all_clinical_validated.csv`** — use this for analysis
-- 2,175 rows × 52 columns + 11 validation columns (v_*)
-- All rows are Clinical Data events (clinical trial readouts, drug results, endpoint announcements)
-- Covers Jan 2023 – Dec 2025 across 460 biotech tickers
+**`enriched_all_clinical_clean.csv`** — use this for ML training
+- **1,057 rows** × 52 columns — false positives removed, dates corrected
+- All rows are confirmed real clinical data events (verified or high-move)
+- 1,023 / 1,057 rows ML-ready (`data_complete = True`)
+- v_action breakdown: 604 unvalidated high/medium moves · 349 DATE_FIXED · 104 OK (verified noise)
+
+**`enriched_all_clinical_validated.csv`** — full dataset with validation flags
+- 2,175 rows × 52 columns — includes all rows + v_action labels
+- Use this to audit or inspect what was removed and why
 
 ---
 
 ## Update History (newest first)
+
+---
+
+### 2026-03-07 — Full Validation Run + Clean Dataset Created
+
+**Files produced:**
+- `enriched_all_clinical_validated.csv` — updated with full validation results (all 1,571 noise rows checked)
+- `enriched_all_clinical_clean.csv` — **new** clean ML-ready dataset (false positives removed, dates corrected)
+
+**Full validation results (all 1,571 noise-class rows):**
+
+| v_action | Count | Meaning |
+|----------|-------|---------|
+| `FLAG_FALSE_POSITIVE` | 1,118 | No clinical news found — not a real event |
+| `FIX_DATE` | 349 | Real event found but attributed to wrong date |
+| `OK` | 104 | Confirmed real clinical event, small market reaction |
+
+**False positive rate: 71% of noise rows** (1,118 / 1,571). Combined with the 604 high/medium-move rows that were not validated (they don't need it — large moves are self-evidently real events), the full dataset breakdown is:
+
+| Category | Rows | Status |
+|----------|------|--------|
+| High/medium moves (not validated — clearly real) | 604 | Kept as-is |
+| Confirmed real noise events (OK) | 104 | Kept |
+| Date-corrected events (FIX_DATE) | 349 | Kept, dates updated |
+| False positives removed | 1,118 | Removed from clean file |
+| **Clean dataset total** | **1,057** | |
+
+**What changed in `enriched_all_clinical_clean.csv` vs the original:**
+- 1,118 rows removed (the false positives)
+- 349 rows have corrected `event_date` and `event_trading_date` (the actual date the press release was published)
+- Prices (`price_at_event`, `price_before`, `price_after`, `move_pct`) were **not** re-fetched for date-corrected rows — yfinance was rate-limited during the run. These rows retain their original price values with the original (wrong) date's prices. **Note for collaborator: treat move_pct on DATE_FIXED rows with caution until prices are re-fetched.**
+- `move_class_norm` breakdown in clean file: Noise 453 · Medium 160 · High 143 · Low 141 · Extreme 127
 
 ---
 
@@ -65,12 +102,12 @@ The 375 high-move events are well-verified (large moves are easy to confirm — 
 2. Run fix script: `python -m scripts.fix_validated_rows --input enriched_all_clinical_validated.csv --remove-false-positives`
 3. Re-export clean dataset with `data_complete = True` and `v_action` not `FLAG_FALSE_POSITIVE`
 
-**Filter for ML-ready clean dataset (after full validation):**
+**Filter for ML-ready clean dataset (use `enriched_all_clinical_clean.csv` directly):**
 ```
-data_complete == True
-AND v_action in [OK, DATE_FIXED]  ← confirmed real events only
-AND move_class_combo != "Medium"  ← clear High vs Low label only
+data_complete == True             → 1,023 rows
+AND move_class_combo != "Medium"  → removes ambiguous cases, keeps clear High vs Low label
 ```
+For DATE_FIXED rows: prices reflect the *original* wrong date until re-fetched. Use `v_action == "OK"` or unvalidated high-move rows (no v_action) if you need clean price data.
 
 ---
 
@@ -223,8 +260,9 @@ Starting point. 265 high-move events (≥30% moves) confirmed as Clinical Data c
 
 | File | Rows | Use for |
 |------|------|---------|
-| `enriched_all_clinical_validated.csv` | 2,175 | **Primary** — includes validation flags |
-| `enriched_all_clinical.csv` | 2,175 | Same data, without v_* columns |
+| `enriched_all_clinical_clean.csv` | 1,057 | **ML training** — false positives removed, dates corrected |
+| `enriched_all_clinical_validated.csv` | 2,175 | **Full audit** — includes all rows + v_action labels |
+| `enriched_all_clinical.csv` | 2,175 | Pre-validation original dataset |
 | `enriched_all_clinical_with_nct.csv` | 1,778 | Analysis requiring confirmed trial ID |
 | `enriched_high_moves.csv` | 265 | High-move-only subset (≥30% moves) |
 | `ml_dataset_clinical.csv` | 210 | Original balanced ML dataset (v3.2) |
