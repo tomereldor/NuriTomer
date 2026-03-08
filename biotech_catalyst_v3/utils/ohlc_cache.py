@@ -109,11 +109,11 @@ def _download_single(
     ticker: str,
     start: str,
     end: str,
-    session: requests.Session,
+    session: requests.Session = None,
 ) -> Optional[pd.DataFrame]:
     """Download one ticker via Ticker.history() — more resilient than bulk download."""
     try:
-        t = yf.Ticker(ticker, session=session)
+        t = yf.Ticker(ticker)
         df = t.history(start=start, end=end, auto_adjust=True)
         return _normalize_df(df, ticker)
     except Exception:
@@ -221,7 +221,6 @@ def load_ohlc_bulk(
                     threads=threads,
                     progress=False,
                     group_by="ticker",
-                    session=session,
                 )
                 break
             except Exception as e:

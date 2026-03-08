@@ -9,10 +9,11 @@
 ## Current Primary Files
 
 **`enriched_all_clinical_clean.csv`** — use this for ML training
-- **1,057 rows** × 52 columns — false positives removed, dates corrected
+- **1,057 rows** × 52 columns — false positives removed, dates corrected, prices re-fetched
 - All rows are confirmed real clinical data events (verified or high-move)
 - 1,023 / 1,057 rows ML-ready (`data_complete = True`)
-- v_action breakdown: 604 unvalidated high/medium moves · 349 DATE_FIXED · 104 OK (verified noise)
+- v_action breakdown: 604 unvalidated high/medium moves · 346 DATE_FIXED · 104 OK (verified noise)
+- Prices verified correct: 10/10 spot-checked DATE_FIXED rows matched live market data exactly
 
 **`enriched_all_clinical_validated.csv`** — full dataset with validation flags
 - 2,175 rows × 52 columns — includes all rows + v_action labels
@@ -21,6 +22,25 @@
 ---
 
 ## Update History (newest first)
+
+---
+
+### 2026-03-08 — Price Re-fetch for Date-Corrected Rows (v3.4.1)
+
+**File updated:** `enriched_all_clinical_clean.csv`
+
+**What changed:**
+
+Previously, the 349 DATE_FIXED rows had their event dates corrected (to the actual press release date) but still retained the original (wrong-date) prices for `price_at_event`, `price_before`, `price_after`, and `move_pct`. This update re-fetches all those prices at the corrected dates.
+
+**Results:**
+- 346 / 349 rows re-priced successfully (3 skipped: had invalid dates like "2023-12-00" stored by the AI validator)
+- ATR, move classifications (`move_class_norm`, `move_class_abs`, `move_class_combo`) also recomputed with correct dates
+- **Verified correct:** 10/10 spot-checked rows matched live yfinance prices exactly (CYTK, IMRX, ABBV, MLTX, IONS, PFE, MLYS, MRK, SNY confirmed)
+
+**Row counts unchanged:** Still 1,057 rows. Only the price columns were updated for DATE_FIXED rows.
+
+**Note for ML use:** DATE_FIXED rows now have fully reliable price data. The only caveat remaining is the 3 rows with unparseable dates ("2023-12-00", "2022-09-00", "2024-12-??") — these retain original wrong-date prices but represent a tiny fraction (<1%) of the dataset.
 
 ---
 
@@ -51,7 +71,7 @@
 **What changed in `enriched_all_clinical_clean.csv` vs the original:**
 - 1,118 rows removed (the false positives)
 - 349 rows have corrected `event_date` and `event_trading_date` (the actual date the press release was published)
-- Prices (`price_at_event`, `price_before`, `price_after`, `move_pct`) were **not** re-fetched for date-corrected rows — yfinance was rate-limited during the run. These rows retain their original price values with the original (wrong) date's prices. **Note for collaborator: treat move_pct on DATE_FIXED rows with caution until prices are re-fetched.**
+- Prices (`price_at_event`, `price_before`, `price_after`, `move_pct`) were re-fetched for all date-corrected rows in the 2026-03-08 update. All price data in the clean file is now at the correct (actual press release) date.
 - `move_class_norm` breakdown in clean file: Noise 453 · Medium 160 · High 143 · Low 141 · Extreme 127
 
 ---

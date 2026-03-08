@@ -151,6 +151,13 @@ def fix_date_rows(
         if not new_date or new_date == "nan":
             skipped += 1
             continue
+        # Skip rows with invalid dates (e.g. "2023-12-00")
+        try:
+            pd.Timestamp(new_date)
+        except Exception:
+            print(f"    SKIP invalid date '{new_date}' for {row.get('ticker', '?')}")
+            skipped += 1
+            continue
 
         ticker = str(row.get("ticker", "")).upper()
         ohlc   = ohlc_cache.get(ticker)
