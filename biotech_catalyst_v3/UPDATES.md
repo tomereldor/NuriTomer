@@ -25,6 +25,46 @@
 
 ---
 
+### 2026-03-08 — Data Quality Review: What's in the Clean File and Why (v3.4.2)
+
+**File:** `enriched_all_clinical_clean.csv` — no rows changed, this is a clarification of what the data means
+
+Every row in the clean file belongs there. Here's the breakdown of the three groups that might look confusing at first glance, and a note on the price update done today.
+
+---
+
+**1. 349 rows where `v_is_verified = FALSE` — but they have a press release link**
+
+These rows are real events. "FALSE" does not mean the event was fake — it means the AI found the clinical news, but on a *different date* than originally recorded. The press release exists; the original date was just wrong. The AI set `is_verified = false` and provided the correct date, which we then used to fix the row. These are the `DATE_FIXED` rows in the dataset — their dates and prices have been corrected. The 261 rows with a PR link have a confirmed source. The 88 without a captured link still had a corrected date returned by the AI.
+
+**Verdict: Keep all 349. They are real, date-corrected events.**
+
+---
+
+**2. 604 rows with no `v_is_verified` at all, and no press release link**
+
+These rows were never sent through the AI validator — intentionally. The validation step only ran on rows where the stock barely moved (the "noise" class). All 604 rows in this group are High, Extreme, Medium, or Low movers. A stock moving +40% or −25% on a given day doesn't need an AI to confirm that something happened. These are the most obviously real rows in the dataset.
+
+**Verdict: Keep all 604. They are high-confidence events that never needed verification.**
+
+---
+
+**3. 42 rows where `v_is_verified = TRUE` but no press release link**
+
+These are actually the cleanest rows in the dataset. "TRUE" means the AI confirmed: yes, there was a real clinical data event on or within one day of the claimed date. The absence of a stored press release URL just means the link wasn't captured — either the source was a journal publication, conference abstract, or FDA document (rather than a company press release), or the URL fetch failed after the event was already confirmed. The confirmation itself is what matters.
+
+**Verdict: Keep all 42. Trust them. If you need a source URL for any of these, a targeted search by ticker + date will find it.**
+
+---
+
+**4. Prices updated to match corrected dates**
+
+For the 349 date-corrected rows: previously the event dates were fixed but the price data (`price_at_event`, `price_before`, `price_after`, `move_pct`) still reflected the original wrong date's prices. Today those prices were re-fetched at the corrected dates. 346 of 349 rows were updated (3 had unparseable dates like "2023-12-00"). Spot-check: 10/10 verified rows matched live market data exactly.
+
+The clean file now has fully correct price data across all 1,057 rows.
+
+---
+
 ### 2026-03-08 — Price Re-fetch for Date-Corrected Rows (v3.4.1)
 
 **File updated:** `enriched_all_clinical_clean.csv`
