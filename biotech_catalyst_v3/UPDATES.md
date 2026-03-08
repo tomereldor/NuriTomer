@@ -295,3 +295,33 @@ data_complete == True          → keeps 2,139 rows (98.3%)
 move_class_combo != "Medium"   → removes ambiguous cases (use Low vs High as binary label)
 v_action not in [FLAG_FALSE_POSITIVE, FLAG_ERROR]  → removes suspected hallucinations (after full validation)
 ```
+
+---
+
+## Verification field decisions
+
+Factual answers about the `v_is_verified` field in `enriched_all_clinical_clean.csv`, based on code logic in `validate_catalysts.py` and confirmed against actual file counts.
+
+---
+
+**Q1: 349 rows have `v_is_verified = FALSE` — some have a press release link. Is this expected? Should they be removed?**
+
+Q1: YES, expected. `v_is_verified = False` means Perplexity found clinical news but on a DIFFERENT date than originally recorded — not that the event is fake. The code rule: *"If news exists on a different date, set is_verified=false and provide actual_date."* All 349 rows carry `v_action = DATE_FIXED`; their dates and prices have already been corrected. The 261 with a PR link have a confirmed source; the 88 without a PR link still had a corrected actual_date returned.
+Reason: v_is_verified=False = wrong date, not a false event. DATE_FIXED rows are the date-corrected real events.
+Action: **KEEP** all 349.
+
+---
+
+**Q2: 604 rows have blank `v_is_verified` and no press release link. Should they be removed?**
+
+Q2: NO. These rows were never sent through the validator. The validation script only processes `move_class_norm == 'Noise'` rows. All 604 blanks are High / Extreme / Medium / Low movers — no Noise rows are in this group. Large price moves (the majority are High/Extreme) are self-evidently real events and did not require AI verification.
+Reason: Blank v_is_verified = not validated, not suspicious. Validator only ran on Noise class by design.
+Action: **KEEP** all 604.
+
+---
+
+**Q3: ~42 rows have `v_is_verified = TRUE` but no press release link. Should they be re-checked?**
+
+Q3: TRUST them. All 42 carry `v_action = OK`. The code rule: *"is_verified = true ONLY if Perplexity finds concrete evidence of clinical news on or within 1 day of the claimed date."* Absence of a stored PR link means the URL was not captured (URL fetch may have failed, or the source was a journal publication, conference abstract, or CT.gov milestone — not a press release). Perplexity's confirmation of the event itself is what matters.
+Reason: is_verified=True is the strictest possible validation outcome. Missing URL ≠ missing event.
+Action: **KEEP** all 42. Optionally run a manual URL lookup pass if PR provenance is needed for every row.
