@@ -4,12 +4,17 @@
 
 ## Current Primary Files
 
-**`enriched_all_clinical_clean.csv`** — use this for ML training
-- **1,057 rows** × 52 columns — false positives removed, dates corrected, prices re-fetched
-- All rows are confirmed real clinical data events (verified or high-move)
-- 1,023 / 1,057 rows ML-ready (`data_complete = True`)
-- v_action breakdown: 604 unvalidated high/medium moves · 346 DATE_FIXED · 104 OK (verified noise)
-- Prices verified correct: 10/10 spot-checked DATE_FIXED rows matched live market data exactly
+**`enriched_all_clinical_clean_v2.csv`** — use this for ML training ← latest
+- **862 rows** — false positives removed from both noise class AND high-move class
+- All rows are confirmed real clinical events with correct dates and prices
+- v_action breakdown: 550 DATE_FIXED · 292 OK · 8 error/unresolved · 12 data_complete=False
+
+**`enriched_all_clinical_clean_pr_backfill.csv`** — pre-fix audit file
+- **1,057 rows** — full clean file with all 604 high-move rows now verified (v_* columns filled)
+- Use this to inspect v_action decisions before the corrections are applied
+
+**`enriched_all_clinical_clean.csv`** — previous clean file (superseded)
+- 1,057 rows — noise-class FPs removed; high-move group not yet verified
 
 **`enriched_all_clinical_validated.csv`** — full dataset with validation flags
 - 2,175 rows × 52 columns — includes all rows + v_action labels
@@ -58,6 +63,40 @@ These are actually the cleanest rows in the dataset. "TRUE" means the AI confirm
 For the 349 date-corrected rows: previously the event dates were fixed but the price data (`price_at_event`, `price_before`, `price_after`, `move_pct`) still reflected the original wrong date's prices. Today those prices were re-fetched at the corrected dates. 346 of 349 rows were updated (3 had unparseable dates like "2023-12-00"). Spot-check: 10/10 verified rows matched live market data exactly.
 
 The clean file now has fully correct price data across all 1,057 rows.
+
+---
+
+### 2026-03-09 — Fix Dates + Remove FPs from High-Move Group → Clean v2 (v3.5.1)
+
+**New file:** `enriched_all_clinical_clean_v2.csv`
+
+**What this does:**
+
+Takes the backfill file (where all 604 high-move rows were now verified) and applies the same correction pipeline that was previously run only on noise rows:
+- Date-corrected rows: update `event_date` to the actual press release date, re-fetch prices, recompute ATR and move classifications
+- False positives: removed
+
+**Results:**
+
+| Action | Count |
+|--------|-------|
+| FIX_DATE rows corrected (dates + prices re-fetched) | 216 |
+| FIX_DATE rows skipped (AI returned unparseable date) | 7 |
+| False positives removed | 195 |
+| **Rows remaining** | **862** |
+
+**What's in `enriched_all_clinical_clean_v2.csv` (862 rows):**
+
+| Group | Rows | v_action | Notes |
+|-------|------|----------|-------|
+| Noise-class confirmed real events | 104 | OK | From original noise validation |
+| Noise-class date-corrected events | 346 | DATE_FIXED | Corrected in v3.4.1 |
+| High-move confirmed real events | 188 | OK | Newly verified in v3.5 |
+| High-move date-corrected events | 216 | DATE_FIXED | Corrected in this step |
+| Unresolved (error / invalid date) | 8 | FLAG_ERROR / FIX_DATE | Retain original dates |
+| **Total** | **862** | | |
+
+**Use this file for ML training.** It is the most complete clean dataset: all rows are real clinical events with correct dates and correct price data. False positives have been removed from both the noise class (done in v3.4) and the high-move class (done in this step).
 
 ---
 
