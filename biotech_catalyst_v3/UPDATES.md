@@ -61,6 +61,43 @@ The clean file now has fully correct price data across all 1,057 rows.
 
 ---
 
+### 2026-03-09 — PR Backfill + Verification for High-Move Rows (v3.5)
+
+**New file:** `enriched_all_clinical_clean_pr_backfill.csv` (1,057 rows — same as clean file, with v_* columns now filled for the previously unverified group)
+
+**Background:**
+
+Until now, the 604 high/extreme/medium/low-move rows in the clean file had never been sent through the AI validator — we assumed large price moves were self-evidently real. That assumption turns out to be partially wrong. This update runs full Perplexity verification on all 604 of those rows to find press release links and confirm whether the clinical event attribution is correct.
+
+**Results — all 604 rows processed:**
+
+| Outcome | Count | What it means |
+|---------|-------|---------------|
+| Verified (OK) | 188 | Real clinical event on the correct date — confirmed |
+| Wrong date (FIX_DATE) | 220 | Real event found but date is off by 1–several days |
+| False positive | 195 | No clinical news found — the catalyst association is likely wrong |
+| Error | 1 | API failure — could not verify |
+| **Total** | **604** | |
+
+**274 new press release links added** across the verified and date-corrected rows.
+
+**False positive rate: 32.3%** — lower than the 71% found in the noise class, but still significant. Roughly 1 in 3 high-move rows turns out to have no verifiable clinical catalyst. These are cases where the stock moved dramatically for a non-clinical reason (earnings, acquisition, FDA label change, general market move) but was attributed to a clinical trial completion date.
+
+**What this means for ML:**
+
+The 195 false positives in the high-move class are a problem: they are mislabeled as "clinical data event with a large market reaction" when in fact no clinical announcement happened. The clean file (`enriched_all_clinical_clean.csv`) remains unchanged. The backfill file (`enriched_all_clinical_clean_pr_backfill.csv`) gives you the full picture — use its `v_action` column to decide which rows to include:
+
+```
+v_action == "OK"           → 188 rows — cleanest verified high-move events
+v_action == "FIX_DATE"     → 220 rows — real events, dates need correcting before use
+v_action is NaN            → 453 rows — noise class (already cleaned in the base file)
+v_action == "FLAG_FALSE_POSITIVE" → 195 rows — exclude from training
+```
+
+**No changes to the original `enriched_all_clinical_clean.csv`** — this is a new separate file.
+
+---
+
 ### 2026-03-08 — Price Re-fetch for Date-Corrected Rows (v3.4.1)
 
 **File updated:** `enriched_all_clinical_clean.csv`

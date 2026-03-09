@@ -580,14 +580,19 @@ def validate_dataset(
     dry_run:       bool = False,
     skip_verified: bool = True,
     save_every:    int  = 25,
+    target_blank:  bool = False,
 ) -> pd.DataFrame:
     print(f"\nLoading {input_file} ...")
     df = pd.read_csv(input_file)
     print(f"  {len(df):,} rows × {len(df.columns)} columns\n")
 
-    noise_df = identify_noise_rows(df)
+    if target_blank:
+        noise_df = df[df["v_is_verified"].isna()].copy()
+        print(f"Target: {len(noise_df):,} rows with blank v_is_verified")
+    else:
+        noise_df = identify_noise_rows(df)
     if noise_df.empty:
-        print("\nNo noise candidates — dataset looks clean.")
+        print("\nNo candidates — nothing to process.")
         return df
 
     if limit:
@@ -752,6 +757,8 @@ if __name__ == "__main__":
                         help=f"Noise threshold in ATR multiples (default: {ATR_NOISE_THRESHOLD})")
     parser.add_argument("--save-every",    type=int,   default=25,
                         help="Save progress every N rows (default: 25)")
+    parser.add_argument("--target-blank",  action="store_true",
+                        help="Process rows with blank v_is_verified instead of Noise rows")
     args = parser.parse_args()
 
     ATR_NOISE_THRESHOLD = args.atr_threshold
@@ -767,4 +774,5 @@ if __name__ == "__main__":
             limit         = args.limit,
             dry_run       = args.dry_run,
             save_every    = args.save_every,
+            target_blank  = args.target_blank,
         )
