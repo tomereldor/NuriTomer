@@ -26,6 +26,54 @@
 
 ---
 
+### 2026-03-09 — PR Discovery Pipeline for Dataset Expansion (v3.6)
+
+**New script:** `scripts/extend_with_pr_discovery.py`
+
+Adds a Perplexity-powered discovery pipeline to find new clinical catalyst events
+**not already in the dataset** and extend `enriched_all_clinical_clean_v2.csv`.
+
+#### How it works
+
+| Stage | What happens |
+|-------|-------------|
+| 1 — Discovery | Runs 20 targeted Perplexity sonar-pro search queries across Phase 3/2/1, FDA decisions, interim analyses, and time periods 2023–2025 |
+| 2 — Verification | Fetches each PR URL, applies keyword relevance filter, deduplicates against existing dataset by (ticker, date) |
+| 3 — OHLC enrichment | Downloads price history, computes price_before/at/after, move_pct, ATR, all move classifications |
+| 4 — Output | Accepted candidates + rejected (with rejection reason) saved to separate CSVs |
+
+#### Output files (not yet run at full scale)
+- `extended_pr_discovery_raw.csv` — intermediate: all events returned by Perplexity before filtering
+- `extended_relevant_clinical_candidates.csv` — accepted new rows, schema matches `clean_v2`
+- `extended_relevant_clinical_rejected.csv` — rejected rows with `_reject_reason` for debugging
+
+#### Key design choices
+- Only accepts events where `abs(move_pct) >= 3%` (configurable via `--min-move`)
+- Deduplicates by exact (ticker, event_date) — no near-duplicates
+- New rows marked `v_action=DISCOVERED`, `v_is_verified=True` (Perplexity confirmed)
+- CT.gov fields (nct_id, ct_phase, etc.) left blank — backfillable via `fix_missing_nct.py`
+
+#### Usage
+```bash
+# Test run — 2 queries, no output written
+python -m scripts.extend_with_pr_discovery --dry-run --limit 2
+
+# Full run
+python -m scripts.extend_with_pr_discovery \
+    --existing enriched_all_clinical_clean_v2.csv \
+    --candidates extended_relevant_clinical_candidates.csv \
+    --rejected  extended_relevant_clinical_rejected.csv
+
+# Resume from saved Stage 1 results (skip API calls)
+python -m scripts.extend_with_pr_discovery \
+    --from-raw  extended_pr_discovery_raw.csv \
+    --existing  enriched_all_clinical_clean_v2.csv \
+    --candidates extended_relevant_clinical_candidates.csv \
+    --rejected  extended_relevant_clinical_rejected.csv
+```
+
+---
+
 ### 2026-03-08 — Data Quality Review: What's in the Clean File and Why (v3.4.2)
 
 **File:** `enriched_all_clinical_clean.csv` — no rows changed, this is a clarification of what the data means
