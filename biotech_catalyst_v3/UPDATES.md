@@ -1,8 +1,4 @@
-# Dataset Updates Log
-
-> Written for subject matter experts and collaborators.
-> Focus: **what changed in the data**, what the output files now contain, and what it means.
-> Updated with every meaningful data change.
+# Outcomes Updates Log
 
 ---
 
