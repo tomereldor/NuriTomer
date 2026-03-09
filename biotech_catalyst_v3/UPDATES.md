@@ -4,7 +4,19 @@
 
 ## Current Primary Files
 
-**`enriched_all_clinical_clean_v2.csv`** — use this for ML training ← latest
+**`enriched_all_clinical_clean_v2_linked.csv`** — clean_v2 + event source links ← latest enriched
+- **862 rows × 53 cols** — clean_v2 plus `best_event_link` column
+- Link coverage: 586 rows have `v_pr_link` · 270 rows backfilled via `best_event_link` · **856/862 (99.3%) have at least one source link**
+- Only 6 rows remain with no link at all
+- `best_event_link` tiers: official PR wires > SEC/FDA > IR/CT.gov/journals > reputable biotech news
+
+**`clean_v2_mesh.csv`** — clean_v2 + MeSH Level-1 disease classification
+- **862 rows × 57 cols** — clean_v2 plus `mesh_level1`, `mesh_level1_reason`, `mesh_branches_raw`, `mesh_terms_raw`, `ct_conditions_raw`
+- MeSH filled: 474/862 (55%) — 240 single_branch · 183 condition_match · 51 priority_list
+- No branches returned: 176 rows (20%) · No NCT ID: 47 rows (5%)
+- Top categories: Neoplasms 141 · Nervous System Diseases 68 · Immune System Diseases 52 · Respiratory Tract Diseases 51 · Infectious Diseases 43
+
+**`enriched_all_clinical_clean_v2.csv`** — use this for ML training (base)
 - **862 rows** — false positives removed from both noise class AND high-move class
 - All rows are confirmed real clinical events with correct dates and prices
 - v_action breakdown: 550 DATE_FIXED · 292 OK · 8 error/unresolved · 12 data_complete=False
@@ -23,6 +35,61 @@
 ---
 
 ## Update History (newest first)
+
+---
+
+### 2026-03-09 — MeSH Level-1 Disease Classification (v3.7)
+
+**File:** `clean_v2_mesh.csv` (862 rows × 57 cols)
+
+Added standardized MeSH Level-1 disease category to every row in clean_v2 using the ClinicalTrials.gov API v2.
+
+**How it works:** For each `nct_id`, the script fetches `conditionBrowseModule.ancestors` (full MeSH hierarchy) and intersects with a 10-branch priority list. When multiple branches match, condition text keyword matching picks the most relevant one.
+
+**Coverage (862 rows):**
+
+| Reason | Count |
+|--------|-------|
+| single_branch | 240 |
+| condition_match | 183 |
+| priority_list | 51 |
+| no_branches | 176 |
+| no_nct_id | 47 |
+
+**Disease distribution (474 rows with MeSH):**
+
+| Category | Count |
+|----------|-------|
+| Neoplasms | 141 |
+| Nervous System Diseases | 68 |
+| Immune System Diseases | 52 |
+| Respiratory Tract Diseases | 51 |
+| Infectious Diseases | 43 |
+| Cardiovascular Diseases | 33 |
+| Endocrine System Diseases | 28 |
+| Digestive System Diseases | 27 |
+| Skin Diseases | 17 |
+| Musculoskeletal Diseases | 14 |
+
+**Script:** `scripts/mesh_level1_from_nct.py`
+
+---
+
+### 2026-03-09 — Event Source Link Backfill (v3.6.2)
+
+**File:** `enriched_all_clinical_clean_v2_linked.csv` (862 rows × 53 cols)
+
+Added `best_event_link` column to fill source links for the 276 rows missing `v_pr_link`. Used Perplexity to find the highest-quality credible link per event.
+
+**Link coverage after backfill:**
+- `v_pr_link` filled: 586 rows (68%)
+- `best_event_link` backfilled: 270 rows (additional)
+- **Has at least one source link: 856/862 (99.3%)**
+- Still no link: 6 rows
+
+**Bonus:** 174 DATE_FIXED rows that received a confirmed link were promoted to `v_is_verified=True`.
+
+**Script:** `scripts/backfill_event_links.py`
 
 ---
 
@@ -497,15 +564,17 @@ Starting point. 265 high-move events (≥30% moves) confirmed as Clinical Data c
 
 ## Key Files — Quick Reference
 
-| File | Rows | Use for |
-|------|------|---------|
-| `enriched_all_clinical_clean.csv` | 1,057 | **ML training** — false positives removed, dates corrected |
-| `enriched_all_clinical_validated.csv` | 2,175 | **Full audit** — includes all rows + v_action labels |
-| `enriched_all_clinical.csv` | 2,175 | Pre-validation original dataset |
-| `enriched_all_clinical_with_nct.csv` | 1,778 | Analysis requiring confirmed trial ID |
-| `enriched_high_moves.csv` | 265 | High-move-only subset (≥30% moves) |
-| `ml_dataset_clinical.csv` | 210 | Original balanced ML dataset (v3.2) |
-| `biotech_universe_expanded.csv` | 460 | The 460 biotech tickers tracked |
+| File | Rows | Cols | Use for |
+|------|------|------|---------|
+| `enriched_all_clinical_clean_v2_linked.csv` | 862 | 53 | **ML training + source links** — clean_v2 + best_event_link (99.3% covered) |
+| `clean_v2_mesh.csv` | 862 | 57 | **Disease analysis** — clean_v2 + MeSH Level-1 classification |
+| `enriched_all_clinical_clean_v2.csv` | 862 | 52 | Base clean dataset (use linked or mesh version above) |
+| `enriched_all_clinical_validated.csv` | 2,175 | 52 | **Full audit** — all rows + v_action labels |
+| `enriched_all_clinical.csv` | 2,175 | 52 | Pre-validation original dataset |
+| `enriched_all_clinical_with_nct.csv` | 1,778 | — | Analysis requiring confirmed trial ID |
+| `enriched_high_moves.csv` | 265 | — | High-move-only subset (≥30% moves) |
+| `ml_dataset_clinical.csv` | 210 | — | Original balanced ML dataset (v3.2) |
+| `biotech_universe_expanded.csv` | 460 | — | The 460 biotech tickers tracked |
 
 ## Recommended Filters for Clean ML Use
 
