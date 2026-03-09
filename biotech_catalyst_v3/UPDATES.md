@@ -26,6 +26,65 @@
 
 ---
 
+### 2026-03-09 — Data Integrity Audit: v_is_verified=FALSE Rows (v3.6.1)
+
+Deep audit of the 181 rows in `clean_v2` where `v_is_verified=FALSE` and no `v_pr_link`.
+
+#### What v_is_verified=FALSE actually means
+
+It does **not** mean "fake event." Per the validation prompt (rule 2):
+> *"If news exists on a DIFFERENT date, set is_verified=false and provide actual_date."*
+
+FALSE = real event, but the original scan attributed it to the wrong date.
+
+#### Date shift analysis
+
+All 562 DATE_FIXED rows show a 0-day shift when comparing `event_date` vs `v_actual_date` — this is expected because `fix_validated_rows.py` **overwrites** `event_date` in place with the corrected date. The original (wrong) dates are no longer in the file. The v_summary text confirms corrections ranged from days to months.
+
+#### Financial data alignment (corrected date)
+
+Of 562 DATE_FIXED rows:
+
+| Status | Count |
+|--------|-------|
+| `event_trading_date` aligns with corrected date (≤4 trading days) | **546** (97%) |
+| Misaligned — prices may be on wrong trading day | **13** (2.3%) |
+| Can't verify (unparseable v_actual_date) | **3** |
+
+#### Why 181 rows have no PR link
+
+`v_pr_link` is the only link/URL column in `clean_v2` — no alternative source columns exist.
+
+The validation prompt explicitly allows `"pr_link": null` when no official PR exists on businesswire/globenewswire/prnewswire/sec.gov. Perplexity returns null when the event was found via a news article, conference presentation, or earnings mention. This is a code design decision, not a bug.
+
+Confidence for the 181 FALSE+no_pr rows:
+- **high: 135 (74%)** — Perplexity was confident about the event, just had no official PR URL
+- medium: 42 (23%)
+- low: 3 (2%), NaN: 1 (FLAG_ERROR)
+
+#### State combinations explained
+
+| State | Count | How it arises | Expected? |
+|-------|-------|---------------|-----------|
+| `FALSE` + `DATE_FIXED` | 562 | Perplexity confirmed event on different date; fix applied; `v_is_verified` is never reset after fix | ✅ Yes |
+| `FALSE` + `FIX_DATE` | 7 | Perplexity returned an unparseable date (`2023-12-00`, `2025-??-??`); fix skipped; prices still on original wrong date | ⚠️ No |
+| `FALSE` + `FLAG_ERROR` | 1 | API failure during validation; event status unknown | ⚠️ No |
+| `FALSE` + no `v_pr_link` | 181 | Perplexity found event but could not provide official PR URL; allowed by prompt design | ✅ Yes |
+
+#### Recommended action for 181 rows
+
+| Group | Count | Action |
+|-------|-------|--------|
+| `DATE_FIXED`, prices aligned | 163 | **KEEP** — event confirmed, date and prices correct |
+| `DATE_FIXED`, prices misaligned | 8 | **MANUAL REVIEW** — prices may correspond to wrong trading day |
+| `DATE_FIXED`, alignment unverifiable | 3 | **KEEP** — low risk |
+| `FIX_DATE` (invalid AI date, fix skipped) | 6 | **MANUAL REVIEW** — event date unconfirmed, prices on original (wrong) date |
+| `FLAG_ERROR` (API failure) | 1 | **REVALIDATE** on next `validate_catalysts.py` run |
+
+**Summary: 166/181 are safe to keep as-is. 14 warrant follow-up (8 misaligned + 6 FIX_DATE).**
+
+---
+
 ### 2026-03-09 — PR Discovery Pipeline for Dataset Expansion (v3.6)
 
 **New script:** `scripts/extend_with_pr_discovery.py`
