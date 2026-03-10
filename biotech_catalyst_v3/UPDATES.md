@@ -4,13 +4,18 @@
 
 ## What's in this folder
 
-### Data files (2)
+### Data files
 
-**`enriched_all_clinical_clean_v2.csv`** ← THE ONE FILE TO USE
-- **862 rows × 58 cols** — master dataset, all enrichments merged
+**`ml_dataset_mesh_final.csv`** ← THE ONE FILE TO USE FOR ML
+- **831 rows × 63 cols** — fully ML-ready: deduped, move_pct fixed, mesh 100% filled
+- `mesh_level1` filled for all 831 rows across 11 categories (incl. `Other / Non-Disease`)
+- `mesh_level1_encoded` numeric feature (1–10 deterministic + 11 for Other)
+- `row_ready` flag: filter `row_ready == True` for the cleanest training subset
+- `mesh_resolution_method` + `mesh_recovery_method` trace how each mesh was derived
+
+**`enriched_all_clinical_clean_v2.csv`** — master source dataset (do not use directly for ML)
+- **862 rows × 58 cols** — all pipeline enrichments merged, used as input to the ML pipeline
 - False positives removed · dates corrected · prices re-fetched
-- Source links: 856/862 (99.3%) have ≥1 link (`v_pr_link` or `best_event_link`)
-- MeSH Level-1 classification: 597 rows classified across 10 disease branches (265 still missing — recoverable)
 - v_action: 550 DATE_FIXED · 292 OK · 8 error/unresolved
 
 **`biotech_universe_expanded.csv`** — ticker universe reference
@@ -738,7 +743,8 @@ Starting point. 265 high-move events (≥30% moves) confirmed as Clinical Data c
 
 | File | Rows | Cols | Use for |
 |------|------|------|---------|
-| `enriched_all_clinical_clean_v2.csv` | 862 | 58 | **Everything** — master file, all enrichments merged ← USE THIS |
+| `ml_dataset_mesh_final.csv` | 831 | 63 | **ML training** — fully prepared, mesh 100% filled ← USE THIS FOR ML |
+| `enriched_all_clinical_clean_v2.csv` | 862 | 58 | **Source of truth** — master dataset, pipeline input |
 | `biotech_universe_expanded.csv` | 460 | — | The 460 biotech tickers tracked (reference) |
 | `archive/*` | — | — | All previous intermediate and superseded files |
 
