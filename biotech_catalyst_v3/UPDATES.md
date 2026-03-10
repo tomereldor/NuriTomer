@@ -87,6 +87,45 @@ The 218 rows with nct_id but no mesh are fully recoverable — the NCT API call 
 
 ---
 
+### 2026-03-10 — Final mesh_level1 resolution: 831/831 filled (v3.12)
+
+**File updated in place:** `ml_dataset_mesh_final.csv` (831 rows × 63 cols, 100% mesh filled)
+
+Resolved the last 56 rows missing `mesh_level1` using a 4-step staged pipeline (`finalize_mesh.py`):
+
+| Step | Method | Rows |
+|------|--------|------|
+| 1 | Non-disease detection — indication/text keywords (`Safety`, `Pharmacokinetic`, `Healthy Volunteers`, no-data placeholders) | 8 |
+| 2 | Acronym dictionary — word-boundary regex (`PCED`→NS, `AMD`→NS, `AML`→Neoplasms, `NMIBC`→Neoplasms, …) | 9 |
+| 3 | Mechanism/phrase matching — 40+ terms (`dry eye`, `myocarditis`, `corneal`, `kcc2`, `glabellar`, `kidney transplant`, `amyloid`, `laromestrocel`, …) | 32 |
+| 4 | LLM inference via Perplexity `sonar` — only the 7 rows with no disease text anywhere | 7 |
+| **Total** | | **56 / 56** |
+
+**LLM results (7 rows):**
+- 5× TVGN 489 → `Infectious Diseases` (Perplexity identified COVID-19 from drug name alone)
+- HUMA V007 → `Other / Non-Disease` (dialysis vascular access graft — no underlying disease)
+- OMER → `Other / Non-Disease` (Phase 3 result with no drug or indication in any field)
+
+**Final mesh_level1 distribution:**
+
+| Category | Rows |
+|----------|------|
+| Neoplasms | 237 |
+| Nervous System Diseases | 168 |
+| Immune System Diseases | 81 |
+| Endocrine System Diseases | 78 |
+| Respiratory Tract Diseases | 68 |
+| Infectious Diseases | 60 |
+| Cardiovascular Diseases | 50 |
+| Digestive System Diseases | 37 |
+| Skin Diseases | 23 |
+| Musculoskeletal Diseases | 19 |
+| Other / Non-Disease | 10 |
+
+**Use `ml_dataset_mesh_final.csv` as the ML input.** Filter `row_ready == True` for the cleanest subset.
+
+---
+
 ### 2026-03-10 — MeSH Recovery Pass + ML Dataset Files (v3.10)
 
 **New files:**

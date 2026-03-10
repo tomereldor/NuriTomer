@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import pandas as pd
+import requests
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = Path(__file__).parent.resolve()
@@ -342,35 +343,36 @@ def _build_user_prompt(row: pd.Series) -> str:
 
 def _llm_classify(rows: pd.DataFrame) -> dict:
     """
-    Call Claude claude-haiku-4-5 for each row.
+    Call Perplexity sonar for each row.
     Returns {index: (category, reason)} for successfully classified rows.
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("PERPLEXITY_API_KEY", "")
     if not api_key:
-        print("\n  [WARN] ANTHROPIC_API_KEY not set — skipping LLM step.")
-        print("         Add it to .env as: ANTHROPIC_API_KEY=sk-ant-...")
+        print("\n  [WARN] PERPLEXITY_API_KEY not set — skipping LLM step.")
+        print("         Add it to .env as: PERPLEXITY_API_KEY=pplx-...")
         return {}
 
-    try:
-        import anthropic
-    except ImportError:
-        print("\n  [WARN] anthropic package not installed — skipping LLM step.")
-        print("         Install: pip3 install anthropic")
-        return {}
-
-    client  = anthropic.Anthropic(api_key=api_key)
     results = {}
 
     for idx, row in rows.iterrows():
         prompt = _build_user_prompt(row)
         try:
-            msg = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=120,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
+            resp = requests.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": "sonar",
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user",   "content": prompt},
+                    ],
+                    "temperature": 0,
+                    "max_tokens": 120,
+                },
+                timeout=20,
             )
-            raw = msg.content[0].text.strip()
+            resp.raise_for_status()
+            raw = resp.json()["choices"][0]["message"]["content"].strip()
             # Strip markdown fences if model wrapped in ```json```
             raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.DOTALL).strip()
             parsed = json.loads(raw)
