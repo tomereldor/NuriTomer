@@ -87,6 +87,59 @@ The 218 rows with nct_id but no mesh are fully recoverable — the NCT API call 
 
 ---
 
+### 2026-03-10 — MeSH Recovery Pass + ML Dataset Files (v3.10)
+
+**New files:**
+- `ml_dataset_v1.csv` — output of `prepare_ml_dataset.py` (831 rows × 61 cols): deduped, move_pct anomalies fixed, `row_ready` flag, `mesh_level1_encoded`
+- `ml_dataset_mesh_recovered.csv` — output of `recover_mesh.py` (831 rows × 63 cols): additional mesh recovery pass, adds `mesh_recovery_method` and `mesh_source_term` columns
+
+**New scripts:**
+- `prepare_ml_dataset.py` — full ML prep pipeline (Steps 1–9: load, audit, fix, recover mesh, encode, flag, dedup, drop zero-variance cols, save)
+- `recover_mesh.py` — targeted mesh recovery pass; splits rows into Group A (has nct_id) and Group B (no nct_id), runs deterministic 4-level fallback hierarchy per group
+
+**mesh_level1 coverage in `ml_dataset_mesh_recovered.csv`:**
+
+| Category | Rows |
+|----------|------|
+| Neoplasms | 234 |
+| Nervous System Diseases | 149 |
+| Immune System Diseases | 76 |
+| Endocrine System Diseases | 74 |
+| Respiratory Tract Diseases | 68 |
+| Infectious Diseases | 54 |
+| Cardiovascular Diseases | 47 |
+| Digestive System Diseases | 36 |
+| Skin Diseases | 20 |
+| Musculoskeletal Diseases | 17 |
+| **Still missing** | **56** |
+
+**Recovery this pass (65 rows resolved):**
+
+| Method | Rows | What happened |
+|--------|------|---------------|
+| `B2_summary_keyword` | 26 | Keyword match on `catalyst_summary` for no-nct rows |
+| `A1_terms_raw_exact` | 18 | `mesh_terms_raw` contained the branch name exactly (e.g. `"Nervous System Diseases"`) |
+| `A3_ctgov_conditions_nlm` | 8 | CT.gov conditions → NLM tree-number lookup |
+| `A3_ctgov_ancestors_exact` | 6 | CT.gov ancestors matched a branch name directly |
+| `A2_*_keyword` | 5 | Keyword match on `ct_conditions` or `indication` columns |
+| `A3_ctgov_ancestors_keyword` | 2 | CT.gov ancestors resolved via keyword match |
+
+**Why the original mesh script missed these rows — three root causes:**
+
+1. **Exact branch name in `mesh_terms_raw` was never checked.** The original `mesh_level1_from_nct.py` only queried CT.gov `ancestors` to derive branches. `prepare_ml_dataset.py` Step 4.2 looked at `mesh_terms_raw` but used keyword-only matching. So when `mesh_terms_raw` contained `"Nervous System Diseases"` literally, the keyword matcher searched for `"neuro"`, `"alzheimer"`, etc. — and found nothing. The branch name is not one of its own keywords. `recover_mesh.py` adds an exact-name check first, catching 18 rows instantly.
+
+2. **CT.gov `ancestors` was empty for these specific trials.** Many trials in CT.gov v2 have no `conditionBrowseModule.ancestors` populated — they get filed as `mesh_level1_reason = no_branches` and fall through. These trials *do* have data in `meshes` (direct MeSH terms) and `conditions`, which the original script never queried. `recover_mesh.py` hits all three sub-fields (`browseBranches` → `meshes` → `ancestors` → `conditions` → NLM) per trial.
+
+3. **Keyword gaps for valid but uncommon disease names.** Terms like `"Endometriosis"`, `"Primary hyperoxaluria"`, `"Dry Eye Syndromes"`, `"Familial chylomicronemia"` never appeared in `_BRANCH_KEYWORDS`. These are resolved by the NLM MeSH Lookup API which maps the disease's tree-number prefix (e.g. `C13` → Endocrine, `C18` → Endocrine, `C11` → Nervous System) rather than relying on the keyword list.
+
+**Remaining 56 unresolved rows fall into two genuinely hard buckets:**
+- Non-disease trial conditions: `"Safety"`, `"Pharmacokinetic"`, `"Healthy Volunteers"`, `"Kidney Transplant"` — no disease category to assign
+- Disease mentioned only by acronym or mechanism in free text: `"R/R AML"` (AML not in keywords), `"KCC2 activator"` (mechanism, not disease), `"p-tau 181 amyloid PET"` (biomarker language) — would require LLM inference to resolve
+
+**Use `ml_dataset_mesh_recovered.csv` as the current ML input.** Filter `row_ready == True` for the cleanest subset.
+
+---
+
 ### 2026-03-10 — Repository cleanup: stale scripts archived, data file relocated
 
 Inspected and relocated three files that were sitting in the project root without a clear purpose:
