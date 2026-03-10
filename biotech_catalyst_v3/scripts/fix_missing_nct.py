@@ -165,7 +165,7 @@ def fix_missing_nct(
             "final_candidates": len(entry.get("final_candidates", [])),
         })
     pd.DataFrame(summary_rows).to_csv(
-        os.path.join(base_dir, "nct_search_results.csv"), index=False
+        os.path.join(base_dir, "data", "nct_search_results.csv"), index=False
     )
 
     # Save updated CSV

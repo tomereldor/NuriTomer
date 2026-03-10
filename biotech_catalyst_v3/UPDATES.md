@@ -2,22 +2,100 @@
 
 ---
 
-## Current Primary File
+## What's in this folder
+
+### Data files (2)
 
 **`enriched_all_clinical_clean_v2.csv`** ← THE ONE FILE TO USE
 - **862 rows × 58 cols** — master dataset, all enrichments merged
 - False positives removed · dates corrected · prices re-fetched
 - Source links: 856/862 (99.3%) have ≥1 link (`v_pr_link` or `best_event_link`)
-- MeSH Level-1 classification: 474 rows classified across 10 disease branches
+- MeSH Level-1 classification: 597 rows classified across 10 disease branches (265 still missing — recoverable)
 - v_action: 550 DATE_FIXED · 292 OK · 8 error/unresolved
-- All other files → `archive/`
 
-**`biotech_universe_expanded.csv`** — reference (not a dataset)
+**`biotech_universe_expanded.csv`** — ticker universe reference
 - 460 biotech tickers ($50M–$10B market cap) used as the tracking universe
+- Stays here because it is a stable input to pipeline scripts, not a pipeline output
+- Update this if the tracked ticker list changes
+
+### Code folders
+
+- `scripts/` — all pipeline scripts (run with `python -m scripts.<name>`)
+- `utils/` — shared utilities (ATR, volatility, data quality)
+- `clients/` — API clients (ClinicalTrials.gov, etc.)
+- `notebooks/` — exploration notebooks
+
+### Archive
+
+- `archive/` — all superseded CSVs and old scripts (gitignored, local backup only)
+  - includes all previous intermediate datasets, old pipeline attempts, trace files
 
 ---
 
 ## Update History (newest first)
+
+---
+
+### 2026-03-10 — ML Readiness Audit (v3.9)
+
+**File:** `enriched_all_clinical_clean_v2.csv` — no rows changed, diagnosis only
+
+Full ML-readiness audit of the master dataset. Short answer: **not yet ready for production training, but close.** 589/862 rows (68%) are fully complete on all core ML features today. The remaining 273 rows are blocked almost entirely by one issue: missing `mesh_level1`.
+
+**Audit findings — missingness:**
+
+| Column | Missing | % | Status |
+|--------|---------|---|--------|
+| `mesh_level1` | 265 | 30.7% | 🔴 Primary blocker |
+| `price_before` | 200 | 23.2% | 🟡 Recoverable via `price_at_event` proxy (96%) |
+| `nct_id` | 47 | 5.5% | 🟡 All real clinical events; ~30 recoverable via retry |
+| `analyst_target` | 52 | 6.0% | 🟢 Non-critical |
+| `ct_phase` | 57 | 6.6% | 🟢 Partial substitute via `phase` column |
+| `move_pct` | 8 | 0.9% | 🟢 Near-complete |
+| `market_cap_m` | 0 | 0% | ✅ Perfect |
+| `catalyst_type` | 0 | 0% | ⚠️ 100% populated but **zero variance** (all "Clinical Data") — drop as feature |
+
+**Other findings:**
+- **109 duplicate rows** across 46 ticker+date groups — multiple drugs from same company on same date. Must deduplicate before training to avoid data leakage.
+- **10 rows with `move_pct = 0`:** 6 are calculation errors (prices differ but move was written as zero — fixable by recalculating); 4 are stale price data (price_before = price_after — drop).
+- **Class imbalance:** Noise class is 65% of data (563/862). Manageable with stratified splits and class weights.
+- **`market_cap_m` outliers:** Range is $11M–$992B. Log-transform required before training.
+
+**`mesh_level1` recovery path (265 missing rows):**
+
+| Source | Rows recoverable |
+|--------|-----------------|
+| Has `nct_id` → re-query ClinicalTrials.gov API | **218 rows** (all recoverable) |
+| Has `indication` only → MeSH Lookup API or LLM inference | **~35 rows** |
+| Likely unresolvable (no nct_id, no indication) | **~12 rows** |
+
+The 218 rows with nct_id but no mesh are fully recoverable — the NCT API call simply didn't return MeSH branches when the script originally ran. A targeted re-run of `mesh_level1_from_nct.py` on this subset should resolve them.
+
+**Prioritized repair plan:**
+
+| Priority | Action | Rows affected |
+|----------|--------|---------------|
+| **P0** | Deduplicate by ticker+date | Remove ~46 redundant rows |
+| **P0** | Fix 6 zero-move calc errors (`(price_after - price_before) / price_before`) | 6 rows corrected |
+| **P0** | Drop 4 stale zero-move rows (identical prices) | 4 rows removed |
+| **P1** | Re-run MeSH lookup for 218 rows with nct_id but no mesh | +218 rows ML-ready |
+| **P2** | Use `price_at_event` as proxy where `price_before` is missing | Feature gap closed |
+| **P2** | Impute `mesh_level1` for ~35 no-nct rows via indication text + MeSH API | +~35 rows |
+| **P3** | Drop `catalyst_type` as a model feature (zero variance) | Cleaner feature set |
+
+**Target after repair: ~820 clean, fully ML-ready rows.**
+
+---
+
+### 2026-03-10 — Repository cleanup: stale scripts archived, data file relocated
+
+Inspected and relocated three files that were sitting in the project root without a clear purpose:
+
+- `batch_scanner.py` → `archive/` — superseded by `scripts/scan_large_moves.py` (hardcoded ticker list vs. `biotech_universe_expanded.csv`, no ATR normalization)
+- `batch_enrichment.py` → `archive/` — superseded by `scripts/incremental_enrich.py`; `AICatalystResearcher` class was an unimplemented stub
+- `nct_search_results.csv` → `data/` — generated output from `scripts/fix_missing_nct.py` (search log, 402 rows); updated script path to write there going forward
+
+No data changed. No scripts broken.
 
 ---
 
