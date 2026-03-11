@@ -429,17 +429,10 @@ def _proximity_bucket(d):
     return "unknown"
 
 
-def _endpoint_score(row) -> float:
+def _endpoint_outcome_score(row) -> float:
+    """Endpoint outcome only — no is_pivotal dependency. Range -1 to +1."""
     ep = str(row.get("primary_endpoint_met", "")).strip().lower()
-    ep_score = {"yes": 1.0, "no": -1.0, "unclear": 0.0}.get(ep, 0.0)
-    piv = row.get("is_pivotal", None)
-    if isinstance(piv, bool):
-        piv_score = 1.0 if piv else 0.0
-    elif isinstance(piv, str):
-        piv_score = 1.0 if piv.strip().lower() in ("true", "yes") else 0.0
-    else:
-        piv_score = 0.0
-    return ep_score + piv_score
+    return {"yes": 1.0, "no": -1.0, "unclear": 0.0}.get(ep, 0.0)
 
 
 def rederive_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -542,7 +535,7 @@ def rederive_features(df: pd.DataFrame) -> pd.DataFrame:
     ).round(4)
 
     # ── Endpoint score (benefits from newly filled endpoint/pivotal cols) ─
-    df["feat_endpoint_positive_score"] = df.apply(_endpoint_score, axis=1)
+    df["feat_endpoint_outcome_score"] = df.apply(_endpoint_outcome_score, axis=1)
 
     # ── Reaction priors — recompute on full dataset ──────────────────────
     abs_move = df["stock_movement_atr_normalized"].abs()

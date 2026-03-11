@@ -113,25 +113,15 @@ def _next_version(date_str: str, base_dir: str, prefix: str) -> int:
     return max(nums) + 1 if nums else 1
 
 
-def _endpoint_score(row) -> float:
+def _endpoint_outcome_score(row) -> float:
     """
-    Combine primary_endpoint_met and is_pivotal into a signal score.
-      primary_endpoint_met : Yes=+1, Unclear=0, No=-1, null=0
-      is_pivotal           : True=+1, False=0, null=0
-    Range: -1 to +2
+    Endpoint outcome only — does NOT use is_pivotal.
+      primary_endpoint_met : Yes=+1, No=-1, Unclear/missing=0
+    Range: -1 to +1
+    Pivotal/importance signal is captured separately by feat_regulatory_stage_score.
     """
     ep = str(row.get("primary_endpoint_met", "")).strip().lower()
-    ep_score = {"yes": 1.0, "no": -1.0, "unclear": 0.0}.get(ep, 0.0)
-
-    piv = row.get("is_pivotal", None)
-    if isinstance(piv, bool):
-        piv_score = 1.0 if piv else 0.0
-    elif isinstance(piv, str):
-        piv_score = 1.0 if piv.strip().lower() == "true" else 0.0
-    else:
-        piv_score = 0.0
-
-    return ep_score + piv_score
+    return {"yes": 1.0, "no": -1.0, "unclear": 0.0}.get(ep, 0.0)
 
 
 def _proximity_bucket(days: float) -> str:
@@ -164,8 +154,8 @@ def build_clinical_features(df: pd.DataFrame) -> pd.DataFrame:
     df["feat_late_stage_flag"] = (df["feat_phase_num"] >= 2.5).astype(float)
     df.loc[df["feat_phase_num"].isna(), "feat_late_stage_flag"] = float("nan")
 
-    # Endpoint positive score (data available for ~70-82 rows)
-    df["feat_endpoint_positive_score"] = df.apply(_endpoint_score, axis=1)
+    # Endpoint outcome score — outcome only, no is_pivotal dependency
+    df["feat_endpoint_outcome_score"] = df.apply(_endpoint_outcome_score, axis=1)
 
     # MeSH Level-1 integer encoding — fully derived from mesh_level1 (831/831)
     df["feat_mesh_level1_encoded"] = df["mesh_level1"].map(MESH_ENCODE_MAP)
@@ -254,7 +244,7 @@ FEATURE_META = [
     ("target_large_move",                "target",  "Binary: 1 if move_class_norm in {High, Extreme}",                      "move_class_norm"),
     ("feat_phase_num",                   "feat",    "Trial phase as float: 0.5=EarlyI 1=I 1.5=I/II 2=II 2.5=II/III 3=III 4=IV", "ct_phase"),
     ("feat_late_stage_flag",             "feat",    "1 if phase_num >= 2.5 (Phase 2/3, 3, or 4)",                           "ct_phase"),
-    ("feat_endpoint_positive_score",     "feat",    "Signal: primary_endpoint_met (Yes+1/No-1/Unclear0) + is_pivotal (True+1)", "primary_endpoint_met, is_pivotal"),
+    ("feat_endpoint_outcome_score",      "feat",    "Endpoint outcome only: Yes=+1 No=-1 Unclear/missing=0. Range -1 to +1. Pivotal importance captured separately by feat_regulatory_stage_score.", "primary_endpoint_met"),
     ("feat_mesh_level1_encoded",         "feat",    "MeSH Level-1 integer: 1=Neoplasms … 10=Musculoskeletal 11=Other",      "mesh_level1"),
     ("feat_log_market_cap",              "feat",    "log10(market_cap_m) — log-scale market cap in USD millions",            "market_cap_m"),
     ("feat_short_squeeze_flag",          "feat",    "1 if short_percent >= 20% (elevated short interest)",                  "short_percent"),
