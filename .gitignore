@@ -75,3 +75,4 @@ dmypy.json
 !tsconfig.json
 biotech_catalyst_v3/archive/
 *.bak.csv
+biotech_catalyst_v3/data/ohlc/
