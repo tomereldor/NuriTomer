@@ -53,6 +53,14 @@
 
 ---
 
+### 2026-03-12 — Reports reorganized into versioned history (v3.22)
+
+**Changed:** All 20260310 (v1) reports moved to `reports/reports_history/` with `v1_` prefix.
+**New:** `reports/README.md` — index of all current + historical reports with descriptions and key results.
+**Current reports folder** now contains only v2 (pre-event model) outputs.
+
+---
+
 ### 2026-03-12 — Pre-event model v2: time-aware CV + model comparison (v3.21)
 
 **Script added:** `scripts/pre_event_model_v2.py`
