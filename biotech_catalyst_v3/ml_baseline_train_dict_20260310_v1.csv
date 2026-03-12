@@ -1,0 +1,55 @@
+column_name,role,source_feature,dtype,imputation_used,missing_before,missing_after,note
+ticker,metadata,ticker,object,none,0,0,traceability only — do not pass to model
+event_date,metadata,event_date,object,none,0,0,traceability only — do not pass to model
+drug_name,metadata,drug_name,object,none,0,0,traceability only — do not pass to model
+nct_id,metadata,nct_id,object,none,0,0,traceability only — do not pass to model
+target_large_move,target,target_large_move,int64,none,0,0,"binary: 1=High/Extreme ATR-normalised move, 0=Noise/Low/Medium"
+feat_phase_num,feature,feat_phase_num,float64,median=2.0000,50,0,numeric
+feat_regulatory_stage_score,feature,feat_regulatory_stage_score,int64,none,0,0,numeric
+feat_pivotal_proxy_score,feature,feat_pivotal_proxy_score,float64,none,0,0,numeric
+feat_design_quality_score,feature,feat_design_quality_score,float64,median=3.0000,40,0,numeric
+feat_trial_quality_score,feature,feat_trial_quality_score,float64,median=4.0000,40,0,numeric
+feat_enrollment_log,feature,feat_enrollment_log,float64,median=5.3033,40,0,numeric
+feat_days_to_primary_completion,feature,feat_days_to_primary_completion,float64,median=0.0000,44,0,numeric
+feat_n_unique_drugs_for_company,feature,feat_n_unique_drugs_for_company,int64,none,0,0,numeric
+feat_asset_trial_share,feature,feat_asset_trial_share,float64,none,0,0,numeric
+feat_pipeline_depth_score,feature,feat_pipeline_depth_score,float64,none,0,0,numeric
+feat_lead_asset_dependency_score,feature,feat_lead_asset_dependency_score,float64,none,0,0,numeric
+feat_volatility,feature,feat_volatility,float64,none,0,0,numeric
+feat_log_market_cap,feature,feat_log_market_cap,float64,none,0,0,numeric
+feat_cash_runway_proxy,feature,feat_cash_runway_proxy,float64,median=0.1118,3,0,numeric
+feat_late_stage_flag,feature,feat_late_stage_flag,float64,0 (absent),50,0,binary flag
+feat_active_not_recruiting_flag,feature,feat_active_not_recruiting_flag,float64,0 (absent),40,0,binary flag
+feat_completed_flag,feature,feat_completed_flag,float64,0 (absent),40,0,binary flag
+feat_recent_completion_flag,feature,feat_recent_completion_flag,float64,0 (absent),40,0,binary flag
+feat_orphan_flag,feature,feat_orphan_flag,int64,none,0,0,binary flag
+feat_breakthrough_flag,feature,feat_breakthrough_flag,int64,none,0,0,binary flag
+feat_fast_track_flag,feature,feat_fast_track_flag,int64,none,0,0,binary flag
+feat_nda_bla_flag,feature,feat_nda_bla_flag,int64,none,0,0,binary flag
+feat_randomized_flag,feature,feat_randomized_flag,float64,0 (absent),156,0,binary flag
+feat_blinded_flag,feature,feat_blinded_flag,int64,none,0,0,binary flag
+feat_open_label_flag,feature,feat_open_label_flag,int64,none,0,0,binary flag
+feat_small_trial_flag,feature,feat_small_trial_flag,float64,0 (absent),40,0,binary flag
+feat_oncology_flag,feature,feat_oncology_flag,int64,none,0,0,binary flag
+feat_cns_flag,feature,feat_cns_flag,int64,none,0,0,binary flag
+feat_rare_disease_flag,feature,feat_rare_disease_flag,int64,none,0,0,binary flag
+feat_single_asset_company_flag,feature,feat_single_asset_company_flag,int64,none,0,0,binary flag
+feat_short_squeeze_flag,feature,feat_short_squeeze_flag,float64,0 (absent),29,0,binary flag
+feat_ownership_low_flag,feature,feat_ownership_low_flag,float64,0 (absent),2,0,binary flag
+feat_mesh_level1_encoded,feature,feat_mesh_level1_encoded,int64,none,0,0,ordinal integer
+feat_therapeutic_superclass_CNS,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Cardiovascular,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Dermatology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Endocrine/Metabolic,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_GI/Hepatology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Immunology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Infectious Disease,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Musculoskeletal,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Oncology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Other,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_therapeutic_superclass_Respiratory,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_event_proximity_bucket_future_far,feature,feat_event_proximity_bucket,int64,none,0,0,one-hot encoded
+feat_event_proximity_bucket_future_near,feature,feat_event_proximity_bucket,int64,none,0,0,one-hot encoded
+feat_event_proximity_bucket_just_completed,feature,feat_event_proximity_bucket,int64,none,0,0,one-hot encoded
+feat_event_proximity_bucket_past,feature,feat_event_proximity_bucket,int64,none,0,0,one-hot encoded
+feat_event_proximity_bucket_unknown,feature,feat_event_proximity_bucket,int64,none,0,0,one-hot encoded

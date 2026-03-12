@@ -53,6 +53,38 @@
 
 ---
 
+### 2026-03-12 — First baseline ML models trained (v3.19)
+
+**Scripts added:** `scripts/build_baseline_training_table.py`, `scripts/make_time_splits.py`, `scripts/train_baseline_models.py`
+**Training table:** `ml_baseline_train_20260310_v1.csv` (813 rows × 54 cols, 49 features)
+**Report:** `reports/ml_baseline_report_20260310_v1.md`
+**Models:** `models/model_lgbm_20260310_v1.pkl`, `models/model_logreg_20260310_v1.pkl`
+
+**Split:** time-based (oldest 70% train / next 15% val / newest 15% test)
+
+| Split | Rows | Date range | Positive rate |
+|---|---|---|---|
+| train | 569 | 2007-05-10 → 2025-02-10 | 17.6% |
+| val   | 122 | 2025-02-11 → 2025-09-15 | 23.0% |
+| test  | 122 | 2025-09-17 → 2026-03-09 | 32.0% |
+
+**Test set performance:**
+
+| Model | Balanced Acc | ROC-AUC | F1 |
+|---|---|---|---|
+| Majority baseline | 0.500 | 0.500 | 0.000 |
+| Logistic Regression | 0.576 | 0.685 | 0.491 |
+| **LightGBM** | **0.566** | **0.663** | **0.400** |
+
+★ Best model: LightGBM (val ROC-AUC=0.780). LogReg generalises slightly better on test (ROC-AUC=0.685 vs 0.663).
+Both models meaningfully above majority baseline. Gap between val and test performance is expected given the test set covers 2025-Q4 → 2026-Q1 (most recent period).
+
+**Top 5 features (LightGBM gain):** `feat_volatility`, `feat_days_to_primary_completion`, `feat_cash_runway_proxy`, `feat_log_market_cap`, `feat_enrollment_log`
+
+**Excluded from baseline v1 (outcome-leaning):** `feat_endpoint_outcome_score`, `feat_superiority_flag`, `feat_stat_sig_flag`, `feat_clinically_meaningful_flag`, `feat_primary_endpoint_known_flag`, `feat_mixed_results_flag` — reserved for a separate "given announcement" model expected to show major lift.
+
+---
+
 ### 2026-03-12 — Feature dictionary fully rebuilt from source (v3.18)
 
 **New feature dict:** `ml_feature_dict_20260310_v5.csv` (60 entries)

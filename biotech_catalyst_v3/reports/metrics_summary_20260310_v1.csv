@@ -1,0 +1,7 @@
+split,n,n_positive,positive_pct,accuracy,balanced_accuracy,precision,recall,f1,roc_auc,pr_auc,tn,fp,fn,tp,model,threshold,n_estimators_used
+val,122,28,23.0,0.7705,0.5,0.0,0.0,0.0,0.5,0.2295,94,0,28,0,majority_baseline,,
+test,122,39,32.0,0.6803,0.5,0.0,0.0,0.0,0.5,0.3197,83,0,39,0,majority_baseline,,
+val,122,28,23.0,0.6803,0.7048,0.3962,0.75,0.5185,0.7473,0.4353,62,32,7,21,logistic_regression,0.54,
+test,122,39,32.0,0.5246,0.5758,0.3733,0.7179,0.4912,0.6855,0.5547,36,47,11,28,logistic_regression,0.54,
+val,122,28,23.0,0.8443,0.7109,0.7647,0.4643,0.5778,0.7796,0.6121,90,4,15,13,lightgbm,0.7,61.0
+test,122,39,32.0,0.6311,0.5658,0.4167,0.3846,0.4,0.6627,0.4432,62,21,24,15,lightgbm,0.7,61.0
