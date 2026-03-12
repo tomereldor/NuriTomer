@@ -53,6 +53,46 @@
 
 ---
 
+### 2026-03-12 — Pre-event model v2: time-aware CV + model comparison (v3.21)
+
+**Script added:** `scripts/pre_event_model_v2.py`
+**Best model saved:** `models/model_pre_event_v2_20260312.pkl`
+**Report:** `reports/ml_pre_event_cv_report_20260312_v1.md`
+**Metrics tables:** `reports/cv_metrics_20260312_v1.csv`, `reports/model_comparison_20260312_v1.csv`
+**Figures (5):** `reports/figures/cv_folds_20260312.png`, `model_comparison_20260312.png`, `threshold_precision_20260312.png`, `roc_pr_comparison_20260312.png`, `calibration_20260312.png`
+
+**Goal:** Pre-event only — predict whether a clinical catalyst will cause a large stock move using only public company/trial information available **before** the press release.
+
+**Time-aware cross-validation (LightGBM, 5 folds):**
+
+| Fold window | AUC | PR-AUC | Prec@10% |
+|---|---|---|---|
+| 2023-01-04 → 2023-09-05 | 0.657 | 0.324 | 0.273 |
+| 2023-09-06 → 2024-03-19 | 0.802 | 0.524 | 0.636 |
+| 2024-03-25 → 2024-09-13 | 0.771 | 0.337 | 0.364 |
+| 2024-09-14 → 2025-02-18 | 0.685 | 0.344 | 0.273 |
+| 2025-02-20 → 2025-09-15 | 0.761 | 0.514 | 0.727 |
+| **Mean ± std** | **0.735 ± 0.061** | **0.408 ± 0.101** | **0.455 ± 0.213** |
+
+**Model comparison (test set, 122 rows, base rate 32%):**
+
+| Model | ROC-AUC | PR-AUC | Prec@5% | Prec@10% | Prec@20% |
+|---|---|---|---|---|---|
+| **LogReg** | **0.685** | **0.555** | **0.833** | **0.667** | **0.500** |
+| LightGBM | 0.663 | 0.443 | 0.333 | 0.500 | 0.458 |
+| XGBoost | 0.579 | 0.368 | 0.333 | 0.500 | 0.375 |
+
+★ **Best model: LogReg** — Prec@top-5% = 0.833 (2.6× base rate), Prec@top-10% = 0.667 (2.1× base rate). Model is most useful as a **ranking signal** — top-decile events are reliably enriched for large movers even before any announcement content is known.
+
+**Threshold strategy:**
+- High-precision threshold (≈0.92): prec=1.0, recall=0.026 — strict watchlist
+- Broad threshold (≈0.45): prec=0.41, recall=0.90 — wide candidate list
+- Recommended deployment: score-rank all events, screen top 10% for conviction buys
+
+**Key finding from error analysis:** False negatives (missed large movers) concentrate in high-volatility small-caps across Phase 1–3 and CNS/Oncology — these require announcement content to distinguish from routine misses.
+
+---
+
 ### 2026-03-12 — First baseline ML models trained (v3.19)
 
 **Scripts added:** `scripts/build_baseline_training_table.py`, `scripts/make_time_splits.py`, `scripts/train_baseline_models.py`
