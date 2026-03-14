@@ -1,6 +1,17 @@
 # ML Reports — Biotech Catalyst v3
 
-## Current (v0.3 — pre-event model, 2026-03-13)
+## Current (v0.4 — CT.gov feature refresh, 2026-03-14)
+
+| File | Description |
+|---|---|
+| [`ctgov_timing_pipeline_features_v0.4_20260313.md`](ctgov_timing_pipeline_features_v0.4_20260313.md) | **CT.gov refresh report** — 19 new features, coverage stats, recommendations |
+
+**Feature dataset updated:** `ml_dataset_features_v0.4_20260313.csv` (827 × 145, 82 features)
+**Model not yet retrained** — next step is to rebuild train table and retrain on v0.4 features.
+
+---
+
+## v0.3 — Pre-event model (2026-03-13)
 
 | File | Description |
 |---|---|

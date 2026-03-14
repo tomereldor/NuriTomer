@@ -19,27 +19,26 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.3 — 2026-03-13)
+## Current state (v0.4 — 2026-03-14)
 
 ### Source of truth files
 
 | File | Description |
 |---|---|
-| `ml_dataset_features_v0.3_20260313.csv` | **THE ML INPUT FILE** — 827 rows × 132 cols, 69 features, all pre-event |
-| `ml_feature_dict_v0.3_20260313.csv` | Feature dictionary — 69 entries with coverage + description |
-| `ml_baseline_train_v0.3_20260313.csv` | Training table — 813 rows, 64 model-ready features, split labels |
-| `ml_baseline_train_dict_v0.3_20260313.csv` | Column dictionary for the training table |
+| `ml_dataset_features_v0.4_20260313.csv` | **THE ML INPUT FILE** — 827 rows × 145 cols, 82 features, all pre-event |
+| `ml_feature_dict_v0.4_20260313.csv` | Feature dictionary — 82 entries with coverage + description |
+| `ml_baseline_train_v0.3_20260313.csv` | Training table — 813 rows, 64 model-ready features (v0.3 model) |
 | `enriched_all_clinical_clean_v2.csv` | Master raw dataset — 862 rows × 58 cols (do not use directly for ML) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
-### Current model
+### Current model (v0.3 — not yet retrained on v0.4 features)
 
 | File | Description |
 |---|---|
 | `models/model_pre_event_v0.3_20260313.pkl` | Best model — Logistic Regression |
 | `models/prior_encoder_v0.3_20260313.pkl` | Fold-safe prior encoder (fit on train, apply to val/test) |
 
-### Current report
+### Current model report (v0.3)
 
 → [`reports/ml_pre_event_report_v0.3_20260313.md`](reports/ml_pre_event_report_v0.3_20260313.md)
 
@@ -50,6 +49,10 @@ python -m scripts.<script_name>
 | CV AUC (5-fold) | 0.682 ± 0.129 |
 | Prec @ top 10% | 0.308 |
 | Features | 69 (incl. 9 timing + 6 fold-safe priors) |
+
+### CT.gov feature refresh report (v0.4)
+
+→ [`reports/ctgov_timing_pipeline_features_v0.4_20260313.md`](reports/ctgov_timing_pipeline_features_v0.4_20260313.md)
 
 ---
 
@@ -132,6 +135,8 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 | **Timing (new v0.3)** | **11** | imminent_30d/90d, recency_bucket, time_since_last_event, sequence_num, recent_flag |
 | Fold-safe priors | 6 | prior_mean_abs_move by phase/superclass/market-cap; prior_large_move_rate |
 | Event proximity | 5 | event_proximity_bucket (one-hot: future_far/near/just_completed/past/unknown) |
+| **CT.gov Timing (new v0.4)** | **11** | ctgov_primary_completion_date, days_to_primary_completion, imminence flags (CT.gov-derived), ct_status_current, active_not_recruiting_flag, completed_flag, days_since_ctgov_last_update, recent_ctgov_update_flag, status_timing_consistency_flag |
+| **CT.gov Pipeline Proxy (new v0.4)** | **8** | n_active/late/completed/total trials by sponsor; pipeline_maturity_score; n_trials/late_trials same_intervention; asset_maturity_score |
 
 ---
 
@@ -144,6 +149,15 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 ---
 
 ## Changelog
+
+### v0.4 — 2026-03-14
+- Added 11 CT.gov-grounded timing features via `refresh_ctgov_features.py` (per-NCT-ID API fetch, 679 unique IDs, 93.5–94.8% coverage)
+- Added 8 CT.gov pipeline proxy features via `build_ctgov_pipeline_proxies.py` (293 sponsors, 596 drugs queried)
+- Rebuilt `ml_feature_dict_v0.4_20260313.csv` — 82 entries, unified schema
+- Key new signals: `feat_ctgov_pipeline_maturity_score`, `feat_ctgov_asset_maturity_score`, `feat_ct_status_current`, `feat_recent_ctgov_update_flag`
+- Feature dataset: 827 × 145 cols (was 132 in v0.3)
+- Model not yet retrained — next step: rebuild train table and retrain on v0.4 features
+- See: [`reports/ctgov_timing_pipeline_features_v0.4_20260313.md`](reports/ctgov_timing_pipeline_features_v0.4_20260313.md)
 
 ### v0.3 — 2026-03-13
 - Added 9 timing/sequence features (imminence flags, recency bucket, time-since-last-event, sequence numbers)
