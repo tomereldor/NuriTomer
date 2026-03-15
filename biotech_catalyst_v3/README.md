@@ -19,14 +19,14 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.4 — 2026-03-14)
+## Current state (v0.5 — 2026-03-15)
 
 ### Source of truth files
 
 | File | Description |
 |---|---|
-| `ml_dataset_features_v0.4_20260313.csv` | **THE ML INPUT FILE** — 827 rows × 145 cols, 82 features, all pre-event |
-| `ml_feature_dict_v0.4_20260313.csv` | Feature dictionary — 82 entries with coverage + description |
+| `ml_dataset_features_v0.5_20260315.csv` | **THE ML INPUT FILE** — 827 rows × 149 cols, 86 features, all pre-event |
+| `ml_feature_dict_v0.5_20260315.csv` | Feature dictionary — 86 entries with coverage + description |
 | `ml_baseline_train_v0.3_20260313.csv` | Training table — 813 rows, 64 model-ready features (v0.3 model) |
 | `enriched_all_clinical_clean_v2.csv` | Master raw dataset — 862 rows × 58 cols (do not use directly for ML) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
@@ -53,6 +53,10 @@ python -m scripts.<script_name>
 ### CT.gov feature refresh report (v0.4)
 
 → [`reports/ctgov_timing_pipeline_features_v0.4_20260313.md`](reports/ctgov_timing_pipeline_features_v0.4_20260313.md)
+
+### ML audit + follow-up actions (v0.5)
+
+→ [`reports/pre_event_model_followup_actions_v0.4_20260315.md`](reports/pre_event_model_followup_actions_v0.4_20260315.md)
 
 ---
 
@@ -85,6 +89,9 @@ scripts/train_pre_event_v3.py              → models/ + reports/
 | Script | What it does |
 |---|---|
 | `add_pre_event_timing_features.py` | Pass-5: adds 9 timing/sequence features to the feature dataset |
+| `add_oncology_timing_interactions.py` | Pass-8: adds 4 oncology × timing interaction features |
+| `refresh_ctgov_features.py` | Pass-6: CT.gov timing refresh (per-NCT-ID API, 11 features) |
+| `build_ctgov_pipeline_proxies.py` | Pass-7: CT.gov sponsor + drug aggregate features (8 features) |
 | `add_train_fold_priors.py` | `FoldPriorEncoder` — inject reaction priors safely inside CV folds |
 | `build_pre_event_train_v2.py` | Build train/val/test table from feature dataset |
 | `train_pre_event_v3.py` | Train LogReg + LightGBM + XGBoost, CV, report, plots |
@@ -240,6 +247,7 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 | Event proximity | 5 | event_proximity_bucket (one-hot: future_far/near/just_completed/past/unknown) |
 | **CT.gov Timing (new v0.4)** | **11** | ctgov_primary_completion_date, days_to_primary_completion, imminence flags (CT.gov-derived), ct_status_current, active_not_recruiting_flag, completed_flag, days_since_ctgov_last_update, recent_ctgov_update_flag, status_timing_consistency_flag |
 | **CT.gov Pipeline Proxy (new v0.4)** | **8** | n_active/late/completed/total trials by sponsor; pipeline_maturity_score; n_trials/late_trials same_intervention; asset_maturity_score |
+| **Oncology interactions (new v0.5)** | **4** | oncology × imminent_30d/90d; oncology × recent_completion; oncology × recency_imminent |
 
 ---
 
@@ -252,6 +260,13 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v0.5 — 2026-03-15
+- Added 4 oncology × timing interaction features via `add_oncology_timing_interactions.py`
+- Feature dataset: 827 × 149 cols, 86 features
+- Quick comparison (LogReg, same v0.3 split): +0.005 AUC on test (0.653→0.658), neutral on val — no degradation
+- Full lift expected when model is retrained on the complete v0.5 feature set including CT.gov proxies
+- See: [`reports/pre_event_model_followup_actions_v0.4_20260315.md`](reports/pre_event_model_followup_actions_v0.4_20260315.md)
 
 ### v0.4 — 2026-03-14 (audit update — 2026-03-15)
 - ML audit: confirmed target definitions, post-event exclusion policy, timing caveats
