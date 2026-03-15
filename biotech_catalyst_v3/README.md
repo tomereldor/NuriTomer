@@ -104,12 +104,16 @@ python -m scripts.train_pre_event_v3               # retrain models + report
 
 ## Target definition
 
-- **`target_large_move`** (binary, primary): 1 = ATR-normalized move ≥ 3× (High or Extreme class)
+- **`target_large_move`** (binary, primary): 1 = ATR-normalized move ≥ **5×** (High or Extreme class)
 - **`target_abs_move_atr`** (continuous): raw ATR-normalized absolute move magnitude
 - **`target_move_bucket`** (5-class): Noise / Low / Medium / High / Extreme
 
 ATR = Wilder's RMA, `ewm(alpha=1/20, adjust=False)`, 20 trading-day lookback, strictly pre-event.
 Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8× · Extreme ≥ 8×
+
+**Move window:** Last trading day strictly before event → first trading day strictly after event (1 overnight move bracketing the announcement; `move_2d_pct` column name is shorthand for "2 days apart", not a 2-day trailing return).
+
+**Binary cutoff clarification:** `target_large_move = 1` when `move_class_norm ∈ {High, Extreme}`, i.e., ATR-normalized move ≥ 5×. The goal description "≥ 3–5× ATR" refers to the Medium–High boundary; the actual binary positive class starts at High (5×).
 
 ---
 
@@ -120,6 +124,35 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 - **Fold-safe priors:** Reaction priors (mean ATR move by phase/disease/mkt-cap) fit on train fold only via `FoldPriorEncoder`. Never precomputed globally.
 - **ATR normalization:** Moves normalized by pre-event ATR to make large-cap and small-cap events comparable.
 - **Single master CSV:** `enriched_all_clinical_clean_v2.csv` is the one file all enrichments write to.
+
+## Post-event feature exclusion policy
+
+The following features exist in the feature dataset but are **permanently excluded** from the pre-event model training table. They derive from the current announcement text or outcome — using them would be look-ahead leakage:
+
+| Feature | Why excluded |
+|---|---|
+| `feat_superiority_flag` | Keyword match on current PR text (`primary_endpoint_result`, `v_pr_key_info`, etc.) |
+| `feat_stat_sig_flag` | Same — p-values and HR/OR from current result |
+| `feat_clinically_meaningful_flag` | Same — clinical significance language from current result |
+| `feat_mixed_results_flag` | Same — failure/miss language from current result |
+| `feat_endpoint_outcome_score` | Derived from `primary_endpoint_met` (Yes/No/Unclear) — the current outcome |
+| `feat_primary_endpoint_known_flag` | Same source — 1 = outcome is known (i.e., announcement already happened) |
+
+These features are retained in the feature dataset for post-hoc analysis only. They must never be added to `build_pre_event_train_v2.py`.
+
+A legitimate pre-event equivalent would require matching prior-phase publications for the same drug — not yet implemented.
+
+## Timing feature caveats (oncology)
+
+CT.gov primary completion date–based features (`feat_primary_completion_imminent_30d/90d`, `feat_completion_recency_bucket`, `feat_days_to_primary_completion`) are **valid but carry a known caveat for oncology trials**:
+
+In OS/PFS/DFS-driven oncology trials, the efficacy readout occurs when a target number of events accrues — often 6–24 months **before** CT.gov primary completion date. The CT.gov date reflects the administrative study close, not the readout. This means imminence flags can be 0 or "far" even when an oncology readout is genuinely imminent.
+
+These features are kept as-is. They carry real signal for non-oncology (where CT.gov date ≈ readout date) and even for oncology the COMPLETED + recently-closed signal is meaningful. A future improvement would add a separate feature family from enrollment completion announcements or "on track / delayed" text in CT.gov study descriptions — not yet implemented.
+
+## Multiclass status
+
+`target_move_bucket` (5-class) exists in the dataset but no multiclass model has been trained. Binary (`target_large_move`) remains the primary objective. Multiclass is deferred until binary AUC exceeds 0.70 reliably.
 
 ---
 
@@ -149,6 +182,13 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 ---
 
 ## Changelog
+
+### v0.4 — 2026-03-14 (audit update — 2026-03-15)
+- ML audit: confirmed target definitions, post-event exclusion policy, timing caveats
+- Clarified binary target cutoff: `target_large_move = 1` at ≥5× ATR (High+Extreme), not ≥3×
+- Documented 6 permanently excluded post-event features and rationale
+- Documented oncology timing caveat for CT.gov primary completion–based features
+- Deferred multiclass until binary AUC > 0.70; deferred management/CRO quality feature
 
 ### v0.4 — 2026-03-14
 - Added 11 CT.gov-grounded timing features via `refresh_ctgov_features.py` (per-NCT-ID API fetch, 679 unique IDs, 93.5–94.8% coverage)
