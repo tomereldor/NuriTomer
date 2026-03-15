@@ -125,6 +125,76 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 - **ATR normalization:** Moves normalized by pre-event ATR to make large-cap and small-cap events comparable.
 - **Single master CSV:** `enriched_all_clinical_clean_v2.csv` is the one file all enrichments write to.
 
+## Answers to collaborator questions — 2026-03-13
+
+### Q1 — What exactly is `target_abs_move_atr`?
+
+It is the ATR-normalised absolute stock move bracketing the announcement:
+
+```
+target_abs_move_atr = abs(price_after - price_before) / price_before / atr_pct
+```
+
+- `price_before` = closing price on the **last trading day strictly before** the event date
+- `price_after` = closing price on the **first trading day strictly after** the event date
+- So the window spans **1 overnight move** (not 2 trailing days). The raw column is called `move_2d_pct` meaning "2 calendar days apart", not a 2-day trailing return.
+- Based on **trading days**, not calendar days.
+- `atr_pct` = Wilder's RMA with alpha=1/20, 20 trading-day lookback, using price data **strictly before** the event (no look-ahead).
+
+---
+
+### Q2 — Are feat_superiority_flag / feat_stat_sig_flag / feat_clinically_meaningful_flag / feat_mixed_results_flag post-event?
+
+**Yes — all four are post-event and must NOT be used in the pre-event model.**
+
+They are keyword matches on `primary_endpoint_result`, `v_pr_key_info`, `v_summary`, `catalyst_summary`, and `pivotal_evidence` — all of which contain the **current announcement text**. They reflect the outcome of the catalyst event itself, not any prior-phase information.
+
+They are already excluded from the training table and will remain excluded. They exist in the feature dataset for post-hoc analysis only.
+
+To build a legitimate pre-event equivalent, you would need to match keyword signals from **prior-phase publications** for the same drug — not yet implemented.
+
+---
+
+### Q3 — Are the CT.gov timing features valid for oncology?
+
+**Partially valid — known limitation, not a reason to drop.**
+
+For non-oncology trials, CT.gov primary completion date ≈ readout date, so the imminence and recency features are reliable.
+
+For oncology (OS/PFS/DFS-driven trials), the efficacy readout occurs when a target number of events accrues, which can be **6–24 months before** CT.gov primary completion date. The CT.gov date is the administrative study close, not the readout. This means `feat_primary_completion_imminent_30d/90d` and `feat_completion_recency_bucket` can show "far" or "past" even when an oncology readout is genuinely imminent or just happened.
+
+Current decision: keep these features as-is. They carry real signal for the ~40% of the dataset that is non-oncology, and even for oncology the "COMPLETED + recently closed" signal is meaningful. The model can learn to discount them for oncology via the existing `feat_oncology_flag`.
+
+Better future feature: extract enrollment completion language or "on track / delayed / ahead of schedule" signals from CT.gov `detailed_description` or investor guidance text. Worth adding later but not trivial.
+
+---
+
+### Q4 — Is a management / CRO quality feature feasible?
+
+**Feasible later, not the next priority.**
+
+- **PI track record:** CT.gov exposes `principalInvestigator` per trial. Querying historical trial outcomes by PI name is doable via the same API pattern used for sponsor queries. Roughly 1–2 days of work.
+- **CRO reputation:** CT.gov lists collaborators but does not always name the CRO explicitly. Partial coverage.
+- **Senior management / CEO / CMO track record:** Requires linking to external sources (SEC filings, LinkedIn, OpenFDA). Not practical without an LLM enrichment pass.
+
+The existing `feat_ctgov_pipeline_maturity_score` (sponsor depth) already captures some of this signal. PI-level track record is a B-priority research feature for later.
+
+---
+
+### Q5 — Should we add one-vs-rest confusion matrices for each class? Is multiclass worth prioritising?
+
+**Multiclass is not the right focus now. Binary remains the primary objective.**
+
+The current model targets `target_large_move` (binary: High + Extreme = 1). This is correct for the investment use case — we want to know which catalysts will cause outsized moves, not the exact magnitude bucket.
+
+The 5-class `target_move_bucket` column exists in the dataset but no multiclass model has been trained. Class imbalance is severe (Noise = ~72% of rows; High + Extreme together = ~8%). A multiclass model would perform worse on the rare classes without substantially more data.
+
+One-vs-rest confusion matrices are useful once a multiclass model exists, but not worth adding to the current binary model — precision/recall at threshold is the right diagnostic there (already in the reports).
+
+**Decision: defer multiclass until binary AUC exceeds 0.70 reliably.**
+
+---
+
 ## Post-event feature exclusion policy
 
 The following features exist in the feature dataset but are **permanently excluded** from the pre-event model training table. They derive from the current announcement text or outcome — using them would be look-ahead leakage:
