@@ -19,7 +19,7 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.5 — 2026-03-16)
+## Current state (v0.6 — 2026-03-16)
 
 ### Source of truth files
 
@@ -95,6 +95,7 @@ scripts/train_pre_event_v3.py              → models/ + reports/
 
 | Script | What it does |
 |---|---|
+| `run_full_pre_event_pipeline.py` | **One-command orchestration** — runs all 8 steps; supports --start-step N, --dry-run, --master |
 | `add_pre_event_timing_features.py` | Pass-5: adds 9 timing/sequence features to the feature dataset |
 | `add_oncology_timing_interactions.py` | Pass-8: adds 4 oncology × timing interaction features |
 | `expand_historical_events.py` | Dataset expansion: CT.gov Phase 2/3 completions for a date range → appends to master |
@@ -119,7 +120,7 @@ python -m scripts.train_pre_event_v3               # retrain models + report
 
 ## Target definition
 
-- **`target_large_move`** (binary, primary): 1 = ATR-normalized move ≥ **5×** (High or Extreme class)
+- **`target_large_move`** (binary, primary): 1 = ATR-normalized move ≥ **3.0×** AND abs(move_pct) ≥ **10%** (Medium + High + Extreme, minus large-cap noise)
 - **`target_abs_move_atr`** (continuous): raw ATR-normalized absolute move magnitude
 - **`target_move_bucket`** (5-class): Noise / Low / Medium / High / Extreme
 
@@ -128,7 +129,7 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 
 **Move window:** Last trading day strictly before event → first trading day strictly after event (1 overnight move bracketing the announcement; `move_2d_pct` column name is shorthand for "2 days apart", not a 2-day trailing return).
 
-**Binary cutoff clarification:** `target_large_move = 1` when `move_class_norm ∈ {High, Extreme}`, i.e., ATR-normalized move ≥ 5×. The goal description "≥ 3–5× ATR" refers to the Medium–High boundary; the actual binary positive class starts at High (5×).
+**Binary target v0.6:** `target_large_move = 1` when `stock_movement_atr_normalized >= 3.0 AND abs(move_pct) >= 10.0`. This adds the Medium class (3–5× ATR) while excluding large-cap pharma events with high ATR multiples but small absolute moves. Positive rate: 9.7% on full v3 dataset (242/2500); 26.9% on original curated rows (237/881).
 
 ---
 
@@ -268,6 +269,18 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v0.6 — 2026-03-16 (threshold analysis + pipeline orchestration)
+- **New binary target defined: ≥ 3.0× ATR AND abs(move_pct) ≥ 10%** (was ≥ 5× ATR, no floor)
+- Adds the Medium class (3–5× ATR) as positives: +53 new positive rows vs baseline
+- On full v3 (2500 rows): 242 positives = **9.7%** positive rate
+- On original v2 rows only (881): 237 positives = **26.9%** — hits the 25–30% target for the curated event cohort
+- Absolute 10% floor removes 23 large-cap pharma false-positives (AZN/PFE/SNY/AMGN with 5–8% absolute moves)
+- 15% floor vs 10% floor = 3-row difference — 10% chosen
+- Date mismatch: 96.8% exact, 1.7% off by 1 day, only 0.8% >7 days — no filtering needed
+- Created `scripts/run_full_pre_event_pipeline.py` — one-command 8-step pipeline with --start-step, --dry-run, --master flags
+- **Status: threshold approved → ready to run full pipeline and retrain**
+- See: [`reports/binary_target_threshold_analysis_v0.6_20260316.md`](reports/binary_target_threshold_analysis_v0.6_20260316.md)
 
 ### v0.5 — 2026-03-16 (dataset expansion)
 - **Master dataset expanded: 862 → 2514 rows (+1652 new rows)**
