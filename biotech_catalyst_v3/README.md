@@ -19,7 +19,7 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.5 — 2026-03-15)
+## Current state (v0.5 — 2026-03-16)
 
 ### Source of truth files
 
@@ -75,14 +75,21 @@ python -m scripts.<script_name>
 ## Pipeline overview
 
 ```
-enriched_all_clinical_clean_v2.csv   ← master dataset
+enriched_all_clinical_clean_v3.csv   ← master dataset (2514 rows; v2 archived)
         ↓
-scripts/add_pre_event_timing_features.py   → ml_dataset_features_v0.3_20260313.csv
+scripts/prepare_ml_dataset.py              → initial feature table
+scripts/add_high_signal_features.py        → Pass-4 features
+scripts/refresh_ctgov_features.py          → Pass-6: CT.gov timing (11 features)
+scripts/build_ctgov_pipeline_proxies.py    → Pass-7: CT.gov pipeline proxies (8 features)
+scripts/add_pre_event_timing_features.py   → Pass-5: timing/sequence features
+scripts/add_oncology_timing_interactions.py → Pass-8: oncology × timing interactions
         ↓
-scripts/build_pre_event_train_v2.py        → ml_baseline_train_v0.3_20260313.csv
+scripts/build_pre_event_train_v2.py        → train table
         ↓
 scripts/train_pre_event_v3.py              → models/ + reports/
 ```
+
+**Status (2026-03-16):** Feature pipeline not yet re-run on v3 master. Current ML inputs (`ml_dataset_features_v0.5`, `ml_baseline_train_v0.3`) are built from v2 master (827 rows). Full pipeline rerun is the required next step.
 
 ### Key scripts
 
@@ -131,7 +138,7 @@ Class thresholds: Noise < 1.5× · Low 1.5–3× · Medium 3–5× · High 5–8
 - **Time-based splits:** Train/val/test split on `v_actual_date`; CV uses `TimeSeriesSplit` to prevent future leakage.
 - **Fold-safe priors:** Reaction priors (mean ATR move by phase/disease/mkt-cap) fit on train fold only via `FoldPriorEncoder`. Never precomputed globally.
 - **ATR normalization:** Moves normalized by pre-event ATR to make large-cap and small-cap events comparable.
-- **Single master CSV:** `enriched_all_clinical_clean_v2.csv` is the one file all enrichments write to.
+- **Single master CSV:** `enriched_all_clinical_clean_v3.csv` is the one file all enrichments write to (v2 archived).
 
 ## Answers to collaborator questions — 2026-03-13
 
