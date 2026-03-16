@@ -1,6 +1,6 @@
 # Biotech Pre-Event Model v3 — Timing + Fold-Safe Priors
 
-**Date:** 2026-03-16
+**Date:** 2026-03-17
 **Objective:** Predict large stock move from public pre-event information only.
 **No press release content used.**
 **Version:** v3 — adds 9 timing features + 6 train-fold-safe reaction priors vs v2 baseline.
@@ -46,14 +46,17 @@ Interaction prior requires ≥5 samples per cell, else falls back to phase-level
 
 ## 2. Time-Aware Cross-Validation (LightGBM + Priors)
 
-Mean ROC-AUC = 0.704 ± 0.008
-Mean PR-AUC  = 0.330 ± 0.266
-Mean Prec@10% = 0.328 ± 0.219
+Mean ROC-AUC = 0.744 ± 0.096
+Mean PR-AUC  = 0.534 ± 0.184
+Mean Prec@10% = 0.489 ± 0.290
 
 | Fold | Val n / Train n | ROC-AUC | PR-AUC | P@5% | P@10% | P@20% |
 |---|---|---|---|---|---|---|
-| fold_0 | 1189/296 | 0.699 | 0.142 | 0.214 | 0.172 | 0.085 |
-| fold_1 | 1485/296 | 0.709 | 0.518 | 0.571 | 0.483 | 0.475 |
+| fold_0 | 98/ 98 | 0.714 | 0.444 | 0.500 | 0.444 | 0.316 |
+| fold_1 | 196/ 98 | 0.842 | 0.637 | 1.000 | 0.667 | 0.526 |
+| fold_2 | 294/ 98 | 0.782 | 0.613 | 1.000 | 0.667 | 0.526 |
+| fold_3 | 392/ 98 | 0.789 | 0.719 | 0.750 | 0.667 | 0.737 |
+| fold_4 | 490/ 98 | 0.592 | 0.259 | 0.000 | 0.000 | 0.263 |
 
 ---
 
@@ -61,13 +64,13 @@ Mean Prec@10% = 0.328 ± 0.219
 
 | Model | ROC-AUC | PR-AUC | Prec@5% | Prec@10% | Prec@20% |
 |---|---|---|---|---|---|
-| LogReg | 0.498 | 0.399 | 0.412 | 0.543 | 0.451 |
-| LightGBM | 0.672 | 0.496 | 0.412 | 0.514 | 0.563 |
-| XGBoost | 0.660 | 0.481 | 0.471 | 0.543 | 0.549 |
+| LogReg | 0.701 | 0.596 | 0.750 | 0.556 | 0.632 |
+| LightGBM | 0.730 | 0.657 | 0.750 | 0.778 | 0.684 |
+| XGBoost | 0.706 | 0.615 | 0.750 | 0.667 | 0.632 |
 
 ★ **Best model: LightGBM**
-Test ROC-AUC = 0.672 | PR-AUC = 0.496
-Prec@top 5% = 0.412 | @top 10% = 0.514 | @top 20% = 0.563
+Test ROC-AUC = 0.730 | PR-AUC = 0.657
+Prec@top 5% = 0.750 | @top 10% = 0.778 | @top 20% = 0.684
 
 ---
 
@@ -75,8 +78,8 @@ Prec@top 5% = 0.412 | @top 10% = 0.514 | @top 20% = 0.563
 
 | Metric | v2 Baseline | v3 (timing+priors) | Change |
 |---|---|---|---|
-| Best ROC-AUC (test) | N/A | 0.672 | unknown |
-| Best Prec@10% (test) | N/A | 0.514 | — |
+| Best ROC-AUC (test) | N/A | 0.730 | unknown |
+| Best Prec@10% (test) | N/A | 0.778 | — |
 | Feature count | 49 | 44 | +-5 |
 
 **Overall verdict: unknown**
@@ -86,10 +89,10 @@ Prec@top 5% = 0.412 | @top 10% = 0.514 | @top 20% = 0.563
 ## 5. Threshold / Ranking Strategy
 
 ### High-precision watchlist
-Threshold ≈ 0.91: prec=0.614  rec=0.280  n=57
+Threshold ≈ 0.76: prec=1.000  rec=0.024  n=1
 
 ### Broad candidate list (best F1)
-Threshold ≈ 0.10: prec=0.494  rec=0.688  n=174
+Threshold ≈ 0.28: prec=0.563  rec=0.952  n=71
 
 ---
 
@@ -97,16 +100,16 @@ Threshold ≈ 0.10: prec=0.494  rec=0.688  n=174
 
 | Rank | Feature | Importance |
 |---|---|---|
-| 1 | feat_time_since_last_company_event | 37.0000 |
-| 2 | feat_company_event_sequence_num | 28.0000 |
-| 3 | feat_time_since_last_asset_event | 11.0000 |
-| 4 | feat_prior_large_move_rate_by_therapeutic_superclass | 9.0000 |
-| 5 | feat_recent_company_event_flag | 9.0000 |
-| 6 | feat_asset_event_sequence_num | 7.0000 |
-| 7 | feat_primary_completion_imminent_90d | 7.0000 |
-| 8 | feat_therapeutic_superclass_Dermatology | 6.0000 |
-| 9 | feat_cash_runway_proxy | 6.0000 |
-| 10 | feat_cns_flag | 6.0000 |
+| 1 | feat_cash_runway_proxy | 200.0000 |
+| 2 | feat_days_to_primary_completion | 149.0000 |
+| 3 | feat_company_event_sequence_num | 54.0000 |
+| 4 | feat_time_since_last_company_event | 39.0000 |
+| 5 | feat_prior_large_move_rate_by_therapeutic_superclass | 29.0000 |
+| 6 | feat_completed_flag | 29.0000 |
+| 7 | feat_asset_event_sequence_num | 26.0000 |
+| 8 | feat_cns_flag | 25.0000 |
+| 9 | feat_time_since_last_asset_event | 17.0000 |
+| 10 | feat_oncology_flag | 15.0000 |
 
 ---
 

@@ -19,36 +19,37 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.7 — 2026-03-16)
+## Current state (v0.8 — 2026-03-17)
 
 ### Source of truth files
 
 | File | Description |
 |---|---|
-| `ml_dataset_features_20260316_v2.csv` | ML feature dataset — 2379 rows × 108 cols, first full pipeline run on v3 master |
+| `ml_dataset_features_20260316_v2.csv` | ML feature dataset — 2379 rows × 108 cols, full pipeline run on v3 master |
 | `ml_feature_dict_20260316_v2.csv` | Feature dictionary — 14 entries with coverage + description |
-| `ml_baseline_train_20260312_v2.csv` | Training table — 2049 rows, 44 model-ready features |
+| `ml_baseline_train_20260317_v3.csv` | Training table — 596 rows (2023+ only), 44 model-ready features, 30.9% positive rate |
 | `enriched_all_clinical_clean_v3.csv` | **MASTER DATASET** — 2514 rows × 58 cols (v2 + 1652 historical 2020–2022 events) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
-### Current model (v3 — retrained on v3 master, 2379 rows)
+### Current model (v3 — 2023+ training cohort, 596 rows)
 
 | File | Description |
 |---|---|
 | `models/model_pre_event_v3_20260312.pkl` | Best model — LightGBM |
 
-### Current model report (v3)
+### Current model report (v3, retrained 2026-03-17)
 
 → [`reports/ml_pre_event_v3_report_20260312_v1.md`](reports/ml_pre_event_v3_report_20260312_v1.md)
 
-| Metric | v3 | v0.3 (prev) |
-|---|---|---|
-| Best model | **LightGBM** | Logistic Regression |
-| Test ROC-AUC | **0.672** | 0.661 |
-| CV AUC (5-fold) | **0.704 ± 0.008** | 0.682 ± 0.129 |
-| Prec @ top 10% | **0.514** | 0.308 |
-| Features | 44 (38 base + 6 priors) | 69 |
-| Train rows | 1,434 | 569 |
+| Metric | v3 (2023+ only) | v3 prev (all years) | v0.3 (prev) |
+|---|---|---|---|
+| Best model | **LightGBM** | LightGBM | Logistic Regression |
+| Test ROC-AUC | **0.730** | 0.672 | 0.661 |
+| CV AUC (5-fold) | **0.744 ± 0.096** | 0.704 ± 0.008 | 0.682 ± 0.129 |
+| Prec @ top 10% | **0.778** | 0.514 | 0.308 |
+| Positive rate (train) | **30.9%** | ~0.6% | ~30% |
+| Features | 44 (38 base + 6 priors) | 44 | 69 |
+| Train rows | 417 | 1,434 | 569 |
 
 ### CT.gov feature refresh report (v0.4)
 
@@ -89,7 +90,7 @@ scripts/build_pre_event_train_v2.py        → train table
 scripts/train_pre_event_v3.py              → models/ + reports/
 ```
 
-**Status (2026-03-16):** Feature pipeline not yet re-run on v3 master. Current ML inputs (`ml_dataset_features_v0.5`, `ml_baseline_train_v0.3`) are built from v2 master (827 rows). Full pipeline rerun is the required next step.
+**Status (2026-03-17):** Full pipeline complete on v3 master. Training restricted to 2023+ events (596 rows, 30.9% positive rate). LightGBM AUC 0.730 / Prec@10% 0.778.
 
 ### Key scripts
 
@@ -277,6 +278,15 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v0.8 — 2026-03-17 (restrict training to 2023+ rows)
+- **Training cohort restricted to 2023+ events** — 2020–2022 rows excluded from train/val/test
+- 2020–2022 rows had near-zero positive rate (~0.3–0.5%) vs 24–32% for 2023+ due to missing/sparse price data; time-split was putting all of them in train → only 0.6% positives in train
+- After fix: **596 training rows (30.9% positive rate)** vs 2049 rows (0.6% positive rate) before
+- New train table: `ml_baseline_train_20260317_v3.csv`
+- **LightGBM AUC: 0.730** (was 0.672), **Prec@10%: 0.778** (was 0.514), **CV AUC: 0.744 ± 0.096**
+- Top features: `feat_cash_runway_proxy`, `feat_days_to_primary_completion`, timing/sequence features, `feat_cns_flag`, `feat_oncology_flag`
+- Fix: added `MIN_EVENT_YEAR = 2023` filter in `build_pre_event_train_v2.py` (after row_ready filter, before time_split)
 
 ### v0.7 — 2026-03-16 (full pipeline on v3 master + pipeline bug fixes)
 - **First complete pipeline run on v3 master (2514 rows → 2379 after prep)**

@@ -31,8 +31,12 @@ SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
-DATE_TAG = "20260312"
-VERSION  = 2
+DATE_TAG = "20260317"
+VERSION  = 3
+
+# Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
+# due to missing price data, which would make the train split almost label-free)
+MIN_EVENT_YEAR = 2023
 
 # ---------------------------------------------------------------------------
 # Feature roster
@@ -203,7 +207,16 @@ def main():
     # ── Training filter ───────────────────────────────────────────────────────
     mask = df_raw["row_ready"].astype(bool) & df_raw["v_actual_date"].notna()
     df   = df_raw[mask].copy()
-    print(f"After filter: {len(df)} rows")
+    print(f"After row_ready filter: {len(df)} rows")
+
+    # Restrict to MIN_EVENT_YEAR+ (2020-2022 rows have ~0% positives due to
+    # missing price data; time-split puts them all in train → 0.6% positive rate)
+    df["_event_year"] = pd.to_datetime(df["v_actual_date"], errors="coerce").dt.year
+    before_year_filter = len(df)
+    df = df[df["_event_year"] >= MIN_EVENT_YEAR].copy()
+    df = df.drop(columns=["_event_year"])
+    print(f"After year >= {MIN_EVENT_YEAR} filter: {len(df)} rows "
+          f"(excluded {before_year_filter - len(df)} pre-{MIN_EVENT_YEAR} rows)")
 
     # ── Use validated date for splitting ─────────────────────────────────────
     df["_split_date"] = pd.to_datetime(df["v_actual_date"], errors="coerce")

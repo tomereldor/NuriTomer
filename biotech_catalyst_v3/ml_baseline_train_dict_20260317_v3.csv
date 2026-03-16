@@ -5,22 +5,22 @@ drug_name,metadata,drug_name,object,none,0,0,other
 nct_id,metadata,nct_id,object,none,0,1,other
 target_large_move,target,target_large_move,int64,none,0,0,other
 feat_asset_event_sequence_num,feature,feat_asset_event_sequence_num,int64,none,0,0,numeric
-feat_asset_trial_share,feature,feat_asset_trial_share,float64,median=0.0000,2049,0,numeric
-feat_cash_runway_proxy,feature,feat_cash_runway_proxy,float64,median=0.1095,1345,0,numeric
+feat_asset_trial_share,feature,feat_asset_trial_share,float64,median=0.0000,596,0,numeric
+feat_cash_runway_proxy,feature,feat_cash_runway_proxy,float64,median=0.1746,3,0,numeric
 feat_company_event_sequence_num,feature,feat_company_event_sequence_num,int64,none,0,0,numeric
-feat_days_to_primary_completion,feature,feat_days_to_primary_completion,float64,median=0.0000,29,0,numeric
+feat_days_to_primary_completion,feature,feat_days_to_primary_completion,float64,median=0.0000,1,0,numeric
 feat_pipeline_depth_score,feature,feat_pipeline_depth_score,float64,none,0,0,numeric
-feat_pivotal_proxy_score,feature,feat_pivotal_proxy_score,float64,median=0.0000,2049,0,numeric
-feat_time_since_last_asset_event,feature,feat_time_since_last_asset_event,float64,median=155.0000,1381,0,numeric
-feat_time_since_last_company_event,feature,feat_time_since_last_company_event,float64,median=24.0000,296,0,numeric
+feat_pivotal_proxy_score,feature,feat_pivotal_proxy_score,float64,median=0.0000,596,0,numeric
+feat_time_since_last_asset_event,feature,feat_time_since_last_asset_event,float64,median=249.0000,392,0,numeric
+feat_time_since_last_company_event,feature,feat_time_since_last_company_event,float64,median=120.5000,128,0,numeric
 feat_active_not_recruiting_flag,feature,feat_active_not_recruiting_flag,float64,0 (absent),1,0,binary flag
 feat_blinded_flag,feature,feat_blinded_flag,int64,none,0,0,binary flag
 feat_cns_flag,feature,feat_cns_flag,int64,none,0,0,binary flag
 feat_completed_flag,feature,feat_completed_flag,float64,0 (absent),1,0,binary flag
 feat_oncology_flag,feature,feat_oncology_flag,int64,none,0,0,binary flag
 feat_open_label_flag,feature,feat_open_label_flag,int64,none,0,0,binary flag
-feat_primary_completion_imminent_30d,feature,feat_primary_completion_imminent_30d,float64,0 (absent),29,0,binary flag
-feat_primary_completion_imminent_90d,feature,feat_primary_completion_imminent_90d,float64,0 (absent),29,0,binary flag
+feat_primary_completion_imminent_30d,feature,feat_primary_completion_imminent_30d,float64,0 (absent),1,0,binary flag
+feat_primary_completion_imminent_90d,feature,feat_primary_completion_imminent_90d,float64,0 (absent),1,0,binary flag
 feat_rare_disease_flag,feature,feat_rare_disease_flag,int64,none,0,0,binary flag
 feat_recent_asset_event_flag,feature,feat_recent_asset_event_flag,float64,none,0,0,binary flag
 feat_recent_company_event_flag,feature,feat_recent_company_event_flag,float64,none,0,0,binary flag
