@@ -25,10 +25,10 @@ python -m scripts.<script_name>
 
 | File | Description |
 |---|---|
-| `ml_dataset_features_v0.5_20260315.csv` | **THE ML INPUT FILE** — 827 rows × 149 cols, 86 features, all pre-event |
+| `ml_dataset_features_v0.5_20260315.csv` | ML feature dataset — 827 rows × 149 cols, 86 features (built from v2 master; **not yet rebuilt on v3**) |
 | `ml_feature_dict_v0.5_20260315.csv` | Feature dictionary — 86 entries with coverage + description |
-| `ml_baseline_train_v0.3_20260313.csv` | Training table — 813 rows, 64 model-ready features (v0.3 model) |
-| `enriched_all_clinical_clean_v2.csv` | Master raw dataset — 862 rows × 58 cols (do not use directly for ML) |
+| `ml_baseline_train_v0.3_20260313.csv` | Training table — 813 rows, 64 model-ready features (v0.3 model; **not yet rebuilt on v3**) |
+| `enriched_all_clinical_clean_v3.csv` | **MASTER DATASET** — 2514 rows × 58 cols (v2 + 1652 historical 2020–2022 events) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
 ### Current model (v0.3 — not yet retrained on v0.4 features)
@@ -90,6 +90,7 @@ scripts/train_pre_event_v3.py              → models/ + reports/
 |---|---|
 | `add_pre_event_timing_features.py` | Pass-5: adds 9 timing/sequence features to the feature dataset |
 | `add_oncology_timing_interactions.py` | Pass-8: adds 4 oncology × timing interaction features |
+| `expand_historical_events.py` | Dataset expansion: CT.gov Phase 2/3 completions for a date range → appends to master |
 | `refresh_ctgov_features.py` | Pass-6: CT.gov timing refresh (per-NCT-ID API, 11 features) |
 | `build_ctgov_pipeline_proxies.py` | Pass-7: CT.gov sponsor + drug aggregate features (8 features) |
 | `add_train_fold_priors.py` | `FoldPriorEncoder` — inject reaction priors safely inside CV folds |
@@ -260,6 +261,18 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v0.5 — 2026-03-16 (dataset expansion)
+- **Master dataset expanded: 862 → 2514 rows (+1652 new rows)**
+- Historical extension: Phase 2/3 CT.gov completions 2020-01-01 → 2022-12-31
+- Script: `scripts/expand_historical_events.py`
+- New rows: 1652 | Phase 2: 695, Phase 3: 688, Phase 2/3: 55, Ph1/2: 182
+- Year coverage now: 2020=464, 2021=445, 2022=398 (was 19/21/34)
+- New row move distribution: Noise=1466 (89%), Low=133, Med=17, High=3, Extreme=2
+- Oncology: 26.8% of new rows | All 1652 have nct_id + ATR computed
+- Full dataset: Noise=81.2%, Low=7.5%, Medium=3.2%, High=3.7%, Extreme=3.9%
+- **Next required step:** Re-run full feature pipeline on v3 master (prepare_ml_dataset → all pass scripts → rebuild train table → retrain)
+- See: [`reports/dataset_expansion_strategy_v0.5_20260316.md`](reports/dataset_expansion_strategy_v0.5_20260316.md)
 
 ### v0.5 — 2026-03-15
 - Added 4 oncology × timing interaction features via `add_oncology_timing_interactions.py`
