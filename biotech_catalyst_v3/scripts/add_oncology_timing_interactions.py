@@ -20,8 +20,8 @@ Features added (4):
   feat_oncology_x_recent_completion  — oncology AND recent_completion_flag
   feat_oncology_x_recency_imminent   — oncology AND completion_recency_bucket = imminent_0_30
 
-Input:  latest ml_dataset_features_v*.csv
-Output: ml_dataset_features_v0.5_20260315.csv  (827 rows × 149 cols)
+Input:  latest ml_dataset_features_YYYYMMDD_vN.csv  (new pipeline naming)
+Output: ml_dataset_features_YYYYMMDD_v(N+1).csv
 
 Usage (from biotech_catalyst_v3/):
     python -m scripts.add_oncology_timing_interactions
@@ -35,12 +35,9 @@ import shutil
 import numpy as np
 import pandas as pd
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR   = os.path.dirname(SCRIPT_DIR)
+SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
-
-OUT_VERSION = "v0.5"
-OUT_DATE    = "20260315"
 
 NEW_FEAT_COLS = [
     "feat_oncology_x_imminent_30d",
@@ -78,30 +75,26 @@ NEW_FEAT_META = [
 # ---------------------------------------------------------------------------
 
 def _find_latest_features(base_dir, archive_dir):
-    candidates = (
-        glob.glob(os.path.join(base_dir,    "ml_dataset_features_v*.csv")) +
-        glob.glob(os.path.join(archive_dir, "ml_dataset_features_v*.csv"))
-    )
-    best, best_v = None, -1.0
+    """Return (path, version_int, date_tag) for highest-version ml_dataset_features file in base_dir only."""
+    candidates = glob.glob(os.path.join(base_dir, "ml_dataset_features_*.csv"))
+    best, best_v, best_date = None, -1, None
     for f in candidates:
-        m = re.search(r"_v(\d+\.\d+)_", f)
+        m = re.search(r"_(\d{8})_v(\d+)\.csv$", f)
         if m:
-            v = float(m.group(1))
+            v = int(m.group(2))
             if v > best_v:
-                best_v, best = v, f
-    return best, best_v
+                best_v, best, best_date = v, f, m.group(1)
+    return best, best_v, best_date
 
 
 def _find_latest_dict(base_dir, archive_dir):
-    candidates = (
-        glob.glob(os.path.join(base_dir,    "ml_feature_dict_v*.csv")) +
-        glob.glob(os.path.join(archive_dir, "ml_feature_dict_v*.csv"))
-    )
-    best, best_v = None, -1.0
+    """Return path of highest-version ml_feature_dict file in base_dir only."""
+    candidates = glob.glob(os.path.join(base_dir, "ml_feature_dict_*.csv"))
+    best, best_v = None, -1
     for f in candidates:
-        m = re.search(r"_v(\d+\.\d+)_", f)
+        m = re.search(r"_(\d{8})_v(\d+)\.csv$", f)
         if m:
-            v = float(m.group(1))
+            v = int(m.group(2))
             if v > best_v:
                 best_v, best = v, f
     return best
@@ -202,13 +195,13 @@ def main():
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
     # --- find inputs ---
-    feat_path, feat_v = _find_latest_features(BASE_DIR, ARCHIVE_DIR)
-    dict_path         = _find_latest_dict(BASE_DIR, ARCHIVE_DIR)
+    feat_path, feat_v, date_tag = _find_latest_features(BASE_DIR, ARCHIVE_DIR)
+    dict_path                   = _find_latest_dict(BASE_DIR, ARCHIVE_DIR)
 
     if feat_path is None:
-        raise FileNotFoundError("No ml_dataset_features_v*.csv found")
+        raise FileNotFoundError("No ml_dataset_features_YYYYMMDD_vN.csv found in " + BASE_DIR)
     if dict_path is None:
-        raise FileNotFoundError("No ml_feature_dict_v*.csv found")
+        raise FileNotFoundError("No ml_feature_dict_YYYYMMDD_vN.csv found in " + BASE_DIR)
 
     print(f"Input : {os.path.basename(feat_path)}  (v{feat_v})")
     df = pd.read_csv(feat_path)
@@ -223,23 +216,19 @@ def main():
         mean  = df[col].mean()
         print(f"  {col}: {n}/{len(df)} ({pct:.1f}%) | mean={mean:.3f}")
 
-    # --- output paths ---
-    out_feat_name = f"ml_dataset_features_{OUT_VERSION}_{OUT_DATE}.csv"
-    out_dict_name = f"ml_feature_dict_{OUT_VERSION}_{OUT_DATE}.csv"
+    # --- output paths (increment version, keep date_tag from input) ---
+    new_v         = feat_v + 1
+    out_feat_name = f"ml_dataset_features_{date_tag}_v{new_v}.csv"
+    out_dict_name = f"ml_feature_dict_{date_tag}_v{new_v}.csv"
     out_feat_path = os.path.join(BASE_DIR, out_feat_name)
     out_dict_path = os.path.join(BASE_DIR, out_dict_name)
 
-    # --- archive current versions if they'd be overwritten ---
-    for p in [out_feat_path, out_dict_path]:
-        if os.path.exists(p):
-            shutil.copy(p, os.path.join(ARCHIVE_DIR, os.path.basename(p)))
-
-    # --- archive the previous latest if it's different from output ---
-    if os.path.basename(feat_path) != out_feat_name and os.path.dirname(feat_path) == BASE_DIR:
+    # --- archive the previous latest ---
+    if os.path.dirname(feat_path) == BASE_DIR:
         shutil.move(feat_path, os.path.join(ARCHIVE_DIR, os.path.basename(feat_path)))
         print(f"Archived: {os.path.basename(feat_path)}")
 
-    if dict_path and os.path.basename(dict_path) != out_dict_name and os.path.dirname(dict_path) == BASE_DIR:
+    if dict_path and os.path.dirname(dict_path) == BASE_DIR:
         shutil.move(dict_path, os.path.join(ARCHIVE_DIR, os.path.basename(dict_path)))
         print(f"Archived: {os.path.basename(dict_path)}")
 
@@ -248,7 +237,8 @@ def main():
     print(f"\nSaved : {out_feat_name}  ({df.shape[0]} rows × {df.shape[1]} cols)")
 
     # --- update feature dict ---
-    n_entries = update_feature_dict(df, dict_path, out_dict_path)
+    archived_dict = os.path.join(ARCHIVE_DIR, os.path.basename(dict_path)) if dict_path else None
+    n_entries = update_feature_dict(df, archived_dict, out_dict_path)
     print(f"Dict  : {n_entries} entries → {out_dict_name}")
     print("\nDone — oncology timing interaction features added.")
 

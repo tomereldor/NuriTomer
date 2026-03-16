@@ -122,10 +122,7 @@ METADATA_COLS = ["ticker", "event_date", "drug_name", "nct_id"]
 # ---------------------------------------------------------------------------
 
 def _find_latest_feat(base_dir, archive_dir):
-    candidates = (
-        glob.glob(os.path.join(base_dir, "ml_dataset_features_*.csv")) +
-        glob.glob(os.path.join(archive_dir, "ml_dataset_features_*.csv"))
-    )
+    candidates = glob.glob(os.path.join(base_dir, "ml_dataset_features_*.csv"))
     best, best_v = None, 0
     for f in candidates:
         m = re.search(r"_v(\d+)\.csv$", f)
@@ -152,8 +149,9 @@ def impute(df, feat_cols):
             imputation_log.append((col, "0 (absent)", int(n_miss)))
         else:
             med = df[col].median()
-            df[col] = df[col].fillna(med)
-            imputation_log.append((col, f"median={med:.4f}", int(n_miss)))
+            fill_val = med if pd.notna(med) else 0.0
+            df[col] = df[col].fillna(fill_val)
+            imputation_log.append((col, f"median={fill_val:.4f}", int(n_miss)))
     return df, imputation_log
 
 
@@ -192,6 +190,15 @@ def main():
 
     df_raw = pd.read_csv(src_path)
     print(f"Raw: {df_raw.shape[0]} rows × {df_raw.shape[1]} cols")
+
+    # ── Compute binary target if missing ─────────────────────────────────────
+    # target_large_move = 1 when abs_move_atr >= 3.0 AND abs(move_pct) >= 10%
+    if TARGET_COL not in df_raw.columns:
+        abs_atr = df_raw["stock_movement_atr_normalized"].abs()
+        abs_pct = df_raw["move_pct"].abs()
+        df_raw[TARGET_COL] = ((abs_atr >= 3.0) & (abs_pct >= 10.0)).astype(int)
+        print(f"Computed {TARGET_COL}: {int(df_raw[TARGET_COL].sum())} positives "
+              f"({df_raw[TARGET_COL].mean():.1%})")
 
     # ── Training filter ───────────────────────────────────────────────────────
     mask = df_raw["row_ready"].astype(bool) & df_raw["v_actual_date"].notna()

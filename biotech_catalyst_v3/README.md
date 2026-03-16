@@ -19,36 +19,36 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.6 — 2026-03-16)
+## Current state (v0.7 — 2026-03-16)
 
 ### Source of truth files
 
 | File | Description |
 |---|---|
-| `ml_dataset_features_v0.5_20260315.csv` | ML feature dataset — 827 rows × 149 cols, 86 features (built from v2 master; **not yet rebuilt on v3**) |
-| `ml_feature_dict_v0.5_20260315.csv` | Feature dictionary — 86 entries with coverage + description |
-| `ml_baseline_train_v0.3_20260313.csv` | Training table — 813 rows, 64 model-ready features (v0.3 model; **not yet rebuilt on v3**) |
+| `ml_dataset_features_20260316_v2.csv` | ML feature dataset — 2379 rows × 108 cols, first full pipeline run on v3 master |
+| `ml_feature_dict_20260316_v2.csv` | Feature dictionary — 14 entries with coverage + description |
+| `ml_baseline_train_20260312_v2.csv` | Training table — 2049 rows, 44 model-ready features |
 | `enriched_all_clinical_clean_v3.csv` | **MASTER DATASET** — 2514 rows × 58 cols (v2 + 1652 historical 2020–2022 events) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
-### Current model (v0.3 — not yet retrained on v0.4 features)
+### Current model (v3 — retrained on v3 master, 2379 rows)
 
 | File | Description |
 |---|---|
-| `models/model_pre_event_v0.3_20260313.pkl` | Best model — Logistic Regression |
-| `models/prior_encoder_v0.3_20260313.pkl` | Fold-safe prior encoder (fit on train, apply to val/test) |
+| `models/model_pre_event_v3_20260312.pkl` | Best model — LightGBM |
 
-### Current model report (v0.3)
+### Current model report (v3)
 
-→ [`reports/ml_pre_event_report_v0.3_20260313.md`](reports/ml_pre_event_report_v0.3_20260313.md)
+→ [`reports/ml_pre_event_v3_report_20260312_v1.md`](reports/ml_pre_event_v3_report_20260312_v1.md)
 
-| Metric | v0.3 |
-|---|---|
-| Best model | Logistic Regression |
-| Test ROC-AUC | 0.661 |
-| CV AUC (5-fold) | 0.682 ± 0.129 |
-| Prec @ top 10% | 0.308 |
-| Features | 69 (incl. 9 timing + 6 fold-safe priors) |
+| Metric | v3 | v0.3 (prev) |
+|---|---|---|
+| Best model | **LightGBM** | Logistic Regression |
+| Test ROC-AUC | **0.672** | 0.661 |
+| CV AUC (5-fold) | **0.704 ± 0.008** | 0.682 ± 0.129 |
+| Prec @ top 10% | **0.514** | 0.308 |
+| Features | 44 (38 base + 6 priors) | 69 |
+| Train rows | 1,434 | 569 |
 
 ### CT.gov feature refresh report (v0.4)
 
@@ -110,11 +110,19 @@ scripts/train_pre_event_v3.py              → models/ + reports/
 
 ### Running the full feature → model pipeline
 
+One command (from `biotech_catalyst_v3/`):
 ```bash
-python -m scripts.add_pre_event_timing_features   # regenerate feature dataset
-python -m scripts.build_pre_event_train_v2         # rebuild train table
-python -m scripts.train_pre_event_v3               # retrain models + report
+python -m scripts.run_full_pre_event_pipeline
 ```
+
+Or resume from a specific step (e.g. after step 3 API calls complete):
+```bash
+python -m scripts.run_full_pre_event_pipeline --start-step 4
+```
+
+Steps: 1 `prepare_ml_dataset` → 2 `add_high_signal_features` → 3 `refresh_ctgov_features` (API, ~20 min) → 4 `build_ctgov_pipeline_proxies` (API, ~10 min) → 5 `add_pre_event_timing_features` → 6 `add_oncology_timing_interactions` → 7 `build_pre_event_train_v2` → 8 `train_pre_event_v3`
+
+**Important:** All pipeline scripts use the naming convention `ml_dataset_features_YYYYMMDD_vN.csv` (date-first, integer version). Do not put old `v0.X_YYYYMMDD` files in the project root — they will be ignored. Old files belong in `archive/`.
 
 ---
 
@@ -269,6 +277,20 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v0.7 — 2026-03-16 (full pipeline on v3 master + pipeline bug fixes)
+- **First complete pipeline run on v3 master (2514 rows → 2379 after prep)**
+- Pipeline now correctly flows 2379 rows through all 8 steps end-to-end
+- **New model retrained on v3 data: LightGBM, AUC 0.672, CV AUC 0.704 ± 0.008, Prec@top10% 0.514**
+- Previous best was LogReg 0.661 / CV 0.682 ± 0.129 / Prec@10% 0.308 (827 rows)
+- Pipeline bug fixes (all 6 find-latest functions):
+  - Removed archive-search from all `_find_latest*` functions — archived high-version files no longer shadow new files
+  - Fixed steps 3 + 4 (`refresh_ctgov_features`, `build_ctgov_pipeline_proxies`) to use integer versioning (`_YYYYMMDD_vN.csv`) instead of semver (`v0.X_YYYYMMDD.csv`)
+  - Fixed step 1 (`prepare_ml_dataset`): was reading wrong input file (`v2` in `scripts/`) and writing to wrong location
+  - Fixed step 6 (`add_oncology_timing_interactions`): was using old semver regex, couldn't find pipeline output
+  - Fixed step 7 (`build_pre_event_train_v2`): added target computation (`target_large_move`) and median-NaN fallback to 0
+  - Fixed step 8 (`train_pre_event_v3`): added `fillna(0)` after prior injection to handle post-merge NaN
+- **Known issue:** 2020–2022 rows have ~0.3–0.5% positive rate vs 24–32% for 2023+ (time-split puts these in train → 0.6% positives in train). Next step: filter training data to 2023+ rows before retraining
 
 ### v0.6 — 2026-03-16 (threshold analysis + pipeline orchestration)
 - **New binary target defined: ≥ 3.0× ATR AND abs(move_pct) ≥ 10%** (was ≥ 5× ATR, no floor)

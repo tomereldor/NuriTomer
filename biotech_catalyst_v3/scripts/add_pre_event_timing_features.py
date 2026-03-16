@@ -49,11 +49,9 @@ ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 # ---------------------------------------------------------------------------
 
 def _find_latest_version(base_dir, archive_dir, prefix):
-    """Return (path, version_int, date_tag) for the highest-version file across
-    both base_dir and archive_dir."""
+    """Return (path, version_int, date_tag) for the highest-version file in base_dir only."""
     candidates = (
-        glob.glob(os.path.join(base_dir, f"{prefix}_*.csv")) +
-        glob.glob(os.path.join(archive_dir, f"{prefix}_*.csv"))
+        glob.glob(os.path.join(base_dir, f"{prefix}_*.csv"))
     )
     best, best_v, date_tag = None, 0, None
     for f in candidates:
@@ -66,10 +64,9 @@ def _find_latest_version(base_dir, archive_dir, prefix):
 
 
 def _next_version_in_basedir(base_dir, archive_dir, prefix, date_tag):
-    """Return max version seen across both dirs + 1."""
+    """Return max version seen in base_dir + 1."""
     all_files = (
-        glob.glob(os.path.join(base_dir, f"{prefix}_{date_tag}_v*.csv")) +
-        glob.glob(os.path.join(archive_dir, f"{prefix}_{date_tag}_v*.csv"))
+        glob.glob(os.path.join(base_dir, f"{prefix}_{date_tag}_v*.csv"))
     )
     nums = [int(re.search(r"_v(\d+)\.csv$", f).group(1))
             for f in all_files if re.search(r"_v(\d+)\.csv$", f)]

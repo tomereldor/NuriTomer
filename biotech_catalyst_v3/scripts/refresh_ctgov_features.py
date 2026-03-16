@@ -96,48 +96,31 @@ ACTIVE_STATUSES = {
 # Versioning helpers
 # ---------------------------------------------------------------------------
 
-def _find_latest(base_dir, archive_dir, prefix):
-    candidates = (
-        glob.glob(os.path.join(base_dir,    f"{prefix}_*.csv")) +
-        glob.glob(os.path.join(archive_dir, f"{prefix}_*.csv"))
-    )
-    candidates = [f for f in candidates if "dict" not in os.path.basename(f)]
-    best, best_v = None, -1
+def _find_latest(base_dir, prefix):
+    """Return (path, version_int, date_tag) for highest-version file in base_dir only."""
+    candidates = [f for f in glob.glob(os.path.join(base_dir, f"{prefix}_*.csv"))
+                  if "dict" not in os.path.basename(f)]
+    best, best_v, best_date = None, -1, None
     for f in candidates:
-        m = re.search(r"_v(\d+(?:\.\d+)?)_", f)
+        m = re.search(r"_(\d{8})_v(\d+)\.csv$", f)
         if m:
-            try:
-                v = float(m.group(1))
-            except ValueError:
-                v = 0
+            v = int(m.group(2))
             if v > best_v:
-                best_v, best = v, f
-    return best, best_v
+                best_v, best, best_date = v, f, m.group(1)
+    return best, best_v, best_date
 
 
-def _find_latest_dict(base_dir, archive_dir, prefix):
-    candidates = (
-        glob.glob(os.path.join(base_dir,    f"{prefix}_*.csv")) +
-        glob.glob(os.path.join(archive_dir, f"{prefix}_*.csv"))
-    )
+def _find_latest_dict(base_dir, prefix):
+    """Return path of highest-version dict file in base_dir only."""
+    candidates = glob.glob(os.path.join(base_dir, f"{prefix}_*.csv"))
     best, best_v = None, -1
     for f in candidates:
-        m = re.search(r"_v(\d+(?:\.\d+)?)_", f)
+        m = re.search(r"_(\d{8})_v(\d+)\.csv$", f)
         if m:
-            try:
-                v = float(m.group(1))
-            except ValueError:
-                v = 0
+            v = int(m.group(2))
             if v > best_v:
                 best_v, best = v, f
     return best
-
-
-def _next_semver(current_version_float: float) -> str:
-    """0.3 → '0.4',  0.9 → '0.10',  1.0 → '1.1'."""
-    major = int(current_version_float)
-    minor = round((current_version_float - major) * 10)
-    return f"{major}.{minor + 1}"
 
 
 # ---------------------------------------------------------------------------
@@ -395,17 +378,10 @@ def main():
     os.makedirs(CACHE_DIR, exist_ok=True)
 
     # ── Find source ───────────────────────────────────────────────────────────
-    src_path, src_v = _find_latest(BASE_DIR, ARCHIVE_DIR, "ml_dataset_features")
+    src_path, src_v, date_tag = _find_latest(BASE_DIR, "ml_dataset_features")
     if not src_path:
-        print("ERROR: no ml_dataset_features_*.csv found", file=sys.stderr)
+        print("ERROR: no ml_dataset_features_YYYYMMDD_vN.csv found in " + BASE_DIR, file=sys.stderr)
         sys.exit(1)
-
-    # If source is in archive, restore it
-    if ARCHIVE_DIR in src_path:
-        dst = os.path.join(BASE_DIR, os.path.basename(src_path))
-        shutil.copy(src_path, dst)
-        src_path = dst
-        print(f"Restored from archive: {os.path.basename(src_path)}")
 
     print(f"Input : {os.path.basename(src_path)}  (v{src_v})")
     df = pd.read_csv(src_path)
@@ -477,35 +453,28 @@ def main():
             print(f"  {col:<48}  {n:4d}/{len(df)}  ({n/len(df)*100:.1f}%)")
 
     # ── Build new version tag ─────────────────────────────────────────────────
-    new_v    = _next_semver(src_v)
-    date_tag = "20260313"
-    new_name = f"ml_dataset_features_v{new_v}_{date_tag}.csv"
+    new_v    = src_v + 1
+    new_name = f"ml_dataset_features_{date_tag}_v{new_v}.csv"
     out_path = os.path.join(BASE_DIR, new_name)
 
     # ── Archive current version in base dir ──────────────────────────────────
-    for f in glob.glob(os.path.join(BASE_DIR, "ml_dataset_features_v*.csv")):
-        dest = os.path.join(ARCHIVE_DIR, os.path.basename(f))
-        if not os.path.exists(dest):
-            shutil.move(f, dest)
-        else:
-            os.remove(f)
-        print(f"Archived: archive/{os.path.basename(f)}")
+    if os.path.abspath(src_path) != os.path.abspath(out_path):
+        dest = os.path.join(ARCHIVE_DIR, os.path.basename(src_path))
+        shutil.move(src_path, dest)
+        print(f"Archived: archive/{os.path.basename(src_path)}")
 
     df.to_csv(out_path, index=False)
     print(f"\nSaved : {new_name}  ({df.shape[0]} rows × {df.shape[1]} cols)")
 
     # ── Update feature dict ───────────────────────────────────────────────────
-    old_dict = _find_latest_dict(BASE_DIR, ARCHIVE_DIR, "ml_feature_dict")
-    for f in glob.glob(os.path.join(BASE_DIR, "ml_feature_dict_v*.csv")):
-        dest = os.path.join(ARCHIVE_DIR, os.path.basename(f))
-        if not os.path.exists(dest):
-            shutil.move(f, dest)
-        else:
-            os.remove(f)
+    old_dict = _find_latest_dict(BASE_DIR, "ml_feature_dict")
+    if old_dict:
+        dest = os.path.join(ARCHIVE_DIR, os.path.basename(old_dict))
+        shutil.move(old_dict, dest)
 
-    new_dict_name = f"ml_feature_dict_v{new_v}_{date_tag}.csv"
+    new_dict_name = f"ml_feature_dict_{date_tag}_v{new_v}.csv"
     out_dict_path = os.path.join(BASE_DIR, new_dict_name)
-    update_feature_dict(df, old_dict, out_dict_path)
+    update_feature_dict(df, os.path.join(ARCHIVE_DIR, os.path.basename(old_dict)) if old_dict else None, out_dict_path)
     print(f"Saved : {new_dict_name}")
 
     print("\nDone — CT.gov timing features refreshed.")

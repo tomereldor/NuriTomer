@@ -1,0 +1,3 @@
+split,n,pos_pct,roc_auc,pr_auc,prec@top5pct,n@top5pct,prec@top10pct,n@top10pct,prec@top20pct,n@top20pct,date_range,n_train
+fold_3,296,5.1,0.6985,0.1416,0.2143,14,0.1724,29,0.0847,59,fold_3,1189
+fold_4,296,32.8,0.7092,0.5183,0.5714,14,0.4828,29,0.4746,59,fold_4,1485

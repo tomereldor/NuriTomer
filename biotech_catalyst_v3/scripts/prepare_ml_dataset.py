@@ -2,7 +2,7 @@
 """
 prepare_ml_dataset.py
 =====================
-Single-pass ML preparation pipeline for enriched_all_clinical_clean_v2.csv.
+Single-pass ML preparation pipeline for enriched_all_clinical_clean_v3.csv.
 
 Steps:
   1. Load dataset
@@ -13,18 +13,19 @@ Steps:
   6. Flag unusable rows  (row_ready column)
   7. Deduplicate  (ticker + event_date + catalyst_summary)
   8. Drop zero-variance columns (catalyst_type)
-  9. Save ml_dataset_v1.csv
+  9. Save ml_dataset_features_YYYYMMDD_v1.csv  (project root, feeds step 2)
 
 Usage:
     python prepare_ml_dataset.py
-    python prepare_ml_dataset.py --input enriched_all_clinical_clean_v2.csv
+    python prepare_ml_dataset.py --input enriched_all_clinical_clean_v3.csv
     python prepare_ml_dataset.py --skip-api     # offline — skips CT.gov and NLM calls
-    python prepare_ml_dataset.py --output ml_dataset_v1.csv
+    python prepare_ml_dataset.py --output ml_dataset_features_20260316_v1.csv
 """
 
 import argparse
 import os
 import time
+from datetime import date
 from typing import Dict, Optional
 
 import pandas as pd
@@ -32,8 +33,10 @@ import requests
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_IN  = os.path.join(SCRIPT_DIR, "enriched_all_clinical_clean_v2.csv")
-DEFAULT_OUT = os.path.join(SCRIPT_DIR, "ml_dataset_v1.csv")
+PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+DEFAULT_IN  = os.path.join(PROJECT_DIR, "enriched_all_clinical_clean_v3.csv")
+_DATE_TAG   = date.today().strftime("%Y%m%d")
+DEFAULT_OUT = os.path.join(PROJECT_DIR, f"ml_dataset_features_{_DATE_TAG}_v1.csv")
 
 # ── API settings ───────────────────────────────────────────────────────────────
 CT_URL      = "https://clinicaltrials.gov/api/v2/studies/{nct_id}"
@@ -619,12 +622,12 @@ def main(input_file: str, output_file: str, skip_api: bool = False) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="ML preparation pipeline for enriched_all_clinical_clean_v2.csv"
+        description="ML preparation pipeline for enriched_all_clinical_clean_v3.csv"
     )
     parser.add_argument(
         "--input",
         default=DEFAULT_IN,
-        help=f"Input CSV  (default: enriched_all_clinical_clean_v2.csv)",
+        help=f"Input CSV  (default: enriched_all_clinical_clean_v3.csv)",
     )
     parser.add_argument(
         "--output",

@@ -69,10 +69,7 @@ sns.set_style("whitegrid")
 # ---------------------------------------------------------------------------
 
 def _find_latest(base_dir, archive_dir, prefix):
-    candidates = (
-        glob.glob(os.path.join(base_dir, f"{prefix}_*.csv")) +
-        glob.glob(os.path.join(archive_dir, f"{prefix}_*.csv"))
-    )
+    candidates = glob.glob(os.path.join(base_dir, f"{prefix}_*.csv"))
     candidates = [f for f in candidates if "dict" not in os.path.basename(f)]
     best, best_v = None, 0
     for f in candidates:
@@ -443,13 +440,17 @@ def main():
     X_te = te_p[feat_cols_with_priors].astype(float)
     y_te = te[TARGET].astype(int)
 
-    # Fill any residual NaNs
+    # Fill any residual NaNs (priors first with train median, then all remaining with 0)
     for col in prior_cols:
         if col in X_tr.columns:
             med = X_tr[col].median()
-            X_tr[col] = X_tr[col].fillna(med)
-            X_va[col] = X_va[col].fillna(med)
-            X_te[col] = X_te[col].fillna(med)
+            fill_val = med if pd.notna(med) else 0.0
+            X_tr[col] = X_tr[col].fillna(fill_val)
+            X_va[col] = X_va[col].fillna(fill_val)
+            X_te[col] = X_te[col].fillna(fill_val)
+    X_tr = X_tr.fillna(0)
+    X_va = X_va.fillna(0)
+    X_te = X_te.fillna(0)
 
     print(f"Features v3: {len(feat_cols_with_priors)} "
           f"(base {len(feat_cols)} + {len([c for c in prior_cols if c in tr_p.columns])} priors)")

@@ -1,0 +1,15 @@
+feature_name,stage,feature_type,description,source_columns,source_type,n_valid,n_null,pct_valid
+feat_days_to_primary_completion,pass5_timing,feat,Days from event date to ct_primary_completion date; negative = event after completion,"ct_primary_completion, v_actual_date",deterministic,2297,82,96.6
+feat_primary_completion_imminent_30d,pass5_timing,feat,1 if primary completion is within next 0–30 days from event date; 0 otherwise,feat_days_to_primary_completion,deterministic,2297,82,96.6
+feat_primary_completion_imminent_90d,pass5_timing,feat,1 if primary completion is within next 0–90 days from event date; 0 otherwise,feat_days_to_primary_completion,deterministic,2297,82,96.6
+feat_completion_recency_bucket,pass5_timing,feat,Categorical: imminent_0_30 / near1_90 / medium_91_180 / far_180_plus / past / unknown,feat_days_to_primary_completion,deterministic,2379,0,100.0
+feat_time_since_last_company_event,pass5_timing,feat,Days since prior clinical event for same ticker; NaN for first company event,"ticker, v_actual_date",deterministic,2018,361,84.8
+feat_time_since_last_asset_event,pass5_timing,feat,Days since prior clinical event for same ticker+drug_name; NaN for first asset event,"ticker, drug_name, v_actual_date",deterministic,754,1625,31.7
+feat_asset_event_sequence_num,pass5_timing,feat,Ordinal position of this event within ticker+drug_name history (1=first known),"ticker, drug_name, v_actual_date",deterministic,2379,0,100.0
+feat_company_event_sequence_num,pass5_timing,feat,Ordinal position of this event within the company (ticker) history,"ticker, v_actual_date",deterministic,2379,0,100.0
+feat_recent_company_event_flag,pass5_timing,feat,1 if this company had a prior catalyst within the last 90 days; else 0,feat_time_since_last_company_event,deterministic,2379,0,100.0
+feat_recent_asset_event_flag,pass5_timing,feat,1 if this ticker+drug had a prior event within 180 days; else 0,feat_time_since_last_asset_event,deterministic,2379,0,100.0
+feat_oncology_x_imminent_30d,pre_event,deterministic,Interaction: oncology=1 AND primary_completion_imminent_30d=1,feat_oncology_flag × feat_primary_completion_imminent_30d,deterministic,2379,0,1.0
+feat_oncology_x_imminent_90d,pre_event,deterministic,Interaction: oncology=1 AND primary_completion_imminent_90d=1,feat_oncology_flag × feat_primary_completion_imminent_90d,deterministic,2379,0,1.0
+feat_oncology_x_recent_completion,pre_event,deterministic,Interaction: oncology=1 AND recent_completion_flag=1,feat_oncology_flag × feat_recent_completion_flag,deterministic,2379,0,1.0
+feat_oncology_x_recency_imminent,pre_event,deterministic,Interaction: oncology=1 AND completion_recency_bucket = imminent_0_30,feat_oncology_flag × (feat_completion_recency_bucket == 'imminent_0_30'),deterministic,2379,0,1.0

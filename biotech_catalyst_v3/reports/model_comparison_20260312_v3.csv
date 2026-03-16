@@ -1,0 +1,4 @@
+model,roc_auc,pr_auc,prec@top5pct,prec@top10pct,prec@top20pct
+LogReg,0.4985,0.3991,0.4118,0.5429,0.4507
+LightGBM,0.6719,0.4964,0.4118,0.5143,0.5634
+XGBoost,0.6605,0.481,0.4706,0.5429,0.5493

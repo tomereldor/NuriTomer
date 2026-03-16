@@ -107,39 +107,29 @@ NEW_FEAT_META = [
 # Versioning helpers (same pattern as Part 1)
 # ---------------------------------------------------------------------------
 
-def _find_latest(base_dir, archive_dir, prefix, exclude_dict=True):
-    candidates = (
-        glob.glob(os.path.join(base_dir,    f"{prefix}_*.csv")) +
-        glob.glob(os.path.join(archive_dir, f"{prefix}_*.csv"))
-    )
+def _find_latest(base_dir, prefix, exclude_dict=True):
+    """Return (path, version_int, date_tag) for highest-version file in base_dir only."""
+    candidates = glob.glob(os.path.join(base_dir, f"{prefix}_*.csv"))
     if exclude_dict:
         candidates = [f for f in candidates if "dict" not in os.path.basename(f)]
-    best, best_v = None, -1
+    best, best_v, best_date = None, -1, None
     for f in candidates:
-        m = re.search(r"_v(\d+(?:\.\d+)?)_", f)
+        m = re.search(r"_(\d{8})_v(\d+)\.csv$", f)
         if m:
-            try:
-                v = float(m.group(1))
-            except ValueError:
-                v = 0
+            v = int(m.group(2))
             if v > best_v:
-                best_v, best = v, f
-    return best, best_v
+                best_v, best, best_date = v, f, m.group(1)
+    return best, best_v, best_date
 
 
-def _find_latest_dict(base_dir, archive_dir):
-    candidates = (
-        glob.glob(os.path.join(base_dir,    "ml_feature_dict_v*.csv")) +
-        glob.glob(os.path.join(archive_dir, "ml_feature_dict_v*.csv"))
-    )
+def _find_latest_dict(base_dir):
+    """Return path of highest-version dict file in base_dir only."""
+    candidates = glob.glob(os.path.join(base_dir, "ml_feature_dict_*.csv"))
     best, best_v = None, -1
     for f in candidates:
-        m = re.search(r"_v(\d+(?:\.\d+)?)_", f)
+        m = re.search(r"_(\d{8})_v(\d+)\.csv$", f)
         if m:
-            try:
-                v = float(m.group(1))
-            except ValueError:
-                v = 0
+            v = int(m.group(2))
             if v > best_v:
                 best_v, best = v, f
     return best
@@ -372,14 +362,10 @@ def main():
     os.makedirs(CACHE_DIR, exist_ok=True)
 
     # ── Find latest feature dataset ───────────────────────────────────────────
-    src_path, src_v = _find_latest(BASE_DIR, ARCHIVE_DIR, "ml_dataset_features")
+    src_path, src_v, date_tag = _find_latest(BASE_DIR, "ml_dataset_features")
     if not src_path:
-        print("ERROR: no ml_dataset_features_v*.csv found", file=sys.stderr)
+        print("ERROR: no ml_dataset_features_YYYYMMDD_vN.csv found in " + BASE_DIR, file=sys.stderr)
         sys.exit(1)
-    if ARCHIVE_DIR in src_path:
-        dst = os.path.join(BASE_DIR, os.path.basename(src_path))
-        shutil.copy(src_path, dst)
-        src_path = dst
     print(f"Input : {os.path.basename(src_path)}  (v{src_v})")
     df = pd.read_csv(src_path)
     print(f"Shape : {df.shape[0]} rows × {df.shape[1]} cols")
@@ -505,38 +491,25 @@ def main():
             print(f"    {k}: {capped[k].get('n_total')} total")
 
     # ── Archive and save ──────────────────────────────────────────────────────
-    # The pipeline proxies go on top of whatever version we just read.
-    # We overwrite the same version file (still v0.4 if Part 1 ran first).
-    # If this is the first script run (no Part 1), we bump version.
-    out_version = src_v  # Keep same version — proxies are additive to Part 1 output
-    date_tag    = "20260313"
-    out_name    = f"ml_dataset_features_v{out_version}_{date_tag}.csv"
-    out_path    = os.path.join(BASE_DIR, out_name)
+    new_v    = src_v + 1
+    out_name = f"ml_dataset_features_{date_tag}_v{new_v}.csv"
+    out_path = os.path.join(BASE_DIR, out_name)
 
-    # Archive old version files (except if same filename — we're overwriting)
-    for f in glob.glob(os.path.join(BASE_DIR, "ml_dataset_features_v*.csv")):
-        if os.path.abspath(f) != os.path.abspath(out_path):
-            dest = os.path.join(ARCHIVE_DIR, os.path.basename(f))
-            if not os.path.exists(dest):
-                shutil.move(f, dest)
-            else:
-                os.remove(f)
-            print(f"Archived: archive/{os.path.basename(f)}")
+    dest = os.path.join(ARCHIVE_DIR, os.path.basename(src_path))
+    shutil.move(src_path, dest)
+    print(f"Archived: archive/{os.path.basename(src_path)}")
 
     df.to_csv(out_path, index=False)
     print(f"\nSaved : {out_name}  ({df.shape[0]} rows × {df.shape[1]} cols)")
 
     # ── Update feature dict ───────────────────────────────────────────────────
-    old_dict = _find_latest_dict(BASE_DIR, ARCHIVE_DIR)
-    for f in glob.glob(os.path.join(BASE_DIR, "ml_feature_dict_v*.csv")):
-        dest = os.path.join(ARCHIVE_DIR, os.path.basename(f))
-        if not os.path.exists(dest):
-            shutil.move(f, dest)
-        else:
-            os.remove(f)
+    old_dict = _find_latest_dict(BASE_DIR)
+    if old_dict:
+        shutil.move(old_dict, os.path.join(ARCHIVE_DIR, os.path.basename(old_dict)))
 
-    out_dict_name = f"ml_feature_dict_v{out_version}_{date_tag}.csv"
-    update_feature_dict(df, old_dict, os.path.join(BASE_DIR, out_dict_name))
+    out_dict_name = f"ml_feature_dict_{date_tag}_v{new_v}.csv"
+    update_feature_dict(df, os.path.join(ARCHIVE_DIR, os.path.basename(old_dict)) if old_dict else None,
+                        os.path.join(BASE_DIR, out_dict_name))
     print(f"Saved : {out_dict_name}")
 
     print("\nDone — CT.gov pipeline proxy features added.")
