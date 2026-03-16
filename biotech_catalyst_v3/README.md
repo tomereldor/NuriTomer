@@ -6,6 +6,27 @@ No press release content is used. All predictions are based on pre-event structu
 
 ---
 
+## Summary
+
+We built a pre-event binary classifier that predicts whether a biotech catalyst (clinical trial readout) will cause a large stock move — defined as ≥ 3× ATR-normalized AND ≥ 10% absolute — using only public information available before the announcement.
+
+**Dataset:** 2514 clinical trial events (2020–2023) sourced from CT.gov and enriched with financial data. Training restricted to 2023+ events (596 rows) where price data is reliable; 2020–2022 rows are retained in the feature dataset for inference but excluded from model training due to near-zero positive rates from sparse price coverage.
+
+**Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.9% on the 2023+ training cohort (26.9% on the original curated rows).
+
+**Features (44 total):** CT.gov timing signals (completion imminence, recency bucket), company/asset pipeline context (cash runway, event sequence, pipeline depth), therapeutic class flags (oncology, CNS, rare disease), oncology × timing interactions, and fold-safe reaction priors (mean ATR move by therapeutic class/phase/market cap).
+
+**Best model:** LightGBM — AUC **0.730**, Prec@top 10% **0.778**, CV AUC **0.744 ± 0.096** (5-fold time-aware).
+
+**Top predictors:** `feat_cash_runway_proxy`, `feat_days_to_primary_completion`, timing/sequence features (`feat_company_event_sequence_num`, `feat_time_since_last_company_event`), therapeutic class priors, `feat_completed_flag`, `feat_cns_flag`, `feat_oncology_flag`.
+
+**Pipeline:** One command runs all 8 steps — feature engineering → CT.gov API enrichment → train table → model training:
+```bash
+python -m scripts.run_full_pre_event_pipeline
+```
+
+---
+
 ## Quick start
 
 ```bash
