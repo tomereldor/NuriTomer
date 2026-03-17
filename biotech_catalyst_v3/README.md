@@ -40,7 +40,7 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.9 — 2026-03-17)
+## Current state (v1.0 — 2026-03-17)
 
 ### Source of truth files
 
@@ -48,34 +48,32 @@ python -m scripts.<script_name>
 |---|---|
 | `ml_dataset_features_20260316_v2.csv` | ML feature dataset — 2379 rows × 108 cols, full pipeline run on v3 master |
 | `ml_feature_dict_20260316_v2.csv` | Feature dictionary — 14 entries with coverage + description |
-| `ml_baseline_train_20260317_v3.csv` | Training table — 596 rows (2023+ only), 44 model-ready features, 30.9% positive rate |
+| `ml_baseline_train_20260317_v4.csv` | **STRICT-CLEAN** training table — 596 rows (2023+ only), 24 valid features, 30.9% positive rate |
 | `enriched_all_clinical_clean_v3.csv` | **MASTER DATASET** — 2514 rows × 58 cols (v2 + 1652 historical 2020–2022 events) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
-### Current model (v3 — 2023+ training cohort, 596 rows)
+### Current model (v4 strict-clean — 2023+ cohort, 30 features)
 
 | File | Description |
 |---|---|
-| `models/model_pre_event_v3_20260312.pkl` | Best model — LightGBM ⚠ approximate validity (see below) |
+| `models/model_pre_event_v3_20260312.pkl` | ✓ STRICT-CLEAN — XGBoost, AUC 0.692 |
 
-> ⚠ **Model validity status:** The v3 model used 9 timing features anchored to the realized event date (`v_actual_date`). These are invalid for strict pre-event use. The model is valid for historical analysis but must not be used for live deployment without inference-time recomputation of those features. `build_pre_event_train_v2.py` has been patched to exclude them. **Next retrain will be clean.**
-> See: [`reports/FEATURE_NOTES.md`](reports/FEATURE_NOTES.md) — Pre-Event Validity Audit section
+> ✓ **Model validity status: STRICT_CLEAN.** All 9 event-date-anchored features (`feat_days_to_primary_completion`, timing imminence/recency/time-since features) are excluded from the train table. No PR/outcome features. Model uses only information knowable before the announcement.
 
-### Current model report (v3, retrained 2026-03-17)
+### Current model report
 
 → [`reports/MODEL_REPORTS.md`](reports/MODEL_REPORTS.md) — full model history, newest at top
 
-| Metric | v3 (2023+ only) ⚠ | v3 prev (all years) | v0.3 (prev) |
+| Metric | v4 STRICT-CLEAN | v3 contaminated ⚠ | v0.3 (prev) |
 |---|---|---|---|
-| Best model | **LightGBM** | LightGBM | Logistic Regression |
-| Test ROC-AUC | **0.730** | 0.672 | 0.661 |
-| CV AUC (5-fold) | **0.744 ± 0.096** | 0.704 ± 0.008 | 0.682 ± 0.129 |
-| Prec @ top 10% | **0.778** | 0.514 | 0.308 |
-| Train / Val / Test | **417 / 89 / 90** | — | — |
-| Class balance (train) | **28.5% pos** | ~0.6% pos | ~30% |
-| Year range (train) | 2023–2024 | 2020–2024 | 2023 |
-| Features | 44 (includes 9 invalid — see audit) | 44 | 69 |
-| Pre-event valid? | ⚠ Approximate only | ⚠ Approximate | ⚠ Approximate |
+| Best model | **XGBoost** | LightGBM | Logistic Regression |
+| Test ROC-AUC | **0.692** | 0.730 (inflated) | 0.661 |
+| CV AUC (5-fold) | **0.711 ± 0.112** | 0.744 ± 0.096 | 0.682 ± 0.129 |
+| Prec @ top 10% | **0.444** | 0.778 (inflated) | 0.308 |
+| Train / Val / Test | **417 / 89 / 90** | 417 / 89 / 90 | — |
+| Class balance (train) | **28.5% pos** | 28.5% pos | ~30% |
+| Features | **24 base + 6 priors = 30** | 44 (14 invalid) | 69 |
+| Pre-event valid? | ✓ **STRICT_CLEAN** | ✗ contaminated | ✗ approximate |
 
 ### Feature notes, validity audit, CT.gov notes
 
@@ -365,6 +363,21 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 - Valid ordinal features kept: `feat_company_event_sequence_num` (#3), `feat_asset_event_sequence_num` (#7)
 - Fix path: add `prediction_date` param to timing feature scripts → re-enable with correct anchor
 - See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
+
+### v1.0 — 2026-03-17 (strict-clean baseline)
+- **STRICT_CLEAN retrain complete** — all event-date-anchored features removed from training
+- `ml_baseline_train_20260317_v4.csv`: 596 rows, 24 base features + 6 priors = 30 total, 0 invalid
+- Contaminated train table v3 (14 invalid feature columns) archived
+- **XGBoost AUC: 0.692** (honest strict-clean baseline), CV AUC: 0.711 ± 0.112, Prec@10%: 0.444
+- AUC drop vs contaminated model (0.730 → 0.692) confirms the invalid features were inflating metrics
+- Top strict-clean features: `feat_company_event_sequence_num`, `feat_completed_flag`, prior by therapeutic class, `feat_cash_runway_proxy`
+
+### v0.9 — 2026-03-17 (pre-event validity audit + doc consolidation)
+- Pre-event validity audit: identified 9 event-date-anchored features as INVALID for strict pre-event use
+- Patched `build_pre_event_train_v2.py` to exclude all 9 features via `INVALID_FOR_PRE_EVENT` list
+- Consolidated 7 standalone `.md` report files into 3 canonical running docs: `MODEL_REPORTS.md`, `FEATURE_NOTES.md`, `DATASET_NOTES.md`
+- Patched `train_pre_event_v3.py` to prepend to `MODEL_REPORTS.md` instead of creating standalone files
+- Previous v3 model marked as approximately valid (historical analysis only, not for live deployment)
 
 ### v0.8 — 2026-03-17 (restrict training to 2023+ rows)
 - **Training cohort restricted to 2023+ events** — 2020–2022 rows excluded from train/val/test

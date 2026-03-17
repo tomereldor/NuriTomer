@@ -5,6 +5,78 @@ Each run of `train_pre_event_v3.py` prepends a new section here.
 
 ---
 
+## 2026-03-17 · v4 STRICT-CLEAN · XGBoost AUC 0.692
+
+**STATUS: ✓ STRICT_CLEAN** — all event-date-anchored features excluded
+**Train table:** `ml_baseline_train_20260317_v4.csv`
+**Feature dataset:** `ml_dataset_features_20260316_v2.csv`
+**Total usable rows:** 596 (2023+ events, row_ready=True, v_actual_date set)
+**Train / Val / Test:** 417 / 89 / 90 (time-based 70/15/15 on v_actual_date)
+**Class balance:** 184 pos / 412 neg = 30.9% positive overall; train 28.5% pos
+**Cohort:** 2023+ only (1453 pre-2023 rows excluded — near-zero positive rate)
+**Feature count:** 24 base + 6 fold-safe priors = **30 total**
+**Excluded (INVALID_FOR_PRE_EVENT):** 9 features — feat_days_to_primary_completion, feat_primary_completion_imminent_30/90d, feat_completion_recency_bucket, feat_recent_completion_flag, feat_time_since_last_company/asset_event, feat_recent_company/asset_event_flag (see FEATURE_NOTES.md)
+**Excluded (missing from feature dataset):** 21 features not present in ml_dataset_features_20260316_v2.csv (feat_phase_num, feat_volatility, feat_log_market_cap, feat_enrollment_log, etc.)
+
+### Time-Aware CV (LightGBM + Priors)
+
+Mean ROC-AUC = **0.711 ± 0.112** · PR-AUC = 0.538 ± 0.139 · Prec@10% = 0.600 ± 0.202
+
+| Fold | Val n / Train n | ROC-AUC | PR-AUC | P@5% | P@10% | P@20% |
+|---|---|---|---|---|---|---|
+| fold_0 | 98/98 | 0.822 | 0.636 | 1.000 | 0.556 | 0.632 |
+| fold_1 | 196/98 | 0.773 | 0.529 | 0.750 | 0.667 | 0.421 |
+| fold_2 | 294/98 | 0.679 | 0.493 | 0.750 | 0.556 | 0.474 |
+| fold_3 | 392/98 | 0.749 | 0.696 | 1.000 | 0.889 | 0.684 |
+| fold_4 | 490/98 | 0.534 | 0.336 | 0.750 | 0.333 | 0.210 |
+
+### Test Set
+
+| Model | ROC-AUC | PR-AUC | Prec@5% | Prec@10% | Prec@20% |
+|---|---|---|---|---|---|
+| LogReg | 0.682 | 0.597 | 0.750 | 0.667 | 0.526 |
+| LightGBM | 0.690 | 0.589 | 0.500 | 0.444 | 0.632 |
+| **XGBoost** | **0.692** | **0.599** | **0.750** | **0.444** | **0.632** |
+
+★ **Best model: XGBoost** · HP threshold ≈ 0.95 (prec=0.600, n=5) · Broad ≈ 0.10 (prec=0.551, rec=0.905, n=69)
+
+### Comparison vs previous contaminated model (v3)
+
+| Metric | v3 CONTAMINATED (14 invalid cols) | v4 STRICT-CLEAN |
+|---|---|---|
+| Train table | ml_baseline_train_20260317_**v3**.csv | ml_baseline_train_20260317_**v4**.csv |
+| Rows | 596 | 596 |
+| Split | 417/89/90 | 417/89/90 |
+| Class balance | 30.9% | 30.9% |
+| Features | 44 (14 INVALID) | 30 (all valid) |
+| Best model | LightGBM | XGBoost |
+| Test ROC-AUC | 0.730 ← inflated | **0.692** ← honest |
+| CV AUC | 0.744 ± 0.096 | **0.711 ± 0.112** |
+| PR-AUC | 0.657 | **0.599** |
+| Prec@10% | 0.778 ← inflated | **0.444** ← honest |
+
+**Interpretation:** The AUC drop (0.730 → 0.692) and Prec@10% drop (0.778 → 0.444) reflect removal of 9 features that leaked the realized event date. The contaminated model had access to `feat_days_to_primary_completion` (#2 importance, 149 units) and `feat_time_since_last_company_event` (#4, 39 units) — both computable only because the future announcement date was known. The strict-clean AUC of **0.692** is the honest pre-event baseline. CV variance increased slightly (±0.112 vs ±0.096) with the smaller clean feature set.
+
+### Top 10 features (XGBoost, strict-clean)
+
+| Rank | Feature | Importance |
+|---|---|---|
+| 1 | feat_company_event_sequence_num | 0.134 |
+| 2 | feat_completed_flag | 0.082 |
+| 3 | feat_prior_large_move_rate_by_therapeutic_superclass | 0.062 |
+| 4 | feat_small_trial_flag | 0.059 |
+| 5 | feat_cash_runway_proxy | 0.058 |
+| 6 | feat_therapeutic_superclass_Cardiovascular | 0.055 |
+| 7 | feat_blinded_flag | 0.051 |
+| 8 | feat_open_label_flag | 0.049 |
+| 9 | feat_therapeutic_superclass_Endocrine/Metabolic | 0.044 |
+| 10 | feat_therapeutic_superclass_CNS | 0.044 |
+
+### Figures
+`figures/cv_folds_20260312_v3.png` · `figures/model_comparison_20260312_v3.png` · `figures/roc_pr_20260312_v3.png` · `figures/feature_importance_20260312_v3.png`
+
+---
+
 ## 2026-03-17 · v3 (2023+ cohort) · LightGBM AUC 0.730
 
 **Train table:** `ml_baseline_train_20260317_v3.csv`

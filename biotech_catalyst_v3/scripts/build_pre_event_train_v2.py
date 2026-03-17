@@ -32,7 +32,7 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260317"
-VERSION  = 3
+VERSION  = 4  # strict-clean: all INVALID_FOR_PRE_EVENT features excluded
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)

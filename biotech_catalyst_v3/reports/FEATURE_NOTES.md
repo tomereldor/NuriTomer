@@ -5,6 +5,20 @@ Newest entry at top.
 
 ---
 
+## 2026-03-17 · Strict-Clean Retrain Status
+
+**STATUS: ✓ STRICT_CLEAN retrain complete** — `ml_baseline_train_20260317_v4.csv` is the current trusted baseline.
+
+The 9 invalid features identified in the audit below were excluded from `build_pre_event_train_v2.py` (commit `235eac4`). The strict-clean retrain (v4) ran steps 7–8 with those features removed. The previous contaminated train table (`ml_baseline_train_20260317_v3.csv`) has been archived.
+
+| | Contaminated v3 | Strict-Clean v4 |
+|---|---|---|
+| Train table | ml_baseline_train_20260317_v3.csv (archived) | ml_baseline_train_20260317_v4.csv |
+| Invalid features | 14 (9 base + 6 one-hot dummies) | **0** |
+| Test AUC | 0.730 (inflated) | **0.692 (honest)** |
+
+---
+
 ## 2026-03-17 · Pre-Event Validity Audit (v0.6)
 
 **Scope:** All features in the current pre-event binary classifier (`ml_baseline_train_20260317_v3.csv`)
