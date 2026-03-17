@@ -14,11 +14,11 @@ We built a pre-event binary classifier that predicts whether a biotech catalyst 
 
 **Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.9% on the 2023+ training cohort (26.9% on the original curated rows).
 
-**Features (44 total, v3 model):** Company/asset pipeline context (cash runway, pipeline depth, event sequence ordinals), trial design flags, therapeutic class flags (oncology, CNS, rare disease), CT.gov status flags, and fold-safe reaction priors. ⚠ Note: the v3 model included 9 timing features later found invalid under strict pre-event rules (see below). Next retrain will exclude these.
+**Features (30 total — strict-clean):** CT.gov status flags (completed, active-not-recruiting), trial design flags (blinded, open-label, small trial), disease class flags (oncology, CNS, rare disease), company context (cash runway, pipeline depth), event sequence ordinals (company/asset event count — no event-date anchor), and 6 fold-safe reaction priors (mean ATR + large-move rate by therapeutic class/phase/market-cap).
 
-**Best model:** LightGBM — AUC **0.730**, Prec@top 10% **0.778**, CV AUC **0.744 ± 0.096** (5-fold time-aware). ⚠ Approximate validity — see pre-event validity rule below.
+**Best model (v4 strict-clean):** XGBoost — AUC **0.692**, Prec@top 10% **0.444**, CV AUC **0.711 ± 0.112** (5-fold time-aware). ✓ STRICT_CLEAN — no event-date-anchored features.
 
-**Top predictors (v3):** `feat_cash_runway_proxy`, `feat_company_event_sequence_num`, therapeutic class priors, `feat_completed_flag`, `feat_cns_flag`, `feat_oncology_flag`.
+**Top predictors:** `feat_company_event_sequence_num`, `feat_completed_flag`, prior by therapeutic class, `feat_cash_runway_proxy`, `feat_small_trial_flag`, `feat_blinded_flag`.
 
 **Pipeline:** One command runs all 8 steps — feature engineering → CT.gov API enrichment → train table → model training:
 ```bash
@@ -132,7 +132,7 @@ scripts/build_pre_event_train_v2.py        → train table
 scripts/train_pre_event_v3.py              → models/ + reports/
 ```
 
-**Status (2026-03-17):** Full pipeline complete on v3 master. Training restricted to 2023+ events (596 rows, 30.9% positive rate). LightGBM AUC 0.730 / Prec@10% 0.778.
+**Status (2026-03-17):** Full pipeline complete. Strict-clean baseline active: 596 rows (2023+), 30 features (all valid), XGBoost AUC 0.692 / Prec@10% 0.444. Previous contaminated model (AUC 0.730, 14 invalid features) archived.
 
 ### Key scripts
 
@@ -379,14 +379,11 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 - Patched `train_pre_event_v3.py` to prepend to `MODEL_REPORTS.md` instead of creating standalone files
 - Previous v3 model marked as approximately valid (historical analysis only, not for live deployment)
 
-### v0.8 — 2026-03-17 (restrict training to 2023+ rows)
+### v0.8 — 2026-03-17 (restrict training to 2023+ rows) ⚠ superseded by v1.0
 - **Training cohort restricted to 2023+ events** — 2020–2022 rows excluded from train/val/test
-- 2020–2022 rows had near-zero positive rate (~0.3–0.5%) vs 24–32% for 2023+ due to missing/sparse price data; time-split was putting all of them in train → only 0.6% positives in train
-- After fix: **596 training rows (30.9% positive rate)** vs 2049 rows (0.6% positive rate) before
-- New train table: `ml_baseline_train_20260317_v3.csv`
-- **LightGBM AUC: 0.730** (was 0.672), **Prec@10%: 0.778** (was 0.514), **CV AUC: 0.744 ± 0.096**
-- Top features: `feat_cash_runway_proxy`, `feat_days_to_primary_completion`, timing/sequence features, `feat_cns_flag`, `feat_oncology_flag`
-- Fix: added `MIN_EVENT_YEAR = 2023` filter in `build_pre_event_train_v2.py` (after row_ready filter, before time_split)
+- After fix: 596 training rows (30.9% positive rate) vs 2049 rows (0.6% positive rate) before
+- Train table `ml_baseline_train_20260317_v3.csv` — **archived** (contained 14 invalid feature columns)
+- Reported AUC 0.730 / Prec@10% 0.778 were **inflated** by 9 event-date-anchored features; superseded by v1.0 strict-clean retrain
 
 ### v0.7 — 2026-03-16 (full pipeline on v3 master + pipeline bug fixes)
 - **First complete pipeline run on v3 master (2514 rows → 2379 after prep)**
