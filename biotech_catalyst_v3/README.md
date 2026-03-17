@@ -14,11 +14,11 @@ We built a pre-event binary classifier that predicts whether a biotech catalyst 
 
 **Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.9% on the 2023+ training cohort (26.9% on the original curated rows).
 
-**Features (44 total):** CT.gov timing signals (completion imminence, recency bucket), company/asset pipeline context (cash runway, event sequence, pipeline depth), therapeutic class flags (oncology, CNS, rare disease), oncology × timing interactions, and fold-safe reaction priors (mean ATR move by therapeutic class/phase/market cap).
+**Features (44 total, v3 model):** Company/asset pipeline context (cash runway, pipeline depth, event sequence ordinals), trial design flags, therapeutic class flags (oncology, CNS, rare disease), CT.gov status flags, and fold-safe reaction priors. ⚠ Note: the v3 model included 9 timing features later found invalid under strict pre-event rules (see below). Next retrain will exclude these.
 
-**Best model:** LightGBM — AUC **0.730**, Prec@top 10% **0.778**, CV AUC **0.744 ± 0.096** (5-fold time-aware).
+**Best model:** LightGBM — AUC **0.730**, Prec@top 10% **0.778**, CV AUC **0.744 ± 0.096** (5-fold time-aware). ⚠ Approximate validity — see pre-event validity rule below.
 
-**Top predictors:** `feat_cash_runway_proxy`, `feat_days_to_primary_completion`, timing/sequence features (`feat_company_event_sequence_num`, `feat_time_since_last_company_event`), therapeutic class priors, `feat_completed_flag`, `feat_cns_flag`, `feat_oncology_flag`.
+**Top predictors (v3):** `feat_cash_runway_proxy`, `feat_company_event_sequence_num`, therapeutic class priors, `feat_completed_flag`, `feat_cns_flag`, `feat_oncology_flag`.
 
 **Pipeline:** One command runs all 8 steps — feature engineering → CT.gov API enrichment → train table → model training:
 ```bash
@@ -40,7 +40,7 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v0.8 — 2026-03-17)
+## Current state (v0.9 — 2026-03-17)
 
 ### Source of truth files
 
@@ -56,21 +56,30 @@ python -m scripts.<script_name>
 
 | File | Description |
 |---|---|
-| `models/model_pre_event_v3_20260312.pkl` | Best model — LightGBM |
+| `models/model_pre_event_v3_20260312.pkl` | Best model — LightGBM ⚠ approximate validity (see below) |
+
+> ⚠ **Model validity status:** The v3 model used 9 timing features anchored to the realized event date (`v_actual_date`). These are invalid for strict pre-event use. The model is valid for historical analysis but must not be used for live deployment without inference-time recomputation of those features. `build_pre_event_train_v2.py` has been patched to exclude them. **Next retrain will be clean.**
+> See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
 
 ### Current model report (v3, retrained 2026-03-17)
 
 → [`reports/ml_pre_event_v3_report_20260312_v1.md`](reports/ml_pre_event_v3_report_20260312_v1.md)
 
-| Metric | v3 (2023+ only) | v3 prev (all years) | v0.3 (prev) |
+| Metric | v3 (2023+ only) ⚠ | v3 prev (all years) | v0.3 (prev) |
 |---|---|---|---|
 | Best model | **LightGBM** | LightGBM | Logistic Regression |
 | Test ROC-AUC | **0.730** | 0.672 | 0.661 |
 | CV AUC (5-fold) | **0.744 ± 0.096** | 0.704 ± 0.008 | 0.682 ± 0.129 |
 | Prec @ top 10% | **0.778** | 0.514 | 0.308 |
-| Positive rate (train) | **30.9%** | ~0.6% | ~30% |
-| Features | 44 (38 base + 6 priors) | 44 | 69 |
-| Train rows | 417 | 1,434 | 569 |
+| Train / Val / Test | **417 / 89 / 90** | — | — |
+| Class balance (train) | **28.5% pos** | ~0.6% pos | ~30% |
+| Year range (train) | 2023–2024 | 2020–2024 | 2023 |
+| Features | 44 (includes 9 invalid — see audit) | 44 | 69 |
+| Pre-event valid? | ⚠ Approximate only | ⚠ Approximate | ⚠ Approximate |
+
+### Pre-event validity audit (v0.9 — 2026-03-17)
+
+→ [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
 
 ### CT.gov feature refresh report (v0.4)
 
@@ -241,6 +250,36 @@ One-vs-rest confusion matrices are useful once a multiclass model exists, but no
 
 ---
 
+## Pre-event feature validity — hard rule
+
+**For the pre-event stock move size model, a feature is only valid if it can be computed using information publicly available BEFORE the future event occurs.**
+
+The following are FORBIDDEN in any pre-event training table:
+- The realized event date (`v_actual_date`, `event_date`, `event_trading_date`)
+- The realized announcement / PR date
+- The realized stock-move date
+- The content or outcome of the announcement (`primary_endpoint_result`, PR text fields, etc.)
+
+**Currently excluded** (use realized event date as anchor — valid concept, wrong implementation):
+
+| Feature | Reason excluded |
+|---|---|
+| `feat_days_to_primary_completion` | `ct_primary_completion - v_actual_date` — anchor = realized announcement date |
+| `feat_primary_completion_imminent_30d/90d` | Derived from above |
+| `feat_completion_recency_bucket` | Derived from above |
+| `feat_recent_completion_flag` | `(event_date - ct_primary_completion) <= 365` — anchor = realized event_date |
+| `feat_time_since_last_company_event` | Endpoint = realized event date (unknown pre-event) |
+| `feat_time_since_last_asset_event` | Same |
+| `feat_recent_company_event_flag` | Derived from above |
+| `feat_recent_asset_event_flag` | Derived from above |
+
+**Still valid** (ordinal counts, no event-date anchor needed):
+- `feat_asset_event_sequence_num`, `feat_company_event_sequence_num` — count of prior events for this drug/company, pre-event knowable
+
+**Fix path:** Add `prediction_date` parameter to `add_pre_event_timing_features.py` and `add_high_signal_features.py`. Default = `v_actual_date` for training (identical behavior), override with `pd.Timestamp.now()` at inference. Once fixed, these features can be re-enabled.
+
+Every future training report must include: train-table filename, total rows, train/val/test counts, class balance per split, split method, year range per split, feature count, pre-event validity status.
+
 ## Post-event feature exclusion policy
 
 The following features exist in the feature dataset but are **permanently excluded** from the pre-event model training table. They derive from the current announcement text or outcome — using them would be look-ahead leakage:
@@ -299,6 +338,19 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v0.9 — 2026-03-17 (pre-event validity audit + patch)
+- **Validity audit:** 9 timing features identified as INVALID for strict pre-event use
+- All 9 use `v_actual_date` or `event_date` (realized event date) as anchor — not knowable before the event
+- Invalid features excluded from `build_pre_event_train_v2.py` — safe for next retrain
+- v3 model marked: **approximately valid** (historical analysis OK; not for live deployment without inference fix)
+- v3 training report updated with all mandatory fields (rows, splits, class balance, validity status)
+- Permanent pre-event validity rule added to README and audit report
+- **No retrain yet** — awaiting approval after reviewing performance impact
+- Invalid features: `feat_days_to_primary_completion` (#2 importance), `feat_time_since_last_company_event` (#4), `feat_completion_recency_bucket`, `feat_primary_completion_imminent_30d/90d`, `feat_recent_completion_flag`, `feat_time_since_last_asset_event`, `feat_recent_company/asset_event_flag`
+- Valid ordinal features kept: `feat_company_event_sequence_num` (#3), `feat_asset_event_sequence_num` (#7)
+- Fix path: add `prediction_date` param to timing feature scripts → re-enable with correct anchor
+- See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
 
 ### v0.8 — 2026-03-17 (restrict training to 2023+ rows)
 - **Training cohort restricted to 2023+ events** — 2020–2022 rows excluded from train/val/test

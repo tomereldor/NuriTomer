@@ -5,6 +5,34 @@
 **No press release content used.**
 **Version:** v3 — adds 9 timing features + 6 train-fold-safe reaction priors vs v2 baseline.
 
+> ⚠ **VALIDITY STATUS: APPROXIMATELY VALID (historical analysis only)**
+> This model used 9 timing features that are anchored to the realized event date (`v_actual_date`).
+> These features encode valid pre-event signals but cannot be reproduced at live inference
+> without recomputing them using `prediction_date = today`.
+> See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](pre_event_validity_audit_v0.6_20260317.md)
+> Audit action: invalid features removed from `build_pre_event_train_v2.py`. Next retrain will be clean.
+
+---
+
+## 0. Training Setup (required fields)
+
+| Field | Value |
+|---|---|
+| **Train table** | `ml_baseline_train_20260317_v3.csv` |
+| **Feature dataset** | `ml_dataset_features_20260316_v2.csv` |
+| **Total usable rows** | **596** (2023+ events with row_ready=True and v_actual_date set) |
+| **Train rows** | **417** (year range: 2023–2024) |
+| **Val rows** | **89** (year range: 2024–2025) |
+| **Test rows** | **90** (year range: 2025–2026) |
+| **Class balance — train** | 119 pos / 298 neg = **28.5% positive** |
+| **Class balance — val** | 27 pos / 62 neg = **30.3% positive** |
+| **Class balance — test** | 38 pos / 52 neg = **42.2% positive** |
+| **Split method** | Time-ordered by `v_actual_date` ascending; 70/15/15 percentile split |
+| **Cohort exclusion** | 2020–2022 rows excluded: near-zero positive rate (~0.3%) from missing price data |
+| **Feature count** | 44 model columns (38 base features + 6 categorical one-hot dummies) |
+| **Invalid features in this model** | 9 (see validity audit) — feat_days_to_primary_completion, feat_completion_recency_bucket, feat_time_since_last_*, feat_recent_*_event_flag, feat_recent_completion_flag |
+| **Target** | `target_large_move = 1` when `abs_atr >= 3.0 AND abs(move_pct) >= 10%` |
+
 ---
 
 ## 1. New Features Added

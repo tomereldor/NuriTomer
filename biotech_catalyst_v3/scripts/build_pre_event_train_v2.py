@@ -42,6 +42,52 @@ MIN_EVENT_YEAR = 2023
 # Feature roster
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# PRE-EVENT VALIDITY: EXCLUDED FEATURES
+# ---------------------------------------------------------------------------
+# These features are conceptually valid signals but are INVALID for the
+# strict pre-event model as currently computed: they use the REALIZED event
+# date (v_actual_date or event_date) as their anchor instead of a prediction
+# date ("today"). At inference time the event date is unknown, so these values
+# cannot be reproduced without leaking future information.
+#
+# DO NOT add these back to any feature list below without first fixing
+# their computation to accept a prediction_date parameter ≠ v_actual_date.
+#
+# Excluded features and their invalidity reason:
+#   feat_days_to_primary_completion      ct_primary_completion - v_actual_date
+#                                        ↑ anchor = realized announcement date
+#   feat_primary_completion_imminent_30d derived from feat_days_to_primary_completion
+#   feat_primary_completion_imminent_90d derived from feat_days_to_primary_completion
+#   feat_completion_recency_bucket       derived from feat_days_to_primary_completion
+#   feat_recent_completion_flag          (event_date - ct_primary_completion <= 365)
+#                                        ↑ anchor = realized event_date
+#   feat_time_since_last_company_event   v_actual_date_current - v_actual_date_prev
+#                                        ↑ current endpoint = realized future event date
+#   feat_time_since_last_asset_event     same issue
+#   feat_recent_company_event_flag       derived from feat_time_since_last_company_event
+#   feat_recent_asset_event_flag         derived from feat_time_since_last_asset_event
+#
+# Fix path (future): add prediction_date param to add_pre_event_timing_features.py
+# and add_high_signal_features.py; default to v_actual_date for training,
+# use pd.Timestamp.now() at inference.
+# ---------------------------------------------------------------------------
+INVALID_FOR_PRE_EVENT = [
+    "feat_days_to_primary_completion",
+    "feat_primary_completion_imminent_30d",
+    "feat_primary_completion_imminent_90d",
+    "feat_completion_recency_bucket",
+    "feat_recent_completion_flag",
+    "feat_time_since_last_company_event",
+    "feat_time_since_last_asset_event",
+    "feat_recent_company_event_flag",
+    "feat_recent_asset_event_flag",
+]
+
+# ---------------------------------------------------------------------------
+# Active feature roster (strict pre-event valid)
+# ---------------------------------------------------------------------------
+
 # Kept from v1
 NUMERIC_FEATURES_V1 = [
     "feat_phase_num",
@@ -50,7 +96,7 @@ NUMERIC_FEATURES_V1 = [
     "feat_design_quality_score",
     "feat_trial_quality_score",
     "feat_enrollment_log",
-    "feat_days_to_primary_completion",
+    # feat_days_to_primary_completion  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
     "feat_n_unique_drugs_for_company",
     "feat_asset_trial_share",
     "feat_pipeline_depth_score",
@@ -65,7 +111,7 @@ BINARY_FEATURES_V1 = [
     "feat_late_stage_flag",
     "feat_active_not_recruiting_flag",
     "feat_completed_flag",
-    "feat_recent_completion_flag",
+    # feat_recent_completion_flag  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
     "feat_orphan_flag",
     "feat_breakthrough_flag",
     "feat_fast_track_flag",
@@ -82,24 +128,25 @@ BINARY_FEATURES_V1 = [
     "feat_ownership_low_flag",
 ]
 
-# New timing features (Part 1)
+# Timing features: ordinal sequence numbers are valid (pre-event knowable).
+# Time-since and imminence features are EXCLUDED (INVALID_FOR_PRE_EVENT).
 NEW_NUMERIC_FEATURES = [
-    "feat_days_to_primary_completion",         # already in v1, but revalidated
-    "feat_time_since_last_company_event",      # NaN for first event → median impute
-    "feat_time_since_last_asset_event",        # NaN for first asset event → median impute
-    "feat_asset_event_sequence_num",           # ordinal
-    "feat_company_event_sequence_num",         # ordinal
+    # feat_days_to_primary_completion   ← EXCLUDED (also removed from v1 above)
+    # feat_time_since_last_company_event ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    # feat_time_since_last_asset_event   ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    "feat_asset_event_sequence_num",           # ordinal count — valid, no anchor needed
+    "feat_company_event_sequence_num",         # ordinal count — valid, no anchor needed
 ]
 
 NEW_BINARY_FEATURES = [
-    "feat_primary_completion_imminent_30d",    # 0 safe for unknown
-    "feat_primary_completion_imminent_90d",    # 0 safe for unknown
-    "feat_recent_company_event_flag",          # 0 safe
-    "feat_recent_asset_event_flag",            # 0 safe
+    # feat_primary_completion_imminent_30d  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    # feat_primary_completion_imminent_90d  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    # feat_recent_company_event_flag        ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    # feat_recent_asset_event_flag          ← EXCLUDED (INVALID_FOR_PRE_EVENT)
 ]
 
 NEW_CATEGORICAL_FEATURES = [
-    "feat_completion_recency_bucket",          # 6 levels → one-hot
+    # feat_completion_recency_bucket  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
 ]
 
 # Combined
