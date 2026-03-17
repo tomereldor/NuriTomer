@@ -756,9 +756,26 @@ Threshold ≈ {best_thresh_broad:.2f}: {brd_str}
 - `figures/feature_importance_{DATE_TAG}_{VERSION}.png`
 """
 
-    report_path = os.path.join(REPORTS_DIR, f"ml_pre_event_v3_report_{DATE_TAG}_v1.md")
-    with open(report_path, "w") as f:
-        f.write(report_md)
+    # Prepend new section to canonical MODEL_REPORTS.md (policy: newest at top)
+    canonical_path = os.path.join(REPORTS_DIR, "MODEL_REPORTS.md")
+    if os.path.exists(canonical_path):
+        with open(canonical_path, "r") as f:
+            existing = f.read()
+        # Insert after the header block (first "---\n\n") to keep the intro intact
+        split_marker = "---\n\n"
+        idx = existing.find(split_marker)
+        if idx != -1:
+            new_content = existing[: idx + len(split_marker)] + report_md + "\n---\n\n" + existing[idx + len(split_marker):]
+        else:
+            new_content = report_md + "\n\n---\n\n" + existing
+        with open(canonical_path, "w") as f:
+            f.write(new_content)
+        report_path = canonical_path
+    else:
+        # Fallback: create standalone if canonical doc missing
+        report_path = os.path.join(REPORTS_DIR, f"ml_pre_event_v3_report_{DATE_TAG}_v1.md")
+        with open(report_path, "w") as f:
+            f.write(report_md)
 
     # Model meta
     meta = {

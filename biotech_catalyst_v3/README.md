@@ -59,11 +59,11 @@ python -m scripts.<script_name>
 | `models/model_pre_event_v3_20260312.pkl` | Best model — LightGBM ⚠ approximate validity (see below) |
 
 > ⚠ **Model validity status:** The v3 model used 9 timing features anchored to the realized event date (`v_actual_date`). These are invalid for strict pre-event use. The model is valid for historical analysis but must not be used for live deployment without inference-time recomputation of those features. `build_pre_event_train_v2.py` has been patched to exclude them. **Next retrain will be clean.**
-> See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
+> See: [`reports/FEATURE_NOTES.md`](reports/FEATURE_NOTES.md) — Pre-Event Validity Audit section
 
 ### Current model report (v3, retrained 2026-03-17)
 
-→ [`reports/ml_pre_event_v3_report_20260312_v1.md`](reports/ml_pre_event_v3_report_20260312_v1.md)
+→ [`reports/MODEL_REPORTS.md`](reports/MODEL_REPORTS.md) — full model history, newest at top
 
 | Metric | v3 (2023+ only) ⚠ | v3 prev (all years) | v0.3 (prev) |
 |---|---|---|---|
@@ -77,29 +77,43 @@ python -m scripts.<script_name>
 | Features | 44 (includes 9 invalid — see audit) | 44 | 69 |
 | Pre-event valid? | ⚠ Approximate only | ⚠ Approximate | ⚠ Approximate |
 
-### Pre-event validity audit (v0.9 — 2026-03-17)
+### Feature notes, validity audit, CT.gov notes
 
-→ [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
+→ [`reports/FEATURE_NOTES.md`](reports/FEATURE_NOTES.md) — validity audit · CT.gov feature notes · oncology caveats · excluded features
 
-### CT.gov feature refresh report (v0.4)
+### Dataset notes, target analysis, expansion
 
-→ [`reports/ctgov_timing_pipeline_features_v0.4_20260313.md`](reports/ctgov_timing_pipeline_features_v0.4_20260313.md)
-
-### ML audit + follow-up actions (v0.5)
-
-→ [`reports/pre_event_model_followup_actions_v0.4_20260315.md`](reports/pre_event_model_followup_actions_v0.4_20260315.md)
+→ [`reports/DATASET_NOTES.md`](reports/DATASET_NOTES.md) — threshold analysis · expansion strategy · coverage
 
 ---
 
-## File naming convention
+## Documentation policy
+
+**Canonical running docs** (one file per topic, newest section at top):
+
+| File | Topic |
+|---|---|
+| [`reports/MODEL_REPORTS.md`](reports/MODEL_REPORTS.md) | All model training results |
+| [`reports/FEATURE_NOTES.md`](reports/FEATURE_NOTES.md) | Feature validity, CT.gov notes, audit findings |
+| [`reports/DATASET_NOTES.md`](reports/DATASET_NOTES.md) | Dataset expansions, target analysis, coverage |
+
+**Rule:** When adding new documentation, prepend a dated section to the relevant canonical doc — do NOT create new standalone `.md` report files. Each section must include date, version tag, and a short heading. `train_pre_event_v3.py` already follows this policy (prepends to MODEL_REPORTS.md).
+
+**Exception:** Dataset and model artifact files (`.csv`, `.pkl`, `.json`) remain separately versioned as before.
+
+Old standalone report files are archived in `reports/reports_history/`.
+
+---
+
+## File naming convention (artifacts)
 
 ```
-{name}_{vX.Y}_{YYYYMMDD}.{ext}
+{name}_{YYYYMMDD}_v{N}.{ext}        # new pipeline naming
 ```
 
-- Version first, always cumulative (v0.3 → v0.4 → …), never reset per date
-- Date = date file was last generated
-- Previous versions → `archive/` (gitignored locally) or `reports/reports_history/`
+- Date first, integer version
+- Previous versions → `archive/` (gitignored locally)
+- Old semver format (`v0.X_YYYYMMDD`) deprecated — do not create new files in that format
 
 ---
 
