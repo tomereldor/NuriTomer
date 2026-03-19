@@ -366,6 +366,15 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 - Fix path: add `prediction_date` param to timing feature scripts → re-enable with correct anchor
 - See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
 
+### v1.3 — 2026-03-19 (Benzinga pilot)
+- **Benzinga API pilot** — tested all relevant endpoints for dataset improvement potential
+- Script: `scripts/benzinga_pilot_event_ingest.py`
+- Access verdict: current plan (`BENZIN_API_KEY`) provides only unfiltered rolling news feed; ticker filter broken, press-releases (404), FDA calendar (403), WIIM (404) all inaccessible
+- Pilot fetched 1,000 items (2026-02-20 → 2026-03-19), 149 master-ticker mentions, 7 within ±3d of known events — no historical 2020–2022 coverage possible
+- **Scaling NOT recommended** until plan upgraded to support ticker filtering or press-releases endpoint
+- All Benzinga columns flagged `DO_NOT_USE_FOR_MODEL`; output CSVs gitignored
+- See `reports/DATASET_NOTES.md` (2026-03-19 section) for full access audit
+
 ### v1.2 — 2026-03-19 (v5 expanded retrain)
 - **Retrain on 701-row expanded strict-clean pool** — +105 rows vs v4 (relaxed mesh-only exclusion)
 - `ml_baseline_train_20260318_v5.csv`: 701 rows, 25 base + 6 priors = 31 features, 30.4% positive rate
