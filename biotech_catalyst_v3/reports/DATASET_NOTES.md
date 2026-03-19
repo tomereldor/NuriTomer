@@ -5,6 +5,100 @@ Newest entry at top.
 
 ---
 
+## 2026-03-18 · Dataset Tiering Pass (v1)
+
+**Master:** `enriched_all_clinical_clean_v3.csv` — 2514 rows × 60 cols (before adding data_tier)
+**Script:** `scripts/curate_dataset_tiers.py`
+**Output (tiered master):** `enriched_all_clinical_clean_v3_tiered_20260318_v1.csv`
+**Output (trainable subset):** `candidate_strict_trainable_20260318_v1.csv`
+
+### Tier definitions
+
+| Tier | Definition |
+|---|---|
+| `trusted_trainable` | year ≥ 2023, complete price data (move_2d_pct + atr_pct) — already in strict training set |
+| `repairable` | year ≥ 2023 missing price data (yfinance backfill feasible), OR pre-2023 High/Extreme move event |
+| `history_only` | pre-2023, Noise/Low/Medium move class, complete price data — genuine hard negatives; useful for sponsor/asset history, future timing model |
+| `reject` | v_action=FLAG_ERROR, or no ticker + no nct_id + no price data |
+
+### Tier counts by year group
+
+| Year group | Rows | trusted_trainable | repairable | history_only | reject | Positives | Pos% |
+|---|---|---|---|---|---|---|---|
+| 2007–2019 | 415 | 0 | 2 | 413 | 0 | 1 | 0.2% |
+| 2020 | 472 | 0 | 1 | 471 | 0 | 3 | 0.6% |
+| 2021 | 450 | 0 | 2 | 448 | 0 | 2 | 0.4% |
+| 2022 | 399 | 0 | 2 | 397 | 0 | 1 | 0.3% |
+| 2023 | 208 | 203 | 5 | 0 | 0 | 60 | 28.8% |
+| 2024 | 259 | 256 | 3 | 0 | 0 | 64 | 24.7% |
+| 2025 | 271 | 266 | 4 | 0 | 1 | 98 | 36.2% |
+| 2026 | 33 | 33 | 0 | 0 | 0 | 10 | 30.3% |
+
+**Overall:**
+
+| Tier | Count | % |
+|---|---|---|
+| trusted_trainable | 758 | 30.2% |
+| repairable | 22 | 0.9% |
+| history_only | 1733 | 68.9% |
+| reject | 1 | 0.0% |
+
+### trusted_trainable positives check
+
+| | Value |
+|---|---|
+| Rows | 758 |
+| Positives | 231 (30.5%) |
+| Negatives | 527 |
+| Current positive rate | 30.5% |
+| Meets 25–30% target? | ✓ Yes |
+
+### Completeness: 2020–2022 newly added historical rows (n=1321)
+
+| Column | Valid (2020–2022) | Valid% | Sufficiency |
+|---|---|---|---|
+| `target_large_move` | 1320/1321 | 99.9% | train now |
+| `move_pct` | 1321/1321 | 100.0% | train now |
+| `atr_pct` | 1320/1321 | 99.9% | train now |
+| `stock_movement_atr_normalized` | 1320/1321 | 99.9% | train now |
+| `ticker` | 1321/1321 | 100.0% | train now |
+| `nct_id` | 1321/1321 | 100.0% | train now |
+| `ct_phase` | 1321/1321 | 100.0% | repair later |
+| `mesh_level1` | 55/1321 | 4.2% | history only |
+| `market_cap_m` | 650/1321 | 49.2% | repair later |
+| `move_class_norm` | 1321/1321 | 100.0% | train now |
+| `v_action` | 74/1321 | 5.6% | repair later |
+| `ct_primary_completion` | 1321/1321 | 100.0% | history only |
+
+
+### Repairable breakdown (n=22)
+
+| Category | Count |
+|---|---|
+| 2023+ missing price data | 12 |
+| pre-2023 High/Extreme move | 7 |
+
+### Key findings
+
+1. **2020–2022 historical rows have 100% price completeness** — ticker, price_before, move_2d_pct, atr_pct, nct_id all present. The data is structurally sound.
+2. **Positive rate for 2020–2022 is 0.3–0.9%** — mean AbsATR ≈ 0.7 (vs threshold 3.0). These rows are genuine hard negatives (CT.gov quiet completions, no formal announcement). Not suitable for training the move-size model.
+3. **mesh_level1 is nearly absent for 2020–2022 rows (4.3%)** and market_cap_m is ~49% missing. These need enrichment before they can be upgraded to repairable.
+4. **No `is_expansion_row` flag exists** in the master CSV. Rows can only be distinguished by year range. Recommend adding this flag in a future expansion pass.
+5. **92% of 2020–2022 rows are unvalidated** (v_action=NaN) — no PR/announcement check was performed during CT.gov expansion.
+
+### Dataset design recommendations
+
+1. **Keep the full expanded master** — `enriched_all_clinical_clean_v3_tiered_20260318_v1.csv` is the broad master. 2020–2022 rows are valid hard negatives and historical context.
+2. **Create a separate balanced training subset** — `candidate_strict_trainable_20260318_v1.csv` (trusted_trainable tier only). Do NOT train on history_only rows; their near-zero positive rate dilutes signal.
+3. **Target positive rate** — current trusted_trainable has 30.5% positives. Use `class_weight="balanced"` in sklearn rather than undersampling; this is already the approach. Raw positive rate is acceptable for LightGBM/XGBoost with balanced weighting.
+4. **Repairable 2023+ rows** (12 rows) — run `backfill_price_at_event.py` on these; if price fills, promote to trusted_trainable. Expect +50–150 rows of training data.
+5. **history_only rows** — keep as hard-negative calibration pool; use for sponsor/asset history queries, future CT.gov timing model. Do not mix into move-size training.
+
+---
+
+
+---
+
 ## 2026-03-16 · Binary Target Threshold Analysis (v0.6)
 
 **Dataset:** `enriched_all_clinical_clean_v3.csv` — 2514 rows (2500 with valid ATR + abs_move)

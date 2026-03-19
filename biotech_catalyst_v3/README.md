@@ -10,7 +10,7 @@ No press release content is used. All predictions are based on pre-event structu
 
 We built a pre-event binary classifier that predicts whether a biotech catalyst (clinical trial readout) will cause a large stock move — defined as ≥ 3× ATR-normalized AND ≥ 10% absolute — using only public information available before the announcement.
 
-**Dataset:** 2514 clinical trial events (2020–2023) sourced from CT.gov and enriched with financial data. Training restricted to 2023+ events (596 rows) where price data is reliable; 2020–2022 rows are retained in the feature dataset for inference but excluded from model training due to near-zero positive rates from sparse price coverage.
+**Dataset:** 2514 clinical trial events (2007–2026) sourced from CT.gov and enriched with financial data. Rows are tiered: 758 `trusted_trainable` (2023+, complete price data, 30.5% positive rate) · 1733 `history_only` (pre-2023, genuine hard negatives with mean AbsATR ≈ 0.7, reserved for sponsor/asset history and future timing models) · 22 `repairable` · 1 `reject`. Current model trained on the 596-row 2023+ strict subset; the 758-row candidate pool is ready for next retrain.
 
 **Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.9% on the 2023+ training cohort (26.9% on the original curated rows).
 
@@ -40,7 +40,7 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v1.0 — 2026-03-17)
+## Current state (v1.1 — 2026-03-18)
 
 ### Source of truth files
 
@@ -50,6 +50,8 @@ python -m scripts.<script_name>
 | `ml_feature_dict_20260316_v2.csv` | Feature dictionary — 14 entries with coverage + description |
 | `ml_baseline_train_20260317_v4.csv` | **STRICT-CLEAN** training table — 596 rows (2023+ only), 24 valid features, 30.9% positive rate |
 | `enriched_all_clinical_clean_v3.csv` | **MASTER DATASET** — 2514 rows × 58 cols (v2 + 1652 historical 2020–2022 events) |
+| `enriched_all_clinical_clean_v3_tiered_20260318_v1.csv` | Tiered master — same rows + `data_tier` + `target_large_move` columns |
+| `candidate_strict_trainable_20260318_v1.csv` | Candidate training subset — 758 trusted_trainable rows, 231 positives (30.5%) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
 ### Current model (v4 strict-clean — 2023+ cohort, 30 features)
@@ -132,7 +134,7 @@ scripts/build_pre_event_train_v2.py        → train table
 scripts/train_pre_event_v3.py              → models/ + reports/
 ```
 
-**Status (2026-03-17):** Full pipeline complete. Strict-clean baseline active: 596 rows (2023+), 30 features (all valid), XGBoost AUC 0.692 / Prec@10% 0.444. Previous contaminated model (AUC 0.730, 14 invalid features) archived.
+**Status (2026-03-18):** Dataset tiering complete. 758-row trusted_trainable candidate pool identified (30.5% positive rate). Strict-clean model active: XGBoost AUC 0.692 / Prec@10% 0.444. Next step: retrain on 758-row candidate pool (vs current 596-row subset).
 
 ### Key scripts
 
@@ -363,6 +365,16 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 - Valid ordinal features kept: `feat_company_event_sequence_num` (#3), `feat_asset_event_sequence_num` (#7)
 - Fix path: add `prediction_date` param to timing feature scripts → re-enable with correct anchor
 - See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
+
+### v1.1 — 2026-03-18 (dataset tiering pass)
+- **Curation / tiering pass on full 2514-row expanded master**
+- Script: `scripts/curate_dataset_tiers.py` — assigns `data_tier` to every row
+- Tier counts: `trusted_trainable` 758 · `repairable` 22 · `history_only` 1733 · `reject` 1
+- `trusted_trainable` (758 rows, 2023+, complete price): 231 positives — **30.5% positive rate** ✓ already in 25–30% target window
+- `history_only` (1733 rows, mostly 2020–2022): genuine hard negatives (mean AbsATR ≈ 0.7); do NOT train on; keep for sponsor/asset history and future timing model
+- `repairable` (22 rows): 12 × 2023+ missing price (yfinance backfillable) + 7 × pre-2023 High/Extreme events
+- Output: `enriched_all_clinical_clean_v3_tiered_20260318_v1.csv` (60 cols, +`data_tier` +`target_large_move`) and `candidate_strict_trainable_20260318_v1.csv` (758 rows)
+- Full analysis in `reports/DATASET_NOTES.md` (2026-03-18 section)
 
 ### v1.0 — 2026-03-17 (strict-clean baseline)
 - **STRICT_CLEAN retrain complete** — all event-date-anchored features removed from training
