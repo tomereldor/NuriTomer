@@ -74,5 +74,6 @@ dmypy.json
 !package-lock.json
 !tsconfig.json
 biotech_catalyst_v3/archive/
+biotech_catalyst_v3/benzinga_pilot_*.csv
 *.bak.csv
 biotech_catalyst_v3/data/ohlc/

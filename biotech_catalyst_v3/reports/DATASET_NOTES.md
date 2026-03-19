@@ -5,6 +5,82 @@ Newest entry at top.
 
 ---
 
+## 2026-03-19 · Benzinga Pilot: Dataset Improvement Test
+
+**Script:** `scripts/benzinga_pilot_event_ingest.py`
+**Goal:** Test whether Benzinga can improve historical event-date accuracy and validated positives/negatives.
+
+### API access audit
+
+| Endpoint | HTTP | Accessible | Note |
+|---|---|---|---|
+| `news_v2_unfiltered` | 200 | ✓ |  |
+| `news_v2_ticker_filter` | 200 | ✗ |  |
+| `news_v2_channel_filter` | 200 | ✓ |  |
+| `press_releases_v2_1` | 404 | ✗ | no Route matched with those values |
+| `fda_calendar_v2_1` | 403 | ✗ | ["Unauthorized for Route"] |
+| `wiim_v3` | 404 | ✗ | no Route matched with those values |
+
+**Summary:**
+- `news_v2` unfiltered: ✓ accessible — returns rolling window of ~10,000 most recent items only
+- Ticker filtering: ✗ not accessible — returns 0 items when tickers param specified; plan limitation
+- Channel filtering: ✓ accessible — returns unrelated items; not filtering by channel
+- Press releases endpoint (v2.1): ✗ not accessible
+- FDA Calendar (v2.1): ✗ not accessible
+- WIIM (v3): ✗ not accessible
+
+### Ingest results (what was accessible)
+
+| | Value |
+|---|---|
+| Endpoint used | `GET /api/v2/news` (unfiltered) |
+| Items fetched | 1000 |
+| Date range accessible | 2026-02-20 → 2026-03-19 |
+| Press-release-tagged items | 0 |
+| Output file | `benzinga_pilot_news_20260319.csv` (flagged DO_NOT_USE_FOR_MODEL) |
+
+**Hard constraint:** `page × pageSize ≤ 10,000`. With pageSize=100 and 40 pages → 4,000 items covering
+only the most recent ~2026-02-20 → 2026-03-19. No way to query historical periods (2020–2022) without
+ticker/date filtering support.
+
+### Match against master dataset
+
+| | Value |
+|---|---|
+| Master tickers | 330 |
+| Benzinga items mentioning a master ticker | 149 |
+| Within ±3 days of a known event | 7 |
+| Potential event-date improvements | 7 (upper bound; mostly 2025–2026 recency only) |
+
+### Assessment for our use cases
+
+| Use case | Feasible with current plan? |
+|---|---|
+| Historical event-date accuracy (2020–2022) | ✗ No — can't filter by ticker or date range |
+| Validated positives (2023–2026) | ✗ No — ticker filter broken |
+| Validated negatives (2020–2022) | ✗ No — same |
+| Future timing model (trial history) | ✗ No — no trial/NCT-ID linkage possible |
+| Recent news enrichment (last ~6 months) | Partial — unfiltered feed only, no ticker selection |
+
+### Recommendation
+
+**NOT RECOMMENDED to scale** with the current API plan. Ticker filtering is broken, press-releases endpoint is inaccessible (404), and FDA calendar is unauthorized (403). The only accessible endpoint returns a small unfiltered rolling window with no historical date-range control. Would need at minimum the **Starter/Professional plan** (press-releases endpoint or working ticker filtering) to be useful for systematic dataset improvement.
+
+**Required for Benzinga to be useful:**
+1. Working ticker filter on `/api/v2/news` — needed to fetch company-specific history
+2. Press releases endpoint (`/api/v2.1/press-releases`) — needed for exact PR timestamps
+3. Historical date-range support — needed for 2020–2022 rows
+
+**Alternative (current approach is better):** The existing Perplexity + CT.gov pipeline
+already provides PR discovery and event-date validation for the master dataset.
+For the specific gap (2020–2022 event-date accuracy), Perplexity is more capable given
+the current Benzinga plan.
+
+---
+
+
+---
+
 ## 2026-03-18 · Dataset Tiering Pass (v1)
 
 **Master:** `enriched_all_clinical_clean_v3.csv` — 2514 rows × 60 cols (before adding data_tier)
