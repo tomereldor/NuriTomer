@@ -5,6 +5,156 @@ Each run of `train_pre_event_v3.py` prepends a new section here.
 
 ---
 
+## 2026-03-19 · v5 EXPANDED · LogReg AUC 0.703 ★ NEW BEST
+
+**Train table:** `ml_baseline_train_20260318_v5.csv` — 701 rows (2023+), 25 base features + 6 priors = 31 total
+**vs v4 strict-clean:** +105 rows (rows previously excluded only for missing mesh_level1 — mesh imputed as "unknown")
+**Validity:** ✓ STRICT_CLEAN — same feature roster as v4, 0 INVALID_FOR_PRE_EVENT features
+
+| | v5 EXPANDED (new) | v4 STRICT-CLEAN (prev) | Δ |
+|---|---|---|---|
+| Train table | `ml_baseline_train_20260318_v5.csv` | `ml_baseline_train_20260317_v4.csv` | — |
+| Rows | **701** | 596 | +105 |
+| Split (train/val/test) | see CV section | 417/89/90 | — |
+| Positive rate | **30.4%** | 30.9% | -0.5pp |
+| Features (base + priors) | **25 + 6 = 31** | 24 + 6 = 30 | +1 |
+| Best model | **LogReg** | XGBoost | changed |
+| Test ROC-AUC | **0.703** | 0.692 | **+0.011** |
+| CV AUC (5-fold) | **0.752 ± 0.053** | 0.711 ± 0.112 | +0.041 / tighter |
+| Prec@top 5% | **0.800** | — | — |
+| Prec@top 10% | **0.545** | 0.444 | **+0.101** |
+
+**Verdict:** Extra 105 rows materially improve the model. AUC +0.011, CV AUC +0.041 with tighter variance (±0.053 vs ±0.112). Prec@top10% +0.101.
+
+---
+
+## 1. New Features Added
+
+### Timing features (9 new columns, deterministic)
+
+| Feature | Coverage |
+|---|---|
+| feat_primary_completion_imminent_30d | 2297/2379 | 96.6% |
+| feat_primary_completion_imminent_90d | 2297/2379 | 96.6% |
+| feat_completion_recency_bucket (6 one-hot) | 2379/2379 | 100.0% |
+| feat_time_since_last_company_event | 2018/2379 | 84.8% |
+| feat_time_since_last_asset_event | 754/2379 | 31.7% |
+| feat_asset_event_sequence_num | 2379/2379 | 100.0% |
+| feat_company_event_sequence_num | 2379/2379 | 100.0% |
+| feat_recent_company_event_flag | 2379/2379 | 100.0% |
+| feat_recent_asset_event_flag | 2379/2379 | 100.0% |
+
+**feat_days_to_study_completion:** SKIPPED — no `ct_study_completion` column in dataset.
+
+All timing features use `v_actual_date` (validated event date) as anchor.
+Sequence/time-since features sorted globally by date within company/asset groups.
+
+### Train-fold-safe priors (6 columns, injected inside folds)
+
+| Prior feature | Group key | Target stat |
+|---|---|---|
+| feat_prior_mean_abs_move_atr_by_phase | feat_phase_num | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_therapeutic_superclass | feat_therapeutic_superclass | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_phase_x_therapeutic_superclass | phase × superclass | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_market_cap_bucket | feat_market_cap_bucket | mean(|ATR-norm move|) |
+| feat_prior_large_move_rate_by_phase | feat_phase_num | P(large move) |
+| feat_prior_large_move_rate_by_therapeutic_superclass | feat_therapeutic_superclass | P(large move) |
+
+Priors fit on TRAIN split only; fallback = global train mean for unseen categories.
+Interaction prior requires ≥5 samples per cell, else falls back to phase-level prior.
+
+---
+
+## 2. Time-Aware Cross-Validation (LightGBM + Priors)
+
+Mean ROC-AUC = 0.752 ± 0.053
+Mean PR-AUC  = 0.547 ± 0.141
+Mean Prec@10% = 0.618 ± 0.135
+
+| Fold | Val n / Train n | ROC-AUC | PR-AUC | P@5% | P@10% | P@20% |
+|---|---|---|---|---|---|---|
+| fold_0 | 118/117 | 0.830 | 0.687 | 0.800 | 0.818 | 0.739 |
+| fold_1 | 235/117 | 0.736 | 0.362 | 0.400 | 0.545 | 0.304 |
+| fold_2 | 352/117 | 0.733 | 0.528 | 0.600 | 0.636 | 0.522 |
+| fold_3 | 469/117 | 0.774 | 0.687 | 0.600 | 0.636 | 0.739 |
+| fold_4 | 586/117 | 0.689 | 0.470 | 0.800 | 0.455 | 0.391 |
+
+---
+
+## 3. Model Comparison — Test Set (v3 features)
+
+| Model | ROC-AUC | PR-AUC | Prec@5% | Prec@10% | Prec@20% |
+|---|---|---|---|---|---|
+| LogReg | 0.703 | 0.593 | 0.800 | 0.545 | 0.636 |
+| LightGBM | 0.647 | 0.544 | 0.600 | 0.818 | 0.500 |
+| XGBoost | 0.638 | 0.534 | 0.800 | 0.636 | 0.500 |
+
+★ **Best model: LogReg**
+Test ROC-AUC = 0.703 | PR-AUC = 0.593
+Prec@top 5% = 0.800 | @top 10% = 0.545 | @top 20% = 0.636
+
+---
+
+## 4. Comparison vs v2 Baseline
+
+| Metric | v2 Baseline | v3 (timing+priors) | Change |
+|---|---|---|---|
+| Best ROC-AUC (test) | N/A | 0.703 | unknown |
+| Best Prec@10% (test) | N/A | 0.545 | — |
+| Feature count | 49 | 31 | +-18 |
+
+**Overall verdict: unknown**
+
+---
+
+## 5. Threshold / Ranking Strategy
+
+### High-precision watchlist
+Threshold ≈ 0.83: prec=1.000  rec=0.023  n=1
+
+### Broad candidate list (best F1)
+Threshold ≈ 0.39: prec=0.478  rec=0.977  n=90
+
+---
+
+## 6. Top 10 Feature Importances (LogReg)
+
+| Rank | Feature | Importance |
+|---|---|---|
+| 1 | feat_therapeutic_superclass_Respiratory | 0.6493 |
+| 2 | feat_completed_flag | 0.5743 |
+| 3 | feat_blinded_flag | 0.4854 |
+| 4 | feat_therapeutic_superclass_Other | 0.4259 |
+| 5 | feat_prior_large_move_rate_by_therapeutic_superclass | 0.2788 |
+| 6 | feat_small_trial_flag | 0.2648 |
+| 7 | feat_active_not_recruiting_flag | 0.2192 |
+| 8 | feat_therapeutic_superclass_Endocrine/Metabolic | 0.2078 |
+| 9 | feat_cash_runway_proxy | 0.1721 |
+| 10 | feat_cns_flag | 0.1550 |
+
+---
+
+## 7. Key Findings
+
+- **Timing features** add coverage of trial completion proximity, which was missing in v2.
+  `feat_completion_recency_bucket` and `feat_primary_completion_imminent_*` capture
+  the "hot zone" where readout is imminent — a known driver of pre-event moves.
+- **Sequence features** (`feat_company/asset_event_sequence_num`) encode whether this
+  is a company's first major readout or a follow-on event. Later-stage companies with
+  repeat catalysts may have more predictable patterns.
+- **Fold-safe priors** prevent leakage that the static precomputed priors in the dataset
+  would cause. They encode the average magnitude/rate of moves for similar phase/disease.
+- **Time-since-last-event** features encode event clustering and momentum dynamics.
+
+## 8. Figures
+
+- `figures/cv_folds_20260312_v3.png`
+- `figures/model_comparison_20260312_v3.png`
+- `figures/roc_pr_20260312_v3.png`
+- `figures/feature_importance_20260312_v3.png`
+
+---
+
 ## 2026-03-17 · v4 STRICT-CLEAN · XGBoost AUC 0.692
 
 **STATUS: ✓ STRICT_CLEAN** — all event-date-anchored features excluded

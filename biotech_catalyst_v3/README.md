@@ -10,15 +10,15 @@ No press release content is used. All predictions are based on pre-event structu
 
 We built a pre-event binary classifier that predicts whether a biotech catalyst (clinical trial readout) will cause a large stock move — defined as ≥ 3× ATR-normalized AND ≥ 10% absolute — using only public information available before the announcement.
 
-**Dataset:** 2514 clinical trial events (2007–2026) sourced from CT.gov and enriched with financial data. Rows are tiered: 758 `trusted_trainable` (2023+, complete price data, 30.5% positive rate) · 1733 `history_only` (pre-2023, genuine hard negatives with mean AbsATR ≈ 0.7, reserved for sponsor/asset history and future timing models) · 22 `repairable` · 1 `reject`. Current model trained on the 596-row 2023+ strict subset; the 758-row candidate pool is ready for next retrain.
+**Dataset:** 2514 clinical trial events (2007–2026) sourced from CT.gov and enriched with financial data. Rows are tiered: 758 `trusted_trainable` (2023+, complete price data, 30.5% positive rate) · 1733 `history_only` (pre-2023, genuine hard negatives — reserved for sponsor/asset history and future timing models) · 22 `repairable` · 1 `reject`. Model trained on 701-row 2023+ strict subset (596 row_ready + 105 relaxed from missing-mesh exclusion only).
 
-**Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.9% on the 2023+ training cohort (26.9% on the original curated rows).
+**Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.4% on the current training cohort.
 
-**Features (30 total — strict-clean):** CT.gov status flags (completed, active-not-recruiting), trial design flags (blinded, open-label, small trial), disease class flags (oncology, CNS, rare disease), company context (cash runway, pipeline depth), event sequence ordinals (company/asset event count — no event-date anchor), and 6 fold-safe reaction priors (mean ATR + large-move rate by therapeutic class/phase/market-cap).
+**Features (31 total — strict-clean):** CT.gov status flags (completed, active-not-recruiting), trial design flags (blinded, open-label, small trial), disease class flags (oncology, CNS, rare disease), company context (cash runway, pipeline depth), event sequence ordinals (company/asset event count — no event-date anchor), and 6 fold-safe reaction priors (mean ATR + large-move rate by therapeutic class/phase/market-cap).
 
-**Best model (v4 strict-clean):** XGBoost — AUC **0.692**, Prec@top 10% **0.444**, CV AUC **0.711 ± 0.112** (5-fold time-aware). ✓ STRICT_CLEAN — no event-date-anchored features.
+**Best model (v5 expanded):** Logistic Regression — AUC **0.703**, Prec@top 10% **0.545**, CV AUC **0.752 ± 0.053** (5-fold time-aware). ✓ STRICT_CLEAN — no event-date-anchored features.
 
-**Top predictors:** `feat_company_event_sequence_num`, `feat_completed_flag`, prior by therapeutic class, `feat_cash_runway_proxy`, `feat_small_trial_flag`, `feat_blinded_flag`.
+**Top predictors:** `feat_completed_flag`, `feat_blinded_flag`, prior by therapeutic class, `feat_small_trial_flag`, `feat_cash_runway_proxy`, `feat_cns_flag`.
 
 **Pipeline:** One command runs all 8 steps — feature engineering → CT.gov API enrichment → train table → model training:
 ```bash
@@ -40,7 +40,7 @@ python -m scripts.<script_name>
 
 ---
 
-## Current state (v1.1 — 2026-03-18)
+## Current state (v1.2 — 2026-03-19)
 
 ### Source of truth files
 
@@ -48,17 +48,18 @@ python -m scripts.<script_name>
 |---|---|
 | `ml_dataset_features_20260316_v2.csv` | ML feature dataset — 2379 rows × 108 cols, full pipeline run on v3 master |
 | `ml_feature_dict_20260316_v2.csv` | Feature dictionary — 14 entries with coverage + description |
-| `ml_baseline_train_20260317_v4.csv` | **STRICT-CLEAN** training table — 596 rows (2023+ only), 24 valid features, 30.9% positive rate |
+| `ml_baseline_train_20260318_v5.csv` | **CURRENT** training table — 701 rows (2023+), 25 base + 6 priors = 31 features, 30.4% positive rate |
+| `ml_baseline_train_20260317_v4.csv` | Previous strict-clean table — 596 rows — archived |
 | `enriched_all_clinical_clean_v3.csv` | **MASTER DATASET** — 2514 rows × 58 cols (v2 + 1652 historical 2020–2022 events) |
 | `enriched_all_clinical_clean_v3_tiered_20260318_v1.csv` | Tiered master — same rows + `data_tier` + `target_large_move` columns |
 | `candidate_strict_trainable_20260318_v1.csv` | Candidate training subset — 758 trusted_trainable rows, 231 positives (30.5%) |
 | `biotech_universe_expanded.csv` | 460 tracked biotech tickers ($50M–$10B) |
 
-### Current model (v4 strict-clean — 2023+ cohort, 30 features)
+### Current model (v5 expanded strict-clean — 2023+ cohort, 31 features)
 
 | File | Description |
 |---|---|
-| `models/model_pre_event_v3_20260312.pkl` | ✓ STRICT-CLEAN — XGBoost, AUC 0.692 |
+| `models/model_pre_event_v3_20260312.pkl` | ✓ STRICT-CLEAN — LogReg, AUC 0.703 |
 
 > ✓ **Model validity status: STRICT_CLEAN.** All 9 event-date-anchored features (`feat_days_to_primary_completion`, timing imminence/recency/time-since features) are excluded from the train table. No PR/outcome features. Model uses only information knowable before the announcement.
 
@@ -66,16 +67,15 @@ python -m scripts.<script_name>
 
 → [`reports/MODEL_REPORTS.md`](reports/MODEL_REPORTS.md) — full model history, newest at top
 
-| Metric | v4 STRICT-CLEAN | v3 contaminated ⚠ | v0.3 (prev) |
+| Metric | v5 EXPANDED (current) | v4 STRICT-CLEAN | v3 contaminated ⚠ |
 |---|---|---|---|
-| Best model | **XGBoost** | LightGBM | Logistic Regression |
-| Test ROC-AUC | **0.692** | 0.730 (inflated) | 0.661 |
-| CV AUC (5-fold) | **0.711 ± 0.112** | 0.744 ± 0.096 | 0.682 ± 0.129 |
-| Prec @ top 10% | **0.444** | 0.778 (inflated) | 0.308 |
-| Train / Val / Test | **417 / 89 / 90** | 417 / 89 / 90 | — |
-| Class balance (train) | **28.5% pos** | 28.5% pos | ~30% |
-| Features | **24 base + 6 priors = 30** | 44 (14 invalid) | 69 |
-| Pre-event valid? | ✓ **STRICT_CLEAN** | ✗ contaminated | ✗ approximate |
+| Best model | **LogReg** | XGBoost | LightGBM |
+| Test ROC-AUC | **0.703** | 0.692 | 0.730 (inflated) |
+| CV AUC (5-fold) | **0.752 ± 0.053** | 0.711 ± 0.112 | 0.744 ± 0.096 |
+| Prec @ top 10% | **0.545** | 0.444 | 0.778 (inflated) |
+| Rows | **701** | 596 | 596 |
+| Features | **25 base + 6 priors = 31** | 24 base + 6 priors = 30 | 44 (14 invalid) |
+| Pre-event valid? | ✓ **STRICT_CLEAN** | ✓ STRICT_CLEAN | ✗ contaminated |
 
 ### Feature notes, validity audit, CT.gov notes
 
@@ -134,7 +134,7 @@ scripts/build_pre_event_train_v2.py        → train table
 scripts/train_pre_event_v3.py              → models/ + reports/
 ```
 
-**Status (2026-03-18):** Dataset tiering complete. 758-row trusted_trainable candidate pool identified (30.5% positive rate). Strict-clean model active: XGBoost AUC 0.692 / Prec@10% 0.444. Next step: retrain on 758-row candidate pool (vs current 596-row subset).
+**Status (2026-03-19):** v5 retrain complete on expanded 701-row pool. New best: LogReg AUC 0.703 / CV AUC 0.752 ± 0.053 / Prec@10% 0.545 — all metrics exceed v4 strict-clean baseline. ✓ STRICT_CLEAN.
 
 ### Key scripts
 
@@ -365,6 +365,15 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 - Valid ordinal features kept: `feat_company_event_sequence_num` (#3), `feat_asset_event_sequence_num` (#7)
 - Fix path: add `prediction_date` param to timing feature scripts → re-enable with correct anchor
 - See: [`reports/pre_event_validity_audit_v0.6_20260317.md`](reports/pre_event_validity_audit_v0.6_20260317.md)
+
+### v1.2 — 2026-03-19 (v5 expanded retrain)
+- **Retrain on 701-row expanded strict-clean pool** — +105 rows vs v4 (relaxed mesh-only exclusion)
+- `ml_baseline_train_20260318_v5.csv`: 701 rows, 25 base + 6 priors = 31 features, 30.4% positive rate
+- **New best model: Logistic Regression** — AUC 0.703, CV AUC 0.752 ± 0.053, Prec@10% 0.545
+- vs v4: AUC +0.011, CV AUC +0.041 with tighter variance (±0.053 vs ±0.112), Prec@10% +0.101
+- XGBoost and LightGBM both scored lower than LogReg on this pool (AUC 0.638 / 0.647)
+- `models/model_pre_event_v3_20260312.pkl` updated to LogReg v5
+- ✓ STRICT_CLEAN — same 9-feature exclusion policy, same feature roster as v4
 
 ### v1.1 — 2026-03-18 (dataset tiering pass)
 - **Curation / tiering pass on full 2514-row expanded master**

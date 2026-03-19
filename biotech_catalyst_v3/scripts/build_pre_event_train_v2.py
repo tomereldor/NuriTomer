@@ -31,8 +31,8 @@ SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
-DATE_TAG = "20260317"
-VERSION  = 4  # strict-clean: all INVALID_FOR_PRE_EVENT features excluded
+DATE_TAG = "20260318"
+VERSION  = 5  # expanded to 701 rows: include mesh-only not-ready 2023+ rows
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -252,9 +252,18 @@ def main():
               f"({df_raw[TARGET_COL].mean():.1%})")
 
     # ── Training filter ───────────────────────────────────────────────────────
-    mask = df_raw["row_ready"].astype(bool) & df_raw["v_actual_date"].notna()
+    # Include rows that are not-row_ready ONLY because of missing_mesh_level1.
+    # These rows have valid price/target data; the mesh feature imputes as "unknown".
+    # Rows failing for stale_price_data or missing_move_pct remain excluded.
+    mesh_only_flag = (
+        (~df_raw["row_ready"].astype(bool)) &
+        (df_raw.get("row_not_ready_reason", pd.Series("", index=df_raw.index)) == "missing_mesh_level1")
+    )
+    mask = (df_raw["row_ready"].astype(bool) | mesh_only_flag) & df_raw["v_actual_date"].notna()
     df   = df_raw[mask].copy()
-    print(f"After row_ready filter: {len(df)} rows")
+    n_mesh_added = int(mesh_only_flag[mask].sum())
+    print(f"After row_ready filter (+ mesh-only relaxation): {len(df)} rows "
+          f"(+{n_mesh_added} mesh-only rows)")
 
     # Restrict to MIN_EVENT_YEAR+ (2020-2022 rows have ~0% positives due to
     # missing price data; time-split puts them all in train → 0.6% positive rate)
