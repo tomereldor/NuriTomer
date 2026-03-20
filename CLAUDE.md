@@ -95,3 +95,27 @@ python biobert_trial_outcome.py  # BioBERT
 - `CTOD/pipeline.sh` - Full data processing pipeline
 - `CTOD/update_labels.sh` - Label generation with multiple models
 - Root notebooks for exploration: `getting_started_cto_vs_top.ipynb`, `exploring_company_examples.ipynb`
+
+---
+
+## biotech_catalyst_v3 — Working Rules
+
+The active ML project lives in `biotech_catalyst_v3/`. All working rules, best practices, and project-specific conventions are documented in:
+
+```
+biotech_catalyst_v3/.claude/
+  00_INDEX.md          — quick-reference: the 8 most important rules
+  01_principles.md     — core philosophy, decision-making, lessons learned
+  02_data_quality.md   — pre-event validity, dataset tiering, DO_NOT_USE flags
+  03_file_management.md — naming conventions, archiving, docs structure, git
+  04_ml_workflow.md    — 8-step pipeline, evaluation standards, model comparison
+  05_agents_efficiency.md — agent/model selection, credits efficiency, reviewer stage
+```
+
+**Read `biotech_catalyst_v3/.claude/00_INDEX.md` at the start of any session working in `biotech_catalyst_v3/`.**
+
+Key invariants (never break these):
+1. Never use `INVALID_FOR_PRE_EVENT` features in the pre-event model
+2. Never train on `history_only` rows (pre-2023, near-zero positive rate)
+3. Always compare retrain against previous strict-clean baseline
+4. Always update README + canonical reports + commit + push after significant changes
