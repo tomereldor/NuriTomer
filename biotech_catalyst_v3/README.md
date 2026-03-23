@@ -483,6 +483,22 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 - Full lift expected when model is retrained on the complete v0.5 feature set including CT.gov proxies
 - See: [`reports/pre_event_model_followup_actions_v0.4_20260315.md`](reports/pre_event_model_followup_actions_v0.4_20260315.md)
 
+### v0.7 — 2026-03-23 (Option C: AACT point-in-time status)
+- Replaced two SNAPSHOT_UNSAFE features with ground-truth point-in-time variants from AACT monthly archives
+- `fetch_aact_status_history.py`: downloads ~39 AACT monthly flat-file snapshots (Jan 2023–Mar 2026), extracts `overall_status` for 710 unique NCT IDs, writes `ct_status_at_event` (point-in-time lookup: latest month ≤ event date) and `data_tier` to master CSV
+- **Removed from training:** `feat_active_not_recruiting_flag` (SNAPSHOT_UNSAFE — same issue as `feat_completed_flag`)
+- **Added:** `feat_completed_at_event_flag` (AACT PIT, replaces `feat_completed_before_event` date proxy)
+- **Added:** `feat_active_not_recruiting_at_event_flag` (AACT PIT, replaces `feat_active_not_recruiting_flag`)
+- v7 retrain: **AUC 0.700** (+0.007 vs v6 0.693); CV AUC 0.759 ± 0.040; LogReg best; 400 leakage cases corrected
+- Cache: `cache/aact_status_history_v1.json` (~200KB); peak disk 2.2GB per month, cleaned after parse
+- See: `reports/FEATURE_NOTES.md` for full Option C coverage/watch-list
+
+### v0.6 — 2026-03-23 (feat_completed_flag leakage fix)
+- `feat_completed_flag` removed from training (SNAPSHOT_UNSAFE)
+- `feat_completed_before_event` added (date proxy: ct_primary_completion < event_date)
+- v6 retrain: AUC 0.693 (delta −0.010 vs v5, expected from removing contamination)
+- Train table: `ml_baseline_train_20260323_v6.csv` (701 rows × 31 cols)
+
 ### v0.4 — 2026-03-14 (audit update — 2026-03-15)
 - ML audit: confirmed target definitions, post-event exclusion policy, timing caveats
 - Clarified binary target cutoff: `target_large_move = 1` at ≥5× ATR (High+Extreme), not ≥3×

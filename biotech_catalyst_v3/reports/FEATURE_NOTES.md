@@ -5,6 +5,55 @@ Newest entry at top.
 
 ---
 
+## 2026-03-23 · Option C — Point-in-Time AACT Status (feat_completed_at_event_flag + feat_active_not_recruiting_at_event_flag)
+
+**STATUS: ✓ IMPLEMENTED** — AACT monthly flat-file archives fetched (~39 months, Jan 2023–Mar 2026); two SNAPSHOT_UNSAFE features replaced by ground-truth point-in-time variants.
+
+### Problem
+
+`feat_active_not_recruiting_flag = (ct_status == "ACTIVE_NOT_RECRUITING")` was kept in v6 training despite being derived from the same SNAPSHOT_UNSAFE current-snapshot source as `feat_completed_flag`. Additionally, `feat_completed_before_event` (v6 fix) is a valid but coarse date proxy — it only captures whether the scheduled data-collection end *date* preceded the event, not the actual trial status.
+
+### Fix — Option C: AACT Monthly Snapshots
+
+AACT (Duke CTTI) archives the full CT.gov database as pipe-delimited flat files on the 1st of each month. `fetch_aact_status_history.py` downloads all ~39 monthly snapshots (Jan 2023–Mar 2026), extracts `overall_status` for 710 unique NCT IDs, and performs a point-in-time lookup: *latest snapshot month ≤ event date*.
+
+**New features added (v7+):**
+
+| Feature | Replaces | Description |
+|---|---|---|
+| `feat_completed_at_event_flag` | `feat_completed_before_event` (date proxy) | 1 if AACT snapshot status == COMPLETED at month closest before event |
+| `feat_active_not_recruiting_at_event_flag` | `feat_active_not_recruiting_flag` (SNAPSHOT_UNSAFE) | 1 if AACT snapshot status == ACTIVE_NOT_RECRUITING at month closest before event |
+
+**SNAPSHOT_UNSAFE features removed from training in v7:**
+
+| Feature | Classification |
+|---|---|
+| `feat_completed_flag` | SNAPSHOT_UNSAFE (removed in v6, confirmed in INVALID_FOR_PRE_EVENT list) |
+| `feat_active_not_recruiting_flag` | **NOW REMOVED** — same SNAPSHOT_UNSAFE issue; replaced by PIT version |
+| `feat_completed_before_event` | Superseded by ground truth; kept in pipeline for compatibility |
+
+### Coverage
+
+| Metric | Value |
+|---|---|
+| Target NCT IDs | 710 unique (validated cohort, v_is_verified non-null) |
+| NCT IDs with ≥1 month of data | 710/710 (100%) |
+| Validated rows with ct_status_at_event non-null | ≥90% (after full fetch) |
+| Monthly granularity | Month-start snapshots; status could lag by ≤30 days |
+
+### Watch list (updated)
+
+| Feature | Status |
+|---|---|
+| `feat_active_not_recruiting_flag` | **REMOVED from training** as of v7 (SNAPSHOT_UNSAFE) |
+| `feat_completed_flag` | REMOVED from training as of v6 (SNAPSHOT_UNSAFE) |
+| `feat_active_not_recruiting_at_event_flag` | **ACTIVE** (v7+) — AACT point-in-time |
+| `feat_completed_at_event_flag` | **ACTIVE** (v7+) — AACT point-in-time |
+| `feat_completed_before_event` | Retained in features CSV; superseded in training by PIT version |
+| `feat_withdrawn_flag`, `feat_terminated_flag` | Still excluded; point-in-time fetch now available if needed |
+
+---
+
 ## 2026-03-23 · feat_completed_flag Leakage Fix (Option B — Date Proxy)
 
 **STATUS: ✓ IMPLEMENTED** — `feat_completed_flag` removed from training; replaced by `feat_completed_before_event`.

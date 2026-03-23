@@ -1,0 +1,51 @@
+feature_name,stage,feature_type,description,source_columns,source_type,n_valid,n_null,pct_valid
+feat_asset_trial_count_for_company,pass4,feat,Count of dataset events for this drug_name within this ticker,"drug_name, ticker",deterministic,2379,0,100.0
+feat_asset_trial_share,pass4,feat,asset_trial_count / n_trials_for_company — fraction of company events on this drug,"feat_asset_trial_count_for_company, feat_n_trials_for_company",deterministic,0,2379,0.0
+feat_pipeline_depth_score,pass4,feat,"min(late_stage_trials,5)*0.6 + log1p(n_unique_drugs)*0.4 — pipeline breadth/depth composite","feat_n_late_stage_trials_for_company, feat_n_unique_drugs_for_company",deterministic,2379,0,100.0
+feat_pivotal_proxy_score,pass4,feat,"0-5 pivotal importance: +1.5 Ph3, +1.0 Ph2/3 or NDA, +0.5 each BTD/priority/text keywords","feat_phase_num, feat_regulatory_stage_score, feat_breakthrough_flag, feat_priority_review_flag, pivotal_evidence, v_summary, v_pr_key_info",deterministic,0,2379,0.0
+feat_primary_endpoint_known_flag,pass4,feat,"1 if primary_endpoint_met is Yes or No (outcome is known, not null/unclear)",primary_endpoint_met,deterministic,2379,0,100.0
+feat_superiority_flag,pass4,feat,1 if superiority / met-primary / positive-result keywords found in evidence text,"primary_endpoint_result, v_pr_key_info, v_summary, catalyst_summary, pivotal_evidence",keyword,2379,0,100.0
+feat_stat_sig_flag,pass4,feat,"1 if statistical significance keywords (p-value, HR, CI) found in evidence text","primary_endpoint_result, v_pr_key_info, v_summary",keyword,2379,0,100.0
+feat_clinically_meaningful_flag,pass4,feat,1 if clinically meaningful / durable / complete response keywords found,"primary_endpoint_result, v_pr_key_info, v_summary",keyword,2379,0,100.0
+feat_mixed_results_flag,pass4,feat,1 if mixed/partial/did-not-meet keywords found in evidence text,"primary_endpoint_result, v_pr_key_info, v_summary, catalyst_summary",keyword,2379,0,100.0
+feat_blinded_flag,pass4,feat,1 if double/single-blind or masking keywords in trial title or design text,"ct_official_title, v_pr_title, v_summary",keyword,2379,0,100.0
+feat_open_label_flag,pass4,feat,1 if open-label or unblinded keywords in trial title or design text,"ct_official_title, v_pr_title, v_summary",keyword,2379,0,100.0
+feat_small_trial_flag,pass4,feat,1 if ct_enrollment < 50 (early-stage / feasibility trial),ct_enrollment,deterministic,2330,49,97.9
+feat_recent_completion_flag,pass4,feat,1 if ct_status==COMPLETED and primary completion within 12 months before event_date,"ct_status, ct_primary_completion, event_date",deterministic,2330,49,97.9
+feat_therapeutic_superclass,pass4,feat,Human-readable therapeutic area from mesh_level1: Oncology/CNS/Immunology/etc.,mesh_level1,deterministic,2379,0,100.0
+feat_oncology_flag,pass4,feat,1 if mesh_level1 == Neoplasms (oncology trial),mesh_level1,deterministic,2379,0,100.0
+feat_cns_flag,pass4,feat,1 if mesh_level1 == Nervous System Diseases,mesh_level1,deterministic,2379,0,100.0
+feat_rare_disease_flag,pass4,feat,1 if orphan designation OR rare disease keywords in indication/mesh,"feat_orphan_flag, indication, mesh_level1",deterministic,2379,0,100.0
+feat_cash_runway_proxy,pass4,feat,cash_position_m / market_cap_m — cash coverage ratio; >1.0 = cash exceeds market cap (existential signal),"cash_position_m, market_cap_m",deterministic,828,1551,34.8
+feat_ctgov_primary_completion_date,pass1/pass3,feat,,,deterministic,2332,47,98.0
+feat_days_to_primary_completion,pass1/pass3,feat,,,deterministic,2297,82,96.6
+feat_primary_completion_imminent_30d,pass1/pass3,feat,,,deterministic,2297,82,96.6
+feat_primary_completion_imminent_90d,pass1/pass3,feat,,,deterministic,2297,82,96.6
+feat_completion_recency_bucket,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_ct_status_current,pass1/pass3,feat,,,deterministic,2332,47,98.0
+feat_active_not_recruiting_flag,pass1/pass3,feat,,,deterministic,2332,47,98.0
+feat_completed_flag,pass4,feat,1 if ct_status == COMPLETED at time of event,ct_status,deterministic,2332,47,98.0
+feat_days_since_ctgov_last_update,pass1/pass3,feat,,,deterministic,2297,82,96.6
+feat_recent_ctgov_update_flag,pass1/pass3,feat,,,deterministic,2297,82,96.6
+feat_status_timing_consistency_flag,pass1/pass3,feat,,,deterministic,2297,82,96.6
+feat_ctgov_n_active_trials_sponsor,pass1/pass3,feat,,,deterministic,2330,49,97.9
+feat_ctgov_n_late_stage_trials_sponsor,pass1/pass3,feat,,,deterministic,2330,49,97.9
+feat_ctgov_n_completed_trials_sponsor,pass1/pass3,feat,,,deterministic,2330,49,97.9
+feat_ctgov_n_trials_total_sponsor,pass1/pass3,feat,,,deterministic,2330,49,97.9
+feat_ctgov_pipeline_maturity_score,pass1/pass3,feat,,,deterministic,2330,49,97.9
+feat_ctgov_n_trials_same_intervention,pass1/pass3,feat,,,deterministic,2371,8,99.7
+feat_ctgov_n_late_stage_trials_same_intervention,pass1/pass3,feat,,,deterministic,2371,8,99.7
+feat_ctgov_asset_maturity_score,pass1/pass3,feat,,,deterministic,2371,8,99.7
+feat_time_since_last_company_event,pass1/pass3,feat,,,deterministic,2018,361,84.8
+feat_time_since_last_asset_event,pass1/pass3,feat,,,deterministic,754,1625,31.7
+feat_asset_event_sequence_num,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_company_event_sequence_num,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_recent_company_event_flag,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_recent_asset_event_flag,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_oncology_x_imminent_30d,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_oncology_x_imminent_90d,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_oncology_x_recent_completion,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_oncology_x_recency_imminent,pass1/pass3,feat,,,deterministic,2379,0,100.0
+feat_completed_before_event,pass1/pass3,feat,,,deterministic,2176,203,91.5
+feat_completed_at_event_flag,pass4_pit,feat,1 if AACT monthly snapshot status == COMPLETED at closest month ≤ event date (point-in-time; replaces feat_completed_before_event date proxy in v7+),ct_status_at_event,deterministic,776,1603,32.6
+feat_active_not_recruiting_at_event_flag,pass4_pit,feat,1 if AACT monthly snapshot status == ACTIVE_NOT_RECRUITING at closest month ≤ event date (point-in-time; replaces feat_active_not_recruiting_flag snapshot in v7+),ct_status_at_event,deterministic,776,1603,32.6

@@ -32,7 +32,8 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 6  # fix feat_completed_flag leakage → feat_completed_before_event (date proxy)
+VERSION  = 7  # Option C: point-in-time AACT status → feat_completed_at_event_flag,
+              # feat_active_not_recruiting_at_event_flag (replaces snapshot features)
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -85,8 +86,12 @@ INVALID_FOR_PRE_EVENT = [
     # feat_completed_flag: ct_status == "COMPLETED" uses CURRENT CT.gov snapshot
     # (March 2026), not point-in-time at event date. For 2024 events, a trial may
     # have transitioned to COMPLETED post-event, leaking future information.
-    # Replaced by feat_completed_before_event (date proxy).
+    # Replaced by feat_completed_at_event_flag (AACT point-in-time).
     "feat_completed_flag",
+    # feat_active_not_recruiting_flag: ct_status == "ACTIVE_NOT_RECRUITING" from the
+    # CURRENT CT.gov snapshot — same SNAPSHOT_UNSAFE issue as feat_completed_flag.
+    # Replaced by feat_active_not_recruiting_at_event_flag (AACT point-in-time).
+    "feat_active_not_recruiting_flag",
 ]
 
 # ---------------------------------------------------------------------------
@@ -114,10 +119,13 @@ NUMERIC_FEATURES_V1 = [
 
 BINARY_FEATURES_V1 = [
     "feat_late_stage_flag",
-    "feat_active_not_recruiting_flag",
+    # feat_active_not_recruiting_flag  ← REMOVED (SNAPSHOT_UNSAFE: current CT.gov snapshot)
+    #                                     Replaced by feat_active_not_recruiting_at_event_flag
+    "feat_active_not_recruiting_at_event_flag",  # AACT point-in-time (v7+)
     # feat_completed_flag          ← REMOVED (SNAPSHOT_UNSAFE: derived from current CT.gov
     #                                 snapshot, not point-in-time at event date)
-    "feat_completed_before_event",  # date proxy: ct_primary_completion < event_date (pre-event valid)
+    # feat_completed_before_event  ← REPLACED by point-in-time AACT version (v7+)
+    "feat_completed_at_event_flag",  # AACT point-in-time: replaces date proxy (v7+)
     # feat_recent_completion_flag  ← EXCLUDED (SNAPSHOT_UNSAFE + INVALID_FOR_PRE_EVENT)
     "feat_orphan_flag",
     "feat_breakthrough_flag",

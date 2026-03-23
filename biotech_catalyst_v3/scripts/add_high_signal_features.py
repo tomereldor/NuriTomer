@@ -47,6 +47,7 @@ import pandas as pd
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+MASTER_CSV  = os.path.join(BASE_DIR, "enriched_all_clinical_clean_v3.csv")
 
 # ---------------------------------------------------------------------------
 # Constants / keyword lists
@@ -327,8 +328,29 @@ def build_timing_flags(df):
     ).astype(float)
     df.loc[status.isna(), "feat_recent_completion_flag"] = float("nan")
 
+    # feat_completed_at_event_flag: point-in-time AACT monthly snapshot status.
+    # Uses ct_status_at_event (written by fetch_aact_status_history.py) which
+    # reflects the trial status in the AACT archive for the month closest-before
+    # the event date. Replaces feat_completed_before_event (date proxy) in training
+    # when available. NaN rows imputed as 0 (absent/unknown → not completed).
+    ct_status_pit = df.get("ct_status_at_event", pd.Series(dtype=str))
+    df["feat_completed_at_event_flag"] = (ct_status_pit == "COMPLETED").astype(float)
+    df.loc[ct_status_pit.isna(), "feat_completed_at_event_flag"] = float("nan")
+
+    # feat_active_not_recruiting_at_event_flag: point-in-time version.
+    # Replaces feat_active_not_recruiting_flag (SNAPSHOT_UNSAFE) in training.
+    df["feat_active_not_recruiting_at_event_flag"] = (
+        ct_status_pit == "ACTIVE_NOT_RECRUITING"
+    ).astype(float)
+    df.loc[ct_status_pit.isna(), "feat_active_not_recruiting_at_event_flag"] = float("nan")
+
+    pit_complete = (ct_status_pit == "COMPLETED").sum()
+    pit_anr = (ct_status_pit == "ACTIVE_NOT_RECRUITING").sum()
+    pit_nonnull = ct_status_pit.notna().sum()
     print(f"  completed_before_event={int(df['feat_completed_before_event'].sum())}, "
           f"recent_completion={df['feat_recent_completion_flag'].sum()}")
+    print(f"  pit_status non-null={pit_nonnull}: completed_at_event={pit_complete}, "
+          f"active_not_recruiting_at_event={pit_anr}")
     return df
 
 
@@ -433,6 +455,14 @@ NEW_FEATURE_META = [
     ("feat_recent_completion_flag",                "pass4", "feat",
      "1 if ct_status==COMPLETED and primary completion within 12 months before event_date",
      "ct_status, ct_primary_completion, event_date", "deterministic"),
+    ("feat_completed_at_event_flag",               "pass4_pit", "feat",
+     "1 if AACT monthly snapshot status == COMPLETED at closest month ≤ event date "
+     "(point-in-time; replaces feat_completed_before_event date proxy in v7+)",
+     "ct_status_at_event", "deterministic"),
+    ("feat_active_not_recruiting_at_event_flag",   "pass4_pit", "feat",
+     "1 if AACT monthly snapshot status == ACTIVE_NOT_RECRUITING at closest month ≤ event date "
+     "(point-in-time; replaces feat_active_not_recruiting_flag snapshot in v7+)",
+     "ct_status_at_event", "deterministic"),
     ("feat_therapeutic_superclass",                "pass4", "feat",
      "Human-readable therapeutic area from mesh_level1: Oncology/CNS/Immunology/etc.",
      "mesh_level1", "deterministic"),
@@ -493,7 +523,27 @@ def main():
 
     print(f"Input : {os.path.basename(data_path)}  (v{data_v})")
     df = pd.read_csv(data_path)
-    print(f"Loaded: {df.shape[0]} rows × {df.shape[1]} cols\n")
+    print(f"Loaded: {df.shape[0]} rows × {df.shape[1]} cols")
+
+    # ── Inject ct_status_at_event from master CSV ─────────────────────────────
+    # Needed for feat_completed_at_event_flag + feat_active_not_recruiting_at_event_flag.
+    # Drop stale column first if re-running.
+    if "ct_status_at_event" in df.columns:
+        df = df.drop(columns=["ct_status_at_event"])
+    if os.path.exists(MASTER_CSV):
+        master = pd.read_csv(MASTER_CSV, usecols=["nct_id", "event_date", "drug_name",
+                                                   "ct_status_at_event"])
+        pit_map = (master
+                   .dropna(subset=["nct_id", "event_date"])
+                   .drop_duplicates(subset=["nct_id", "event_date", "drug_name"])
+                   [["nct_id", "event_date", "drug_name", "ct_status_at_event"]])
+        df = df.merge(pit_map, on=["nct_id", "event_date", "drug_name"], how="left")
+        pit_nn = df["ct_status_at_event"].notna().sum()
+        print(f"Injected ct_status_at_event from master CSV: {pit_nn}/{len(df)} non-null")
+    else:
+        print(f"WARNING: master CSV not found at {MASTER_CSV}; "
+              f"feat_completed_at_event_flag will be all-NaN")
+    print()
 
     print("Step 1: Company asset depth")
     df = build_company_asset_features(df)
