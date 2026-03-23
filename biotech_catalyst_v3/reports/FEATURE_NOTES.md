@@ -5,6 +5,52 @@ Newest entry at top.
 
 ---
 
+## 2026-03-23 · feat_completed_flag Leakage Fix (Option B — Date Proxy)
+
+**STATUS: ✓ IMPLEMENTED** — `feat_completed_flag` removed from training; replaced by `feat_completed_before_event`.
+
+### Problem
+
+`feat_completed_flag = (ct_status == "COMPLETED")` was **#2 in LightGBM feature importance** (coef 0.5743, v5).
+`ct_status` is a current CT.gov snapshot (March 2026 fetch), not the trial status at event time.
+For 2024 events, a trial could have transitioned to COMPLETED after the event date, leaking future information.
+**Classification: SNAPSHOT_UNSAFE.**
+
+### Fix — Option B: Date Proxy
+
+```python
+feat_completed_before_event = (ct_primary_completion_parsed < event_date)
+```
+
+`ct_primary_completion` is a **prospective protocol milestone** (scheduled data-collection end date),
+registered before the trial starts. If it precedes the event date, the trial's primary collection
+period was finished before the event — a valid pre-event proxy.
+
+| Metric | Value |
+|---|---|
+| Training rows (2023+) | 701 |
+| `feat_completed_flag == 1` (old, snapshot) | 415 / 701 (59.2%) |
+| `feat_completed_before_event == 1` (new, proxy) | 282 / 528 non-null rows (40.2% of total) |
+| `ct_primary_completion` null rate | 173 / 701 (24.7%) — below 30% fallback threshold |
+| Imputation for nulls | 0 (absent) — standard binary feature imputation |
+
+### Status after v6 retrain
+
+See MODEL_REPORTS.md entry for v6. Expected: small AUC drop (<0.02) from removing contamination is correct and acceptable.
+
+### Watch list
+
+| Feature | Status |
+|---|---|
+| `feat_active_not_recruiting_flag` | REVIEW_NEEDED — `ct_status == "ACTIVE_NOT_RECRUITING"` is also a CT.gov snapshot. Keep in training for now; revisit with Option C (CT.gov status history fetch). |
+| `feat_completed_flag` | **REMOVED from training** as of v6 (SNAPSHOT_UNSAFE) |
+| `feat_recent_completion_flag` | **EXCLUDED** (SNAPSHOT_UNSAFE + INVALID_FOR_PRE_EVENT anchor) |
+| `feat_withdrawn_flag`, `feat_terminated_flag` | Excluded from training; revisit after Option C |
+| `feat_completed_before_event` | **ACTIVE** (v6+) — date proxy, pre-event valid |
+| `feat_completed_at_event_flag` | PLANNED — Option C (CT.gov history API fetch for ~750 validated rows) |
+
+---
+
 ## 2026-03-17 · Strict-Clean Retrain Status
 
 **STATUS: ✓ STRICT_CLEAN retrain complete** — `ml_baseline_train_20260317_v4.csv` is the current trusted baseline.

@@ -14,11 +14,11 @@ We built a pre-event binary classifier that predicts whether a biotech catalyst 
 
 **Target:** `target_large_move = 1` when `abs(stock_movement_atr_normalized) ≥ 3.0` AND `abs(move_pct) ≥ 10%`. Positive rate: 30.4% on the current training cohort.
 
-**Features (31 total — strict-clean):** CT.gov status flags (completed, active-not-recruiting), trial design flags (blinded, open-label, small trial), disease class flags (oncology, CNS, rare disease), company context (cash runway, pipeline depth), event sequence ordinals (company/asset event count — no event-date anchor), and 6 fold-safe reaction priors (mean ATR + large-move rate by therapeutic class/phase/market-cap).
+**Features (31 total — strict-clean):** `feat_completed_before_event` (date proxy: primary completion date precedes event, pre-event valid), `feat_active_not_recruiting_flag` (CT.gov status flag), trial design flags (blinded, open-label, small trial), disease class flags (oncology, CNS, rare disease), company context (cash runway, pipeline depth), event sequence ordinals (company/asset event count — no event-date anchor), and 6 fold-safe reaction priors (mean ATR + large-move rate by therapeutic class/phase/market-cap).
 
-**Best model (v5 expanded):** Logistic Regression — AUC **0.703**, Prec@top 10% **0.545**, CV AUC **0.752 ± 0.053** (5-fold time-aware). ✓ STRICT_CLEAN — no event-date-anchored features.
+**Best model (v6):** Logistic Regression — AUC **0.693**, Prec@top 10% **0.818**, CV AUC **0.747 ± 0.047** (5-fold time-aware). ✓ STRICT_CLEAN — no event-date-anchored or snapshot-unsafe features.
 
-**Top predictors:** `feat_completed_flag`, `feat_blinded_flag`, prior by therapeutic class, `feat_small_trial_flag`, `feat_cash_runway_proxy`, `feat_cns_flag`.
+**Top predictors:** `feat_active_not_recruiting_flag`, `feat_blinded_flag`, prior by therapeutic class, `feat_completed_before_event`, `feat_small_trial_flag`, `feat_cns_flag`.
 
 **Pipeline:** One command runs all 8 steps — feature engineering → CT.gov API enrichment → train table → model training:
 ```bash
@@ -352,6 +352,18 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v3.39 — 2026-03-23 (feat_completed_flag leakage fix → v6 retrain)
+- **Leakage fix (Option B):** `feat_completed_flag` (CT.gov snapshot — SNAPSHOT_UNSAFE) removed from training feature set
+  - Root cause: `ct_status == "COMPLETED"` reflects current CT.gov state (March 2026 fetch), not trial status at event time. For 2024 events this leaks future information.
+  - Replaced by `feat_completed_before_event = (ct_primary_completion < event_date)` — prospective protocol milestone, registered before trial starts, pre-event valid
+  - Null rate in training cohort: 24.7% (below 30% fallback threshold) → imputed as 0 (absent)
+- **v6 retrain:** `ml_baseline_train_20260323_v6.csv` (701 rows, 31 features) → `feat_completed_before_event` present, `feat_completed_flag` absent
+  - Best model: LogReg — AUC **0.693** (vs v5 0.703, delta −0.010 — expected for removing contamination)
+  - `feat_completed_before_event` rank #7 (coef 0.2485) — retains predictive value
+  - CV AUC: 0.747 ± 0.047
+- **Features CSV:** `ml_dataset_features_20260323_v3.csv` (v2 archived) — added `feat_completed_before_event` column
+- Next: Option C — fetch CT.gov status history for ~750 validated rows to get exact point-in-time status → `feat_completed_at_event_flag` → v7 retrain
 
 ### v1.4 — 2026-03-23 (EDGAR 8-K historical outcome ingest)
 - **SEC EDGAR 8-K pipeline** — `scripts/edgar_8k_ingest.py` — queries all 8-K press releases for history_only tickers (2020–2022) using EDGAR Submissions API + Exhibit 99.1 parsing

@@ -13,7 +13,7 @@ feat_pivotal_proxy_score,feature,feat_pivotal_proxy_score,float64,median=0.0000,
 feat_active_not_recruiting_flag,feature,feat_active_not_recruiting_flag,float64,0 (absent),45,0,binary flag
 feat_blinded_flag,feature,feat_blinded_flag,int64,none,0,0,binary flag
 feat_cns_flag,feature,feat_cns_flag,int64,none,0,0,binary flag
-feat_completed_flag,feature,feat_completed_flag,float64,0 (absent),45,0,binary flag
+feat_completed_before_event,feature,feat_completed_before_event,float64,0 (absent),173,0,binary flag
 feat_oncology_flag,feature,feat_oncology_flag,int64,none,0,0,binary flag
 feat_open_label_flag,feature,feat_open_label_flag,int64,none,0,0,binary flag
 feat_rare_disease_flag,feature,feat_rare_disease_flag,int64,none,0,0,binary flag

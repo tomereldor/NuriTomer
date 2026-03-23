@@ -20,7 +20,7 @@ New features added (22):
   Step 4 — Trial design flags
     feat_blinded_flag, feat_open_label_flag, feat_small_trial_flag
   Step 5 — Trial status / timing
-    feat_completed_flag, feat_recent_completion_flag
+    feat_completed_before_event, feat_recent_completion_flag (SNAPSHOT_UNSAFE — excluded from training)
   Step 6 — Disease structure
     feat_therapeutic_superclass, feat_oncology_flag, feat_cns_flag,
     feat_rare_disease_flag
@@ -308,19 +308,26 @@ def build_timing_flags(df):
     event_dates = pd.to_datetime(df["event_date"], errors="coerce")
     status      = df.get("ct_status", pd.Series(dtype=str))
 
-    df["feat_completed_flag"] = (status == "COMPLETED").astype(float)
-    df.loc[status.isna(), "feat_completed_flag"] = float("nan")
-
+    # feat_completed_before_event: pre-event valid proxy for trial completion.
+    # Uses ct_primary_completion (prospective protocol milestone registered before
+    # trial starts) rather than ct_status (current CT.gov snapshot, SNAPSHOT_UNSAFE).
+    # True if the scheduled primary data-collection end date preceded the event date.
     comp_dates = pd.to_datetime(
         df.get("ct_primary_completion", pd.Series(dtype=str)), errors="coerce"
     )
+    df["feat_completed_before_event"] = (comp_dates < event_dates).astype(float)
+    df.loc[comp_dates.isna(), "feat_completed_before_event"] = float("nan")
+
+    # feat_recent_completion_flag: SNAPSHOT_UNSAFE — uses ct_status (current
+    # CT.gov snapshot) combined with realized event_date anchor. Retained for
+    # pipeline compatibility but EXCLUDED from training feature roster.
     days_since = (event_dates - comp_dates).dt.days
     df["feat_recent_completion_flag"] = (
         (status == "COMPLETED") & (days_since >= 0) & (days_since <= 365)
     ).astype(float)
     df.loc[status.isna(), "feat_recent_completion_flag"] = float("nan")
 
-    print(f"  completed={df['feat_completed_flag'].sum()}, "
+    print(f"  completed_before_event={int(df['feat_completed_before_event'].sum())}, "
           f"recent_completion={df['feat_recent_completion_flag'].sum()}")
     return df
 

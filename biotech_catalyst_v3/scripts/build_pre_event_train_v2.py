@@ -31,8 +31,8 @@ SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
-DATE_TAG = "20260318"
-VERSION  = 5  # expanded to 701 rows: include mesh-only not-ready 2023+ rows
+DATE_TAG = "20260323"
+VERSION  = 6  # fix feat_completed_flag leakage → feat_completed_before_event (date proxy)
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -82,6 +82,11 @@ INVALID_FOR_PRE_EVENT = [
     "feat_time_since_last_asset_event",
     "feat_recent_company_event_flag",
     "feat_recent_asset_event_flag",
+    # feat_completed_flag: ct_status == "COMPLETED" uses CURRENT CT.gov snapshot
+    # (March 2026), not point-in-time at event date. For 2024 events, a trial may
+    # have transitioned to COMPLETED post-event, leaking future information.
+    # Replaced by feat_completed_before_event (date proxy).
+    "feat_completed_flag",
 ]
 
 # ---------------------------------------------------------------------------
@@ -110,8 +115,10 @@ NUMERIC_FEATURES_V1 = [
 BINARY_FEATURES_V1 = [
     "feat_late_stage_flag",
     "feat_active_not_recruiting_flag",
-    "feat_completed_flag",
-    # feat_recent_completion_flag  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    # feat_completed_flag          ← REMOVED (SNAPSHOT_UNSAFE: derived from current CT.gov
+    #                                 snapshot, not point-in-time at event date)
+    "feat_completed_before_event",  # date proxy: ct_primary_completion < event_date (pre-event valid)
+    # feat_recent_completion_flag  ← EXCLUDED (SNAPSHOT_UNSAFE + INVALID_FOR_PRE_EVENT)
     "feat_orphan_flag",
     "feat_breakthrough_flag",
     "feat_fast_track_flag",
