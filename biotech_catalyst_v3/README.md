@@ -353,6 +353,17 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v1.4 — 2026-03-23 (EDGAR 8-K historical outcome ingest)
+- **SEC EDGAR 8-K pipeline** — `scripts/edgar_8k_ingest.py` — queries all 8-K press releases for history_only tickers (2020–2022) using EDGAR Submissions API + Exhibit 99.1 parsing
+- Covered 143 US-listed tickers (1,145 events); 16 foreign filers (SNY, NVS, AZN, BNTX, GLPG etc.) excluded — file 6-K not 8-K
+- Match rate: 64.9% of events found an 8-K within ±21d; 35.1% no 8-K (expected — large-cap pharma file many non-clinical 8-Ks)
+- Clinical hit rate: 17.9% (205 events with clinical/FDA press release content)
+- Outcomes extracted: 176 positive · 6 negative · 9 inconclusive · 3 mixed (81 keyword heuristic + 124 Perplexity)
+- Output: `edgar_8k_matches_20260323.csv` — all columns tagged `DO_NOT_USE_FOR_MODEL`
+- **Enables next step:** Build `feat_company_prior_success_rate` + `feat_drug_prior_phase_success_rate` features using historical outcomes (valid pre-event features — computed from events BEFORE the target event date)
+- API: EDGAR (free, no key) + Perplexity sonar-pro (existing key). Total cost: EDGAR free, ~$0.10 Perplexity
+- See `reports/DATASET_NOTES.md` (2026-03-23 section) for full coverage breakdown
+
 ### v0.9 — 2026-03-17 (pre-event validity audit + patch)
 - **Validity audit:** 9 timing features identified as INVALID for strict pre-event use
 - All 9 use `v_actual_date` or `event_date` (realized event date) as anchor — not knowable before the event

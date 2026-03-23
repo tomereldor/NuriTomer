@@ -1,3 +1,49 @@
+---
+## 2026-03-23 · EDGAR 8-K Ingest — Full Run (v1)
+
+**Script:** `scripts/edgar_8k_ingest.py`
+**Output:** `edgar_8k_matches_20260323.csv` (1,145 rows)
+**Target:** history_only rows 2020–2022 — 1,303 events across 160 tickers
+**Coverage gap:** 17 tickers not in EDGAR: 16 foreign private issuers (SNY, NVS, AZN, BNTX, GLPG, etc. — file 6-K, not 8-K) + RHHBY (Roche ADR, not in EDGAR)
+
+### Coverage
+
+| Metric | Count | % of 1,145 rows |
+|---|---|---|
+| 8-K found within ±21d | 743 | 64.9% |
+| No 8-K found | 402 | 35.1% |
+| Clinical 8-K (keyword match) | 205 | 17.9% |
+| 8-K found but not clinical | 538 | 47.0% |
+
+### Outcome extraction (205 clinical 8-Ks)
+
+| Outcome | Count |
+|---|---|
+| positive | 176 |
+| negative | 6 |
+| inconclusive | 9 |
+| mixed | 3 |
+| unknown | 11 |
+
+Extraction method: 81 keyword heuristic · 124 Perplexity (sonar-pro)
+
+### Key findings
+
+- **64.9% match rate** — 35.1% no-8K is expected: large-cap pharma (ABBV, BMY, MRK) file earnings 8-Ks frequently but their clinical results often aren't material individual events
+- **17.9% clinical rate among all events** — consistent with history_only being low-move, noise-class events; genuine clinical readouts are a minority
+- **194 events with outcome label** (positive + negative + inconclusive + mixed) available for drug/company historical outcome rate feature engineering
+- **16 foreign filers** with no EDGAR 8-K data — would need SEC 6-K search or alternative source
+- All `edgar_*` columns are tagged `DO_NOT_USE_FOR_MODEL = True`
+
+### Next steps
+
+1. **Build historical outcome rate features** from `edgar_8k_matches_20260323.csv`:
+   `feat_company_prior_success_rate`, `feat_drug_prior_phase_success_rate` — valid pre-event features (computed from events BEFORE the target event date)
+2. **Event-date correction** — where `edgar_8k_match_days <= 3` and `edgar_8k_date != event_date`, update `event_date` in master CSV
+3. **False positive detection** — `no_8k_found` rows may indicate events with no material public disclosure
+
+---
+
 # Dataset Notes — Biotech Catalyst v3
 
 Canonical running document for dataset expansion, target definitions, and coverage analysis.
