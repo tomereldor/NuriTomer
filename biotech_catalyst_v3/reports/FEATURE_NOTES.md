@@ -5,6 +5,64 @@ Newest entry at top.
 
 ---
 
+## 2026-03-24 · v11 — LLM-Derived Disease Biology Features
+
+**STATUS: IMPLEMENTED** — Three new features classify each indication's biological properties using Perplexity (sonar model). All are static medical knowledge — inherent to the disease, not the trial or event — and are pre-event safe.
+
+### New Features
+
+| Feature | Type | Values | Pre-event safe? |
+|---|---|---|---|
+| `feat_has_predictive_biomarker` | binary | 0/1 | Yes — inherent disease property |
+| `feat_genetic_basis` | categorical | none / monogenic / polygenic / somatic | Yes — inherent disease property |
+| `feat_targeted_therapy_exists` | binary | 0/1 | Yes — inherent disease property |
+
+### Methodology
+
+1. Normalized `indication` column → 1,152 unique values (case-insensitive)
+2. Batched 10 per Perplexity API call (sonar model, temperature=0.0) → 116 batches
+3. Structured prompt requests JSON classification for each disease
+4. Results cached in `cache/disease_biology_v1.json` (resume-safe)
+5. Mapped back to master CSV as `disease_*` columns; feature pipeline reads these in Step 6b
+
+### Coverage & Distribution
+
+- Coverage: 96.9% (2,437/2,514 rows with non-null indication)
+- `genetic_basis` distribution: polygenic 35.2%, somatic 28.3%, none 23.7%, monogenic 9.8%
+- `has_predictive_biomarker`: 30% of rows
+- `targeted_therapy_exists`: 48% of rows
+
+### Spot-check validation
+
+| Disease | Biomarker | Genetic | Targeted | Correct? |
+|---|---|---|---|---|
+| Breast cancer | True | somatic | True | Yes (HER2/ER/PR) |
+| NSCLC | True | somatic | True | Yes (EGFR/ALK/PD-L1) |
+| Cystic fibrosis | True | monogenic | True | Yes (CFTR/ivacaftor) |
+| COVID-19 | False | none | False | Yes |
+| Type 2 diabetes | False | polygenic | False | Yes |
+| CML | True | somatic | True | Yes (BCR-ABL/imatinib) |
+| Major depression | False | polygenic | False | Yes |
+| Sickle cell | False | monogenic | True | Yes |
+
+### v11 Retrain Results
+
+| Metric | v10 (baseline) | v11 | Delta |
+|---|---|---|---|
+| Test AUC | 0.664 | 0.685 | +0.021 |
+| Test PR-AUC | 0.503 | 0.573 | +0.070 |
+| Prec@top 10% | 0.364 | 0.727 | +0.363 |
+| CV AUC | 0.784 ± 0.045 | 0.781 ± 0.048 | -0.003 |
+
+### Files
+
+- `scripts/enrich_disease_biology.py` — Perplexity classification + cache + master CSV write
+- `cache/disease_biology_v1.json` — 1,152 entries (gitignored)
+- `scripts/add_high_signal_features.py` — Step 6b: `build_disease_biology_features()`
+- `scripts/build_pre_event_train_v2.py` — v11: 2 binary + 1 categorical (one-hot → 5 columns)
+
+---
+
 ## 2026-03-24 · v10 — PIT Fix for feat_terminated_flag + feat_withdrawn_flag
 
 **STATUS: ✓ IMPLEMENTED** — `feat_terminated_flag` and `feat_withdrawn_flag` (current CT.gov snapshot) replaced by AACT point-in-time versions; `feat_trial_quality_score` now uses PIT flags for the −2 termination/withdrawal penalty.

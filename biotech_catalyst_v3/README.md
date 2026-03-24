@@ -353,6 +353,19 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.43 — 2026-03-24 (LLM-derived disease biology features → v11 retrain)
+
+- **New features:** Three disease biology features classified via Perplexity (sonar, temp=0) from the `indication` column (1,152 unique diseases, 96.9% coverage):
+  - `feat_has_predictive_biomarker` (binary) — whether a known biomarker routinely guides treatment selection
+  - `feat_genetic_basis` (categorical: none/monogenic/polygenic/somatic) — primary genetic basis of the disease
+  - `feat_targeted_therapy_exists` (binary) — whether an approved or late-stage targeted therapy exists
+- **Pre-event safe:** These are static medical knowledge features — inherent to the disease, not the trial or event date
+- **v11 retrain:** `ml_baseline_train_20260323_v11.csv` (701 rows, 50 base + 6 priors = 56 features)
+  - Test AUC **0.685** (+0.021 vs v10), PR-AUC **0.573** (+0.070), Prec@top 10% **0.727** (+0.363)
+  - CV AUC 0.781 ± 0.048 (flat vs v10 — within noise)
+- **Pipeline:** `enrich_disease_biology.py` → cache in `cache/disease_biology_v1.json` → `add_high_signal_features.py` Step 6b → `build_pre_event_train_v2.py` v11
+- **Bug fix:** Fixed string-based version comparison in `train_pre_event_v3.py` that caused v9 > v11 (lexicographic vs numeric)
+
 ### v3.42 — 2026-03-24 (PIT fix for terminated/withdrawn flags → v10 retrain)
 
 - **Leakage fix:** `feat_terminated_flag` and `feat_withdrawn_flag` (CT.gov snapshot) contaminated `feat_trial_quality_score` — 23/33 terminated rows in training were still active at event time, receiving a spurious −2 quality penalty

@@ -25,6 +25,7 @@ feat_breakthrough_flag,feature,feat_breakthrough_flag,int64,none,0,0,binary flag
 feat_cns_flag,feature,feat_cns_flag,int64,none,0,0,binary flag
 feat_completed_at_event_flag,feature,feat_completed_at_event_flag,float64,0 (absent),45,0,binary flag
 feat_fast_track_flag,feature,feat_fast_track_flag,int64,none,0,0,binary flag
+feat_has_predictive_biomarker,feature,feat_has_predictive_biomarker,int64,none,0,0,binary flag
 feat_late_stage_flag,feature,feat_late_stage_flag,float64,0 (absent),54,0,binary flag
 feat_nda_bla_flag,feature,feat_nda_bla_flag,int64,none,0,0,binary flag
 feat_oncology_flag,feature,feat_oncology_flag,int64,none,0,0,binary flag
@@ -34,6 +35,7 @@ feat_randomized_flag,feature,feat_randomized_flag,float64,0 (absent),145,0,binar
 feat_rare_disease_flag,feature,feat_rare_disease_flag,int64,none,0,0,binary flag
 feat_single_asset_company_flag,feature,feat_single_asset_company_flag,int64,none,0,0,binary flag
 feat_small_trial_flag,feature,feat_small_trial_flag,float64,0 (absent),47,0,binary flag
+feat_targeted_therapy_exists,feature,feat_targeted_therapy_exists,int64,none,0,0,binary flag
 feat_terminated_at_event_flag,feature,feat_terminated_at_event_flag,float64,none,0,0,binary flag
 feat_withdrawn_at_event_flag,feature,feat_withdrawn_at_event_flag,float64,none,0,0,binary flag
 feat_mesh_level1_encoded,feature,feat_mesh_level1_encoded,float64,0 (absent),105,0,ordinal int
@@ -48,4 +50,9 @@ feat_therapeutic_superclass_Musculoskeletal,feature,feat_therapeutic_superclass,
 feat_therapeutic_superclass_Oncology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Other,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Respiratory,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
+feat_genetic_basis_monogenic,feature,feat_genetic_basis,int64,none,0,0,one-hot encoded
+feat_genetic_basis_none,feature,feat_genetic_basis,int64,none,0,0,one-hot encoded
+feat_genetic_basis_polygenic,feature,feat_genetic_basis,int64,none,0,0,one-hot encoded
+feat_genetic_basis_somatic,feature,feat_genetic_basis,int64,none,0,0,one-hot encoded
+feat_genetic_basis_unknown,feature,feat_genetic_basis,int64,none,0,0,one-hot encoded
 split,split,split,object,none,0,0,other

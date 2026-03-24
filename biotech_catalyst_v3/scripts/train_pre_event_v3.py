@@ -375,7 +375,7 @@ def main():
         glob.glob(os.path.join(ARCHIVE_DIR, "ml_baseline_train_2*.csv"))
     )
     train_files = [f for f in train_files if "dict" not in f]
-    train_path  = max(train_files, key=lambda f: (re.search(r"_v(\d+)\.csv$", f) or type("", (), {"group": lambda s, n: "0"})).group(1))
+    train_path  = max(train_files, key=lambda f: int((re.search(r"_v(\d+)\.csv$", f) or type("", (), {"group": lambda s, n: "0"})).group(1)))
 
     # Also load full feature dataset (needed for prior group columns + targets)
     feat_path = _find_latest(BASE_DIR, ARCHIVE_DIR, "ml_dataset_features")

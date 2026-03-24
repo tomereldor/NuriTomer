@@ -32,10 +32,9 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 10  # Add PIT versions of terminated/withdrawn flags (feat_terminated_at_event_flag,
-               # feat_withdrawn_at_event_flag) from AACT cache — fixes SNAPSHOT_UNSAFE
-               # contamination in feat_trial_quality_score (23/33 terminated rows were
-               # still active at event time). Snapshot flags moved to INVALID list.
+VERSION  = 11  # Add LLM-derived disease biology features: feat_has_predictive_biomarker,
+               # feat_genetic_basis (categorical), feat_targeted_therapy_exists.
+               # Static medical knowledge — pre-event safe.
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -164,6 +163,9 @@ BINARY_FEATURES_V1 = [
     "feat_single_asset_company_flag",
     # feat_short_squeeze_flag  ← REMOVED (SNAPSHOT_UNSAFE: yfinance current short_percent)
     # feat_ownership_low_flag  ← REMOVED (SNAPSHOT_UNSAFE: yfinance current institutional_ownership)
+    # ── v11: Disease biology (LLM-derived, pre-event safe) ──
+    "feat_has_predictive_biomarker",
+    "feat_targeted_therapy_exists",
 ]
 
 # Timing features: ordinal sequence numbers are valid (pre-event knowable).
@@ -193,6 +195,8 @@ BINARY_FEATURES  = sorted(set(BINARY_FEATURES_V1 + NEW_BINARY_FEATURES))
 CATEGORICAL_FEATURES = [
     "feat_therapeutic_superclass",
     # feat_event_proximity_bucket  ← REMOVED (INVALID_FOR_PRE_EVENT: anchored to realized event_date)
+    # ── v11: Disease biology (LLM-derived, pre-event safe) ──
+    "feat_genetic_basis",
 ] + NEW_CATEGORICAL_FEATURES
 
 ORDINAL_INT_FEATURES = [

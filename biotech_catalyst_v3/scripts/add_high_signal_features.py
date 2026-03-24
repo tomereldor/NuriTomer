@@ -739,6 +739,38 @@ def build_disease_features(df):
 
 
 # ---------------------------------------------------------------------------
+# Step 6b — Disease biology (LLM-derived)
+# ---------------------------------------------------------------------------
+
+def build_disease_biology_features(df):
+    """
+    LLM-derived disease biology features from indication text.
+    Reads columns written by enrich_disease_biology.py to master CSV.
+    Pre-event safe: inherent disease properties, not event-dependent.
+    """
+    df["feat_has_predictive_biomarker"] = df.get(
+        "disease_has_predictive_biomarker", pd.Series(dtype=float)
+    ).fillna(0).astype(int)
+
+    df["feat_genetic_basis"] = df.get(
+        "disease_genetic_basis", pd.Series(dtype=str)
+    ).fillna("unknown")
+
+    df["feat_targeted_therapy_exists"] = df.get(
+        "disease_targeted_therapy_exists", pd.Series(dtype=float)
+    ).fillna(0).astype(int)
+
+    n = len(df)
+    print(f"  has_predictive_biomarker: {df['feat_has_predictive_biomarker'].sum()}/{n} "
+          f"({df['feat_has_predictive_biomarker'].sum()/n*100:.0f}%)")
+    print(f"  targeted_therapy_exists: {df['feat_targeted_therapy_exists'].sum()}/{n} "
+          f"({df['feat_targeted_therapy_exists'].sum()/n*100:.0f}%)")
+    print(f"  genetic_basis distribution: "
+          f"{df['feat_genetic_basis'].value_counts().to_dict()}")
+    return df
+
+
+# ---------------------------------------------------------------------------
 # Step 7 — Financial context
 # ---------------------------------------------------------------------------
 
@@ -922,6 +954,21 @@ NEW_FEATURE_META = [
     ("feat_rare_disease_flag",                     "pass4", "feat",
      "1 if orphan designation OR rare disease keywords in indication/mesh",
      "feat_orphan_flag, indication, mesh_level1", "deterministic"),
+    # ── Step 6b: Disease biology (LLM-derived) ──────────────────────────────
+    ("feat_has_predictive_biomarker",              "pass4_6b", "feat",
+     "1 if a known predictive biomarker routinely guides treatment selection for this disease "
+     "(LLM-classified from indication text; pre-event safe: inherent disease property)",
+     "indication, disease_has_predictive_biomarker", "llm_perplexity"),
+    ("feat_genetic_basis",                         "pass4_6b", "feat",
+     "Primary genetic basis: none (infectious/environmental) / monogenic (single gene) / "
+     "polygenic (multi-gene) / somatic (acquired mutations, e.g. cancers) "
+     "(LLM-classified from indication text; pre-event safe)",
+     "indication, disease_genetic_basis", "llm_perplexity"),
+    ("feat_targeted_therapy_exists",               "pass4_6b", "feat",
+     "1 if an approved or late-stage (Ph3+) therapy targeting a specific validated molecular target "
+     "exists for this disease (LLM-classified from indication text; pre-event safe)",
+     "indication, disease_targeted_therapy_exists", "llm_perplexity"),
+    # ── Step 7: Financial context ─────────────────────────────────────────────
     ("feat_cash_runway_proxy",                     "pass4", "feat",
      "cash_position_m / market_cap_m — cash coverage ratio; >1.0 = cash exceeds market cap (existential signal). "
      "SNAPSHOT_UNSAFE (yfinance current market_cap) — not in training roster.",
@@ -994,6 +1041,27 @@ def main():
     else:
         print(f"WARNING: master CSV not found at {MASTER_CSV}; "
               f"feat_completed_at_event_flag will be all-NaN")
+
+    # ── Inject disease biology columns from master CSV ────────────────────────
+    # Written by enrich_disease_biology.py; needed for build_disease_biology_features().
+    disease_cols = ["disease_has_predictive_biomarker", "disease_genetic_basis",
+                    "disease_targeted_therapy_exists"]
+    for col in disease_cols:
+        if col in df.columns:
+            df = df.drop(columns=[col])
+    if os.path.exists(MASTER_CSV):
+        master_disease = pd.read_csv(
+            MASTER_CSV,
+            usecols=["nct_id", "event_date", "drug_name"] + disease_cols,
+        )
+        master_disease = (master_disease
+                          .dropna(subset=["nct_id", "event_date"])
+                          .drop_duplicates(subset=["nct_id", "event_date", "drug_name"]))
+        df = df.merge(master_disease, on=["nct_id", "event_date", "drug_name"], how="left")
+        bio_nn = df["disease_has_predictive_biomarker"].notna().sum()
+        print(f"Injected disease biology from master CSV: {bio_nn}/{len(df)} non-null")
+    else:
+        print(f"WARNING: master CSV not found; disease biology features will be all-NaN")
     print()
 
     print("Step 0a: Clinical protocol core features")
@@ -1018,6 +1086,8 @@ def main():
     df = build_timing_flags(df)
     print("\nStep 6: Disease structure")
     df = build_disease_features(df)
+    print("\nStep 6b: Disease biology (LLM-derived)")
+    df = build_disease_biology_features(df)
     print("\nStep 7: Financial context")
     df = build_financial_context(df)
 
