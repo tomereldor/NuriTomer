@@ -62,46 +62,70 @@ Top features (v9): `feat_cash_runway_proxy`, `feat_volatility`, `feat_n_trials_f
 
 ### Problem
 
-`feat_active_not_recruiting_flag = (ct_status == "ACTIVE_NOT_RECRUITING")` was kept in v6 training despite being derived from the same SNAPSHOT_UNSAFE current-snapshot source as `feat_completed_flag`. Additionally, `feat_completed_before_event` (v6 fix) is a valid but coarse date proxy — it only captures whether the scheduled data-collection end *date* preceded the event, not the actual trial status.
+Two SNAPSHOT_UNSAFE features remained in training after v6:
+
+1. **`feat_active_not_recruiting_flag`** = `(ct_status == "ACTIVE_NOT_RECRUITING")` — `ct_status` is the current CT.gov snapshot (March 2026 fetch), not the trial status at event time. Same leakage risk as `feat_completed_flag`.
+2. **`feat_completed_before_event`** (v6 fix) = `(ct_primary_completion < event_date)` — a valid pre-event date proxy, but coarse: it only checks whether the *scheduled* data-collection end date preceded the event, not whether the trial had actually transitioned to COMPLETED status at the time.
+
+### Why the date proxy is not sufficient
+
+`ct_primary_completion` is ambiguous: CT.gov updates it from "estimated" to "actual" after the trial completes, but we have no `_type` field to distinguish the two. More critically, agreement between the date proxy and actual point-in-time status (verified on 530 training rows where both are available) is only **71.1%** — and 145 of the 530 rows are false positives where the proxy says "completed" but the trial had NOT yet transitioned to COMPLETED status at event time. These are exactly the leakage cases that needed fixing.
 
 ### Fix — Option C: AACT Monthly Snapshots
 
-AACT (Duke CTTI) archives the full CT.gov database as pipe-delimited flat files on the 1st of each month. `fetch_aact_status_history.py` downloads all ~39 monthly snapshots (Jan 2023–Mar 2026), extracts `overall_status` for 710 unique NCT IDs, and performs a point-in-time lookup: *latest snapshot month ≤ event date*.
+**AACT** (Duke CTTI — Aggregate Analysis of ClinicalTrials.gov) archives the full CT.gov database as pipe-delimited flat files on the 1st of each month, publicly available at `aact.ctti-clinicaltrials.org/downloads/snapshots`.
+
+**`scripts/fetch_aact_status_history.py` — algorithm:**
+
+1. Load master CSV → extract 710 unique NCT IDs (validated cohort, `v_is_verified` non-null)
+2. Load/resume cache at `cache/aact_status_history_v1.json`
+3. For each of ~39 months (Jan 2023–Mar 2026):
+   - Stream-download the monthly ZIP (~2GB) to `$TMPDIR`
+   - Open ZIP in-memory → extract only `studies.txt` (pipe-delimited)
+   - Read only columns `nct_id` and `overall_status`
+   - Filter to our 710 NCT IDs; normalize status to SCREAMING_SNAKE_CASE (AACT uses "Active, not recruiting" etc.)
+   - Store `{nct_id: {month_key: status}}` in cache; delete temp ZIP
+4. Point-in-time lookup for each event row: find the **latest month ≤ event_date** in the cache
+5. Write `ct_status_at_event` column to master CSV; add `data_tier` column ("validated" / "historical")
 
 **New features added (v7+):**
 
-| Feature | Replaces | Description |
+| Feature | Replaces | Derivation |
 |---|---|---|
-| `feat_completed_at_event_flag` | `feat_completed_before_event` (date proxy) | 1 if AACT snapshot status == COMPLETED at month closest before event |
-| `feat_active_not_recruiting_at_event_flag` | `feat_active_not_recruiting_flag` (SNAPSHOT_UNSAFE) | 1 if AACT snapshot status == ACTIVE_NOT_RECRUITING at month closest before event |
+| `feat_completed_at_event_flag` | `feat_completed_before_event` (date proxy) | `1 if ct_status_at_event == "COMPLETED"`, else 0; NaN if no AACT record |
+| `feat_active_not_recruiting_at_event_flag` | `feat_active_not_recruiting_flag` (SNAPSHOT_UNSAFE) | `1 if ct_status_at_event == "ACTIVE_NOT_RECRUITING"`, else 0; NaN if no AACT record |
 
-**SNAPSHOT_UNSAFE features removed from training in v7:**
+**SNAPSHOT_UNSAFE features removed from training:**
 
-| Feature | Classification |
+| Feature | Removed in | Classification |
+|---|---|---|
+| `feat_completed_flag` | v6 | SNAPSHOT_UNSAFE (ct_status = current CT.gov snapshot) |
+| `feat_active_not_recruiting_flag` | v7 | SNAPSHOT_UNSAFE (same source) |
+| `feat_completed_before_event` | v7 | Superseded by PIT; kept in features CSV for compatibility |
+
+### Coverage (correctly scoped)
+
+The AACT archive starts Jan 2023. The training cohort is also 2023+ only (older rows excluded due to near-zero positive rate). So PIT and training scope align well:
+
+| Scope | PIT coverage |
 |---|---|
-| `feat_completed_flag` | SNAPSHOT_UNSAFE (removed in v6, confirmed in INVALID_FOR_PRE_EVENT list) |
-| `feat_active_not_recruiting_flag` | **NOW REMOVED** — same SNAPSHOT_UNSAFE issue; replaced by PIT version |
-| `feat_completed_before_event` | Superseded by ground truth; kept in pipeline for compatibility |
+| Full dataset (2379 rows, incl. 2020–2022) | 32.6% — misleading figure; most missing are pre-2023 rows not used in training |
+| **Training cohort (2023+, 711 rows)** | **92.4% (657/711)** — the operationally relevant number |
+| Training rows without PIT (54 rows) | Imputed as 0 (absent) — more conservative than using unreliable date proxy |
+| Monthly granularity | Status could lag by ≤30 days (event near month boundary) |
 
-### Coverage
-
-| Metric | Value |
-|---|---|
-| Target NCT IDs | 710 unique (validated cohort, v_is_verified non-null) |
-| NCT IDs with ≥1 month of data | 710/710 (100%) |
-| Validated rows with ct_status_at_event non-null | ≥90% (after full fetch) |
-| Monthly granularity | Month-start snapshots; status could lag by ≤30 days |
+**Do not use `feat_completed_before_event` as fallback for the 54 null rows.** The date proxy has 27% disagreement with PIT (145 false positives in 530 validated comparisons), and those false positives are exactly the leakage pattern Option C was designed to fix. Imputing 0 is safer.
 
 ### Watch list (updated)
 
 | Feature | Status |
 |---|---|
-| `feat_active_not_recruiting_flag` | **REMOVED from training** as of v7 (SNAPSHOT_UNSAFE) |
-| `feat_completed_flag` | REMOVED from training as of v6 (SNAPSHOT_UNSAFE) |
-| `feat_active_not_recruiting_at_event_flag` | **ACTIVE** (v7+) — AACT point-in-time |
-| `feat_completed_at_event_flag` | **ACTIVE** (v7+) — AACT point-in-time |
-| `feat_completed_before_event` | Retained in features CSV; superseded in training by PIT version |
-| `feat_withdrawn_flag`, `feat_terminated_flag` | Still excluded; point-in-time fetch now available if needed |
+| `feat_active_not_recruiting_flag` | **REMOVED from training** (v7) — SNAPSHOT_UNSAFE |
+| `feat_completed_flag` | **REMOVED from training** (v6) — SNAPSHOT_UNSAFE |
+| `feat_active_not_recruiting_at_event_flag` | **ACTIVE** (v7+) — AACT PIT, 92.4% coverage in training cohort |
+| `feat_completed_at_event_flag` | **ACTIVE** (v7+) — AACT PIT, 92.4% coverage in training cohort |
+| `feat_completed_before_event` | Retained in features CSV only; superseded in training by PIT |
+| `feat_withdrawn_flag`, `feat_terminated_flag` | Still excluded; AACT cache available if needed |
 
 ---
 
