@@ -32,9 +32,10 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 9  # Add feat_mesh_level1_encoded (ordinal int, therapeutic area).
-              # Move feat_event_proximity_bucket to INVALID_FOR_PRE_EVENT
-              # (anchored to realized event_date — cannot be reproduced pre-event).
+VERSION  = 10  # Add PIT versions of terminated/withdrawn flags (feat_terminated_at_event_flag,
+               # feat_withdrawn_at_event_flag) from AACT cache — fixes SNAPSHOT_UNSAFE
+               # contamination in feat_trial_quality_score (23/33 terminated rows were
+               # still active at event time). Snapshot flags moved to INVALID list.
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -97,6 +98,13 @@ INVALID_FOR_PRE_EVENT = [
     # CURRENT CT.gov snapshot — same SNAPSHOT_UNSAFE issue as feat_completed_flag.
     # Replaced by feat_active_not_recruiting_at_event_flag (AACT point-in-time).
     "feat_active_not_recruiting_flag",
+    # feat_terminated_flag: ct_status == "TERMINATED" from CURRENT CT.gov snapshot.
+    # 23/33 terminated rows in training were still active at event time — terminated
+    # post-event. Replaced by feat_terminated_at_event_flag (AACT PIT).
+    "feat_terminated_flag",
+    # feat_withdrawn_flag: ct_status == "WITHDRAWN" from CURRENT CT.gov snapshot.
+    # Same SNAPSHOT_UNSAFE issue. Replaced by feat_withdrawn_at_event_flag (AACT PIT).
+    "feat_withdrawn_flag",
     # feat_short_squeeze_flag: short_percent >= 20% via yfinance current snapshot.
     # For historical events (2023-2024), short_percent is fetched in 2026 — SNAPSHOT_UNSAFE.
     "feat_short_squeeze_flag",
@@ -136,7 +144,11 @@ BINARY_FEATURES_V1 = [
     # feat_completed_flag          ← REMOVED (SNAPSHOT_UNSAFE: derived from current CT.gov
     #                                 snapshot, not point-in-time at event date)
     # feat_completed_before_event  ← REPLACED by point-in-time AACT version (v7+)
-    "feat_completed_at_event_flag",  # AACT point-in-time: replaces date proxy (v7+)
+    "feat_completed_at_event_flag",      # AACT point-in-time: replaces date proxy (v7+)
+    # feat_terminated_flag  ← REMOVED (SNAPSHOT_UNSAFE: 23/33 rows terminated post-event)
+    "feat_terminated_at_event_flag",     # AACT point-in-time (v10+)
+    # feat_withdrawn_flag   ← REMOVED (SNAPSHOT_UNSAFE: same issue)
+    "feat_withdrawn_at_event_flag",      # AACT point-in-time (v10+)
     # feat_recent_completion_flag  ← EXCLUDED (SNAPSHOT_UNSAFE + INVALID_FOR_PRE_EVENT)
     "feat_orphan_flag",
     "feat_breakthrough_flag",

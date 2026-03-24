@@ -5,6 +5,44 @@ Newest entry at top.
 
 ---
 
+## 2026-03-24 · v10 — PIT Fix for feat_terminated_flag + feat_withdrawn_flag
+
+**STATUS: ✓ IMPLEMENTED** — `feat_terminated_flag` and `feat_withdrawn_flag` (current CT.gov snapshot) replaced by AACT point-in-time versions; `feat_trial_quality_score` now uses PIT flags for the −2 termination/withdrawal penalty.
+
+### Problem
+
+`feat_terminated_flag = (ct_status == "TERMINATED")` and `feat_withdrawn_flag = (ct_status == "WITHDRAWN")` were used as −2 penalty terms inside `feat_trial_quality_score`. Both use the current CT.gov snapshot (March 2026) — same SNAPSHOT_UNSAFE issue as `feat_completed_flag`.
+
+Audit using AACT cache against 33 training rows with current status TERMINATED or WITHDRAWN:
+- **23 leakage cases** — trial was still RECRUITING or ACTIVE_NOT_RECRUITING at event time; terminated post-event
+- **10 clean cases** — already TERMINATED/WITHDRAWN at event time
+
+For the 23 leakage rows: `feat_trial_quality_score` was artificially lowered by 2 points relative to what was knowable at event time.
+
+### Fix
+
+Added **Step 0b.5** (`build_status_pit_flags`) in `add_high_signal_features.py`:
+- `feat_terminated_at_event_flag` = `ct_status_at_event == "TERMINATED"` (AACT PIT; falls back to snapshot for ~7.6% of training rows with no AACT record)
+- `feat_withdrawn_at_event_flag` = `ct_status_at_event == "WITHDRAWN"` (same)
+
+`build_trial_quality_score` (Step 0c) now uses these PIT flags for the −2 penalties instead of the snapshot flags.
+
+Both PIT flags added to training roster in v10 (low base rate: 9 and 1 positive cases in 701 rows — minimal direct signal, but correct for quality score composition).
+
+Snapshot flags (`feat_terminated_flag`, `feat_withdrawn_flag`) moved to `INVALID_FOR_PRE_EVENT`.
+
+### After fix
+
+| | Snapshot (old) | PIT (v10) |
+|---|---|---|
+| TERMINATED positive count | 32 | 9 |
+| WITHDRAWN positive count | 1 | 1 |
+| Quality score inflated downward for | 23 rows | 0 rows |
+
+v10: Test AUC 0.664, CV AUC 0.784 ± 0.045 — flat vs v9 (expected; 9 affected rows are too few to move the aggregate metric, but the score is now correct).
+
+---
+
 ## 2026-03-24 · v9 — Port Foundational Features + Fix INVALID_FOR_PRE_EVENT Roster
 
 **STATUS: ✓ IMPLEMENTED** — Three legacy root-level scripts ported into `add_high_signal_features.py`; SNAPSHOT_UNSAFE and INVALID features cleaned from training roster; v9 train table = 701 rows × 42 features.

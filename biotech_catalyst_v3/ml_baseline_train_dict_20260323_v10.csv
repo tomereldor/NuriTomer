@@ -34,6 +34,8 @@ feat_randomized_flag,feature,feat_randomized_flag,float64,0 (absent),145,0,binar
 feat_rare_disease_flag,feature,feat_rare_disease_flag,int64,none,0,0,binary flag
 feat_single_asset_company_flag,feature,feat_single_asset_company_flag,int64,none,0,0,binary flag
 feat_small_trial_flag,feature,feat_small_trial_flag,float64,0 (absent),47,0,binary flag
+feat_terminated_at_event_flag,feature,feat_terminated_at_event_flag,float64,none,0,0,binary flag
+feat_withdrawn_at_event_flag,feature,feat_withdrawn_at_event_flag,float64,none,0,0,binary flag
 feat_mesh_level1_encoded,feature,feat_mesh_level1_encoded,float64,0 (absent),105,0,ordinal int
 feat_therapeutic_superclass_CNS,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Cardiovascular,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded

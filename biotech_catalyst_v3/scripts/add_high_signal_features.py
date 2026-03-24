@@ -17,7 +17,10 @@ New features added (Steps 0a–0d are foundational; Steps 1–7 are higher-order
   Step 0b — Regulatory designation flags (keyword match on press release + CT.gov text)
     feat_orphan_flag, feat_fast_track_flag, feat_breakthrough_flag,
     feat_nda_bla_flag, feat_priority_review_flag*, feat_regulatory_stage_score
-  Step 0c — Trial quality score (requires 0a + 0b)
+  Step 0b.5 — PIT status flags for terminated/withdrawn (AACT point-in-time; same approach as Option C)
+    feat_terminated_at_event_flag, feat_withdrawn_at_event_flag
+    Falls back to snapshot flags (feat_terminated_flag / feat_withdrawn_flag) when ct_status_at_event is null
+  Step 0c — Trial quality score (requires 0a + 0b + 0b.5)
     feat_trial_quality_score, feat_controlled_flag
   Step 0d — Company foundation features
     feat_n_trials_for_company, feat_n_unique_drugs_for_company,
@@ -350,21 +353,64 @@ def build_regulatory_flags(df):
 
 
 # ---------------------------------------------------------------------------
-# Step 0c — Trial quality score (requires 0a + 0b)
+# Step 0b.5 — PIT terminated / withdrawn flags (AACT point-in-time)
+# ---------------------------------------------------------------------------
+
+def build_status_pit_flags(df):
+    """
+    feat_terminated_at_event_flag and feat_withdrawn_at_event_flag —
+    point-in-time versions using ct_status_at_event (AACT monthly snapshot,
+    same source as feat_completed_at_event_flag from Option C).
+
+    For rows without AACT data (ct_status_at_event null), falls back to the
+    current CT.gov snapshot flags (feat_terminated_flag / feat_withdrawn_flag).
+    This is safe because for 92.4% of the training cohort (2023+) AACT data
+    is available. The 7.6% fallback rows are all trials with no AACT record,
+    so leakage risk is limited to those rows.
+
+    Audit: 23/33 terminated rows in training were still active at event time —
+    they were terminated AFTER the event. The snapshot flags inject a -2
+    quality-score penalty for these 23 rows that should not be there.
+    These PIT flags fix that in feat_trial_quality_score (Step 0c).
+    """
+    ct_pit = df.get("ct_status_at_event", pd.Series(dtype=str))
+
+    # PIT flag — NaN where no AACT record
+    term_pit = (ct_pit == "TERMINATED").astype(float)
+    term_pit[ct_pit.isna()] = float("nan")
+
+    with_pit = (ct_pit == "WITHDRAWN").astype(float)
+    with_pit[ct_pit.isna()] = float("nan")
+
+    # Fall back to snapshot for rows with no AACT record
+    snap_term = df.get("feat_terminated_flag", pd.Series(0, index=df.index)).fillna(0)
+    snap_with = df.get("feat_withdrawn_flag",  pd.Series(0, index=df.index)).fillna(0)
+
+    df["feat_terminated_at_event_flag"] = term_pit.fillna(snap_term)
+    df["feat_withdrawn_at_event_flag"]  = with_pit.fillna(snap_with)
+
+    pit_avail = ct_pit.notna().sum()
+    print(f"  terminated_at_event={int(df['feat_terminated_at_event_flag'].sum())} "
+          f"(snapshot had {int(snap_term.sum())}), "
+          f"withdrawn_at_event={int(df['feat_withdrawn_at_event_flag'].sum())} "
+          f"— PIT available for {pit_avail}/{len(df)} rows")
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Step 0c — Trial quality score (requires 0a + 0b + 0b.5)
 # ---------------------------------------------------------------------------
 
 def build_trial_quality_score(df):
     """
     feat_trial_quality_score and feat_controlled_flag.
 
-    Must run after build_clinical_core (feat_design_quality_score, feat_randomized_flag,
-    feat_withdrawn_flag, feat_terminated_flag) and build_regulatory_flags
-    (feat_breakthrough_flag).
+    Must run after build_clinical_core (0a), build_regulatory_flags (0b),
+    and build_status_pit_flags (0b.5).
 
-    NOTE: feat_trial_quality_score uses feat_terminated_flag / feat_withdrawn_flag
-    (current CT.gov snapshot) as -2 penalties. Mild SNAPSHOT_UNSAFE risk documented
-    in FEATURE_NOTES.md. Not used directly in training — included as a numeric
-    summary fed to the model as feat_trial_quality_score.
+    Uses feat_terminated_at_event_flag / feat_withdrawn_at_event_flag (PIT)
+    for the -2 penalties — fixes the SNAPSHOT_UNSAFE contamination where 23/33
+    terminated rows in training were still active at event time.
     """
     ct_alloc  = df.get("ct_allocation", pd.Series(dtype=str))
     enroll    = pd.to_numeric(df.get("ct_enrollment"), errors="coerce")
@@ -388,8 +434,8 @@ def build_trial_quality_score(df):
         design
         + blinded_title.astype(float)
         + breakthrough * 0.5
-        - df.get("feat_withdrawn_flag",  pd.Series(0, index=df.index)).fillna(0).astype(float) * 2.0
-        - df.get("feat_terminated_flag", pd.Series(0, index=df.index)).fillna(0).astype(float) * 2.0
+        - df.get("feat_withdrawn_at_event_flag",  pd.Series(0, index=df.index)).fillna(0).astype(float) * 2.0
+        - df.get("feat_terminated_at_event_flag", pd.Series(0, index=df.index)).fillna(0).astype(float) * 2.0
     )
     all_missing = ct_alloc.isna() & enroll.isna() & phase_num.isna() & ct_status.isna()
     quality[all_missing] = np.nan
@@ -843,6 +889,16 @@ NEW_FEATURE_META = [
     ("feat_recent_completion_flag",                "pass4", "feat",
      "1 if ct_status==COMPLETED and primary completion within 12 months before event_date",
      "ct_status, ct_primary_completion, event_date", "deterministic"),
+    ("feat_terminated_at_event_flag",              "pass4_pit", "feat",
+     "1 if AACT monthly snapshot status == TERMINATED at closest month ≤ event date "
+     "(point-in-time; fixes SNAPSHOT_UNSAFE feat_terminated_flag). "
+     "Falls back to feat_terminated_flag when ct_status_at_event is null.",
+     "ct_status_at_event, feat_terminated_flag", "deterministic"),
+    ("feat_withdrawn_at_event_flag",               "pass4_pit", "feat",
+     "1 if AACT monthly snapshot status == WITHDRAWN at closest month ≤ event date "
+     "(point-in-time; fixes SNAPSHOT_UNSAFE feat_withdrawn_flag). "
+     "Falls back to feat_withdrawn_flag when ct_status_at_event is null.",
+     "ct_status_at_event, feat_withdrawn_flag", "deterministic"),
     ("feat_completed_at_event_flag",               "pass4_pit", "feat",
      "1 if AACT monthly snapshot status == COMPLETED at closest month ≤ event date "
      "(point-in-time; replaces feat_completed_before_event date proxy in v7+)",
@@ -944,6 +1000,8 @@ def main():
     df = build_clinical_core(df)
     print("\nStep 0b: Regulatory designation flags")
     df = build_regulatory_flags(df)
+    print("\nStep 0b.5: PIT terminated/withdrawn flags")
+    df = build_status_pit_flags(df)
     print("\nStep 0c: Trial quality score")
     df = build_trial_quality_score(df)
     print("\nStep 0d: Company foundation features")

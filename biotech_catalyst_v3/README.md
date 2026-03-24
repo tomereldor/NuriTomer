@@ -353,6 +353,13 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.42 — 2026-03-24 (PIT fix for terminated/withdrawn flags → v10 retrain)
+
+- **Leakage fix:** `feat_terminated_flag` and `feat_withdrawn_flag` (CT.gov snapshot) contaminated `feat_trial_quality_score` — 23/33 terminated rows in training were still active at event time, receiving a spurious −2 quality penalty
+- **Fix:** Added `feat_terminated_at_event_flag` + `feat_withdrawn_at_event_flag` (AACT PIT, same approach as Option C); `build_trial_quality_score()` now uses PIT flags for the −2 penalty terms
+- **v10 retrain:** `ml_baseline_train_20260323_v10.csv` (701 rows, 44 features) — Test AUC 0.664, CV AUC 0.784 ± 0.045 (flat vs v9 — 9 affected rows too few to move aggregate AUC, but scores are now correct)
+- Snapshot flags moved to `INVALID_FOR_PRE_EVENT`
+
 ### v3.41 — 2026-03-24 (foundational feature port + INVALID roster cleanup → v9 retrain)
 
 - **Root cause fix:** Three legacy root-level scripts (`build_ml_ready_features.py`, `add_high_value_predictors.py`, `completeness_pass.py`) were never ported when dataset expanded from 831 → 2379 rows. ~12 foundational features were absent from training.
