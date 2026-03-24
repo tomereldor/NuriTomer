@@ -51,6 +51,97 @@ Newest entry at top.
 
 ---
 
+## 2026-03-24 · Benzinga Data Assessment: Free Tier vs Paid Subscription
+
+**Context:** Follow-up to the 2026-03-19 pilot. Reviewed free-tier data quality with a fresh 125-item sample and assessed what a paid subscription would unlock.
+
+### What the free tier gives us (sample: 125 items, 2026-03-19 → 2026-03-24)
+
+**Columns available per news item:**
+
+| Column | Type | Example | Useful? |
+|---|---|---|---|
+| `bz_id` | int | 51427269 | Internal ID, no use |
+| `bz_created` | timestamp | Mon, 24 Mar 2026 13:45:22 | Precise timestamp — useful for event dating |
+| `bz_title` | string | "Merck Says BC, NIHB... Added WINREVAIR To Their Public Drug Formularies" | High value — catalyst identification |
+| `bz_url` | URL | benzinga.com/news/... | Source link |
+| `bz_author` | string | "Benzinga Newsdesk" / "Vandana Singh" | Low value |
+| `bz_stocks` | pipe-delimited | "MRK" / "MRK\|PFE\|MRNA" | High value — ticker linkage |
+| `bz_channels` | pipe-delimited | "News\|Price Target\|Analyst Ratings" / "Biotech\|Health Care" | Medium — categorical signal |
+| `bz_tags` | pipe-delimited | "Expert Ideas\|Mounjaro\|Weight Loss" | Medium — drug/therapy tagging |
+| `bz_teaser` | string | First ~200 chars of article | Medium — summary text |
+| `bz_body` | HTML string | Full article (0–6,500 chars) | Low for free (often empty or truncated) |
+
+**Quality issues observed in sample:**
+
+1. **Body text is unreliable:** 2/11 matched items had `body_len = 0`, others range from 192–6,509 chars. No consistency.
+2. **Channel tagging is coarse:** "News" is the dominant channel (94/125 items = 75%). Biotech/Health Care channels are rare. No "Press Releases" or "Clinical Trials" channel in any item.
+3. **Mostly general market news:** Of 125 items, only 11 mentioned any of our 330 biotech tickers. Of those 11, **zero** were about clinical trial results — they were analyst ratings, regulatory filings, general business news, and market commentary.
+4. **No NCT-ID or trial linkage:** Benzinga items mention tickers but never reference NCT IDs, trial names, or drug names in structured fields. The drug name appears only in free-text title/body.
+5. **No historical access:** Free tier returns only a rolling ~5-day window (125 items). Cannot query 2020–2025.
+
+**Matched items breakdown (11 items mentioning our tickers):**
+
+| Content type | Count | Clinical trial related? |
+|---|---|---|
+| Drug formulary/reimbursement news | 1 | No (post-approval) |
+| Licensing/partnership deal | 1 | No (business) |
+| Market commentary ("What's Going On With...") | 1 | No (price action) |
+| General business news (China expansion, etc.) | 2 | No |
+| Analyst ratings / price target | 2 | No |
+| Regulatory/political (Medicare, CDC) | 4 | No |
+| Private credit / bond market | 1 | No |
+| **Clinical trial data readouts** | **0** | — |
+
+### What a paid subscription would add
+
+Based on Benzinga API documentation (Starter/Professional tiers):
+
+| Endpoint | Free | Paid | Value for our dataset |
+|---|---|---|---|
+| `/api/v2/news` with **ticker filter** | Broken (0 results) | Working | **HIGH** — fetch all news for each of our 330 tickers historically |
+| `/api/v2/news` with **date range** | Last ~5 days only | Full history | **HIGH** — query 2020–2026 for event-date validation |
+| `/api/v2.1/press-releases` | 404 | Accessible | **HIGH** — exact PR timestamps, official company releases (not journalist articles) |
+| `/api/v2.1/calendar/fda` | 403 | Accessible | **VERY HIGH** — PDUFA dates, FDA action dates, AdCom dates |
+| `/api/v3/wiim` ("Why Is It Moving") | 404 | Accessible | **MEDIUM** — real-time catalyst explanations (post-event, but useful for labeling) |
+| Body text completeness | Often empty/truncated | Full text | **LOW** — we already have PR text via Perplexity |
+
+### Assessment: Would a paid subscription be useful?
+
+**YES, conditionally.** The two high-value endpoints would be:
+
+**1. FDA Calendar (`/api/v2.1/calendar/fda`) — strongest case**
+- This would give us structured PDUFA dates, FDA action dates, and AdCom meetings
+- Currently we have NO systematic FDA calendar data — this is a gap
+- These dates are known weeks/months in advance → **pre-event safe** features
+- Could enable: `feat_days_to_pdufa`, `feat_has_upcoming_fda_action`, `feat_adcom_scheduled`
+- **This alone could justify a subscription**
+
+**2. Press Releases + Ticker Filter — moderate case**
+- Would allow systematic PR matching against our 2,514 events
+- Could validate event dates more precisely than Perplexity (exact PR timestamp vs LLM inference)
+- But: our Perplexity + CT.gov pipeline already achieves this with ~85% accuracy
+- Incremental value is moderate — would mainly help the 2020–2022 history_only rows
+
+**3. WIIM ("Why Is It Moving") — low incremental value**
+- Post-event catalyst explanations
+- We already have `catalyst_summary` from our enrichment pipeline
+- Would be useful for labeling/validation, not for features
+
+### Recommendation
+
+| Scenario | Recommendation |
+|---|---|
+| FDA calendar data is a priority | **Subscribe** — this is a unique structured data source we can't replicate |
+| Only need event-date validation | **Don't subscribe** — Perplexity + EDGAR 8-K pipeline is sufficient |
+| Need high-volume ticker-filtered news | **Subscribe** — but only if building a news-sentiment feature (currently out of scope) |
+
+**Bottom line:** The free tier is useless for our purposes (no filtering, no history, no clinical content in the rolling window). A paid subscription's value depends entirely on the FDA Calendar endpoint — if it provides structured PDUFA/action dates, it would be the best source for `feat_days_to_pdufa` (a strong pre-event signal we currently lack). The news/PR endpoints provide marginal improvement over our existing pipeline.
+
+**Cost consideration:** Benzinga Starter is ~$99/mo, Professional ~$499/mo. The FDA calendar endpoint alone would need to cover ≥50% of our dataset's events to justify the cost.
+
+---
+
 ## 2026-03-19 · Benzinga Pilot: Dataset Improvement Test
 
 **Script:** `scripts/benzinga_pilot_event_ingest.py`
