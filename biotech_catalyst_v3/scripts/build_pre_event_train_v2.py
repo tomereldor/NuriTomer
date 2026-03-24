@@ -32,8 +32,9 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 7  # Option C: point-in-time AACT status → feat_completed_at_event_flag,
-              # feat_active_not_recruiting_at_event_flag (replaces snapshot features)
+VERSION  = 9  # Add feat_mesh_level1_encoded (ordinal int, therapeutic area).
+              # Move feat_event_proximity_bucket to INVALID_FOR_PRE_EVENT
+              # (anchored to realized event_date — cannot be reproduced pre-event).
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -83,6 +84,10 @@ INVALID_FOR_PRE_EVENT = [
     "feat_time_since_last_asset_event",
     "feat_recent_company_event_flag",
     "feat_recent_asset_event_flag",
+    # feat_event_proximity_bucket: bucket of (ct_primary_completion - event_date).days
+    # Uses realized event_date as anchor — same invalidity as feat_days_to_primary_completion.
+    # At inference time the event date is unknown; this cannot be reproduced pre-event.
+    "feat_event_proximity_bucket",
     # feat_completed_flag: ct_status == "COMPLETED" uses CURRENT CT.gov snapshot
     # (March 2026), not point-in-time at event date. For 2024 events, a trial may
     # have transitioned to COMPLETED post-event, leaking future information.
@@ -92,6 +97,12 @@ INVALID_FOR_PRE_EVENT = [
     # CURRENT CT.gov snapshot — same SNAPSHOT_UNSAFE issue as feat_completed_flag.
     # Replaced by feat_active_not_recruiting_at_event_flag (AACT point-in-time).
     "feat_active_not_recruiting_flag",
+    # feat_short_squeeze_flag: short_percent >= 20% via yfinance current snapshot.
+    # For historical events (2023-2024), short_percent is fetched in 2026 — SNAPSHOT_UNSAFE.
+    "feat_short_squeeze_flag",
+    # feat_ownership_low_flag: institutional_ownership < 30% via yfinance current snapshot.
+    # Same SNAPSHOT_UNSAFE issue as feat_short_squeeze_flag.
+    "feat_ownership_low_flag",
 ]
 
 # ---------------------------------------------------------------------------
@@ -139,8 +150,8 @@ BINARY_FEATURES_V1 = [
     "feat_cns_flag",
     "feat_rare_disease_flag",
     "feat_single_asset_company_flag",
-    "feat_short_squeeze_flag",
-    "feat_ownership_low_flag",
+    # feat_short_squeeze_flag  ← REMOVED (SNAPSHOT_UNSAFE: yfinance current short_percent)
+    # feat_ownership_low_flag  ← REMOVED (SNAPSHOT_UNSAFE: yfinance current institutional_ownership)
 ]
 
 # Timing features: ordinal sequence numbers are valid (pre-event knowable).
@@ -169,7 +180,7 @@ NUMERIC_FEATURES = sorted(set(NUMERIC_FEATURES_V1 + NEW_NUMERIC_FEATURES))
 BINARY_FEATURES  = sorted(set(BINARY_FEATURES_V1 + NEW_BINARY_FEATURES))
 CATEGORICAL_FEATURES = [
     "feat_therapeutic_superclass",
-    "feat_event_proximity_bucket",
+    # feat_event_proximity_bucket  ← REMOVED (INVALID_FOR_PRE_EVENT: anchored to realized event_date)
 ] + NEW_CATEGORICAL_FEATURES
 
 ORDINAL_INT_FEATURES = [

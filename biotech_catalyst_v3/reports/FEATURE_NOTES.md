@@ -5,6 +5,57 @@ Newest entry at top.
 
 ---
 
+## 2026-03-24 · v9 — Port Foundational Features + Fix INVALID_FOR_PRE_EVENT Roster
+
+**STATUS: ✓ IMPLEMENTED** — Three legacy root-level scripts ported into `add_high_signal_features.py`; SNAPSHOT_UNSAFE and INVALID features cleaned from training roster; v9 train table = 701 rows × 42 features.
+
+### Problem
+
+`add_high_signal_features.py` (Pass-4) assumed foundational features pre-existed in the CSV, but three root-level scripts (`build_ml_ready_features.py`, `add_high_value_predictors.py`, `completeness_pass.py`) were never ported when the dataset expanded from 831 → 2379 rows. As a result, `feat_phase_num`, `feat_trial_quality_score`, `feat_regulatory_stage_score`, `feat_volatility`, `feat_orphan_flag`, and ~10 others were absent from the v5 features CSV.
+
+### Fix
+
+Ported all missing derivations into `add_high_signal_features.py` as new Steps 0a–0d:
+
+| Step | Features added |
+|---|---|
+| 0a Clinical core | `feat_phase_num`, `feat_late_stage_flag`, `feat_enrollment_log`, `feat_randomized_flag`, `feat_design_quality_score`, `feat_withdrawn_flag`*, `feat_terminated_flag`* |
+| 0b Regulatory flags | `feat_orphan_flag`, `feat_fast_track_flag`, `feat_breakthrough_flag`, `feat_nda_bla_flag`, `feat_priority_review_flag`*, `feat_regulatory_stage_score` |
+| 0c Trial quality | `feat_trial_quality_score`, `feat_controlled_flag` |
+| 0d Company foundation | `feat_n_trials_for_company`, `feat_n_unique_drugs_for_company`, `feat_single_asset_company_flag`, `feat_lead_asset_dependency_score`, `feat_n_late_stage_trials_for_company`, `feat_pipeline_concentration_simple`* |
+| 6 (extended) | `feat_mesh_level1_encoded` (ordinal int 1–11, MESH_ENCODE_MAP) |
+
+\* intermediate only; not in training roster
+
+### SNAPSHOT_UNSAFE features moved to INVALID_FOR_PRE_EVENT
+
+| Feature | Reason |
+|---|---|
+| `feat_short_squeeze_flag` | `short_percent` via yfinance current snapshot; historical value unknown |
+| `feat_ownership_low_flag` | `institutional_ownership` via yfinance current snapshot; same issue |
+
+### feat_event_proximity_bucket declared INVALID_FOR_PRE_EVENT
+
+`feat_event_proximity_bucket` = bucket of `(ct_primary_completion - event_date).days`. Uses realized `event_date` as anchor — same invalidity as `feat_days_to_primary_completion`. Removed from CATEGORICAL_FEATURES in v9.
+
+### Regulatory flag coverage (expected near-zero)
+
+`feat_breakthrough_flag` = 3 rows, `feat_orphan_flag` = 2 rows, `feat_fast_track_flag` = 2 rows across 2379 rows. Expected: the dataset is primarily trial **data readout** events; designation announcements are a different catalyst type. `v_summary` (rich text) covers 893/2379 rows (validated cohort only); keyword matching on historical rows finds nothing because no press release text exists for those rows.
+
+### v9 Model Results
+
+| Metric | v9 (42 features) | v8 (41 features) | v7 (25 features) | v6 (baseline) |
+|---|---|---|---|---|
+| Test AUC | 0.664 | 0.665 | 0.700 | 0.693 |
+| CV AUC | 0.784 ± 0.045 | 0.788 ± 0.045 | 0.759 ± 0.040 | — |
+| Model | LightGBM | LightGBM | LogReg | LightGBM |
+
+Test AUC delta v8→v9 is noise (−0.001). CV AUC improvement v7→v8/v9 (+0.025–0.029) reflects richer feature set. The v8/v9 vs v7 test AUC gap (−0.036) is likely test-set noise given small N (106 rows) and LightGBM vs LogReg model difference.
+
+Top features (v9): `feat_cash_runway_proxy`, `feat_volatility`, `feat_n_trials_for_company`, `feat_company_event_sequence_num`, `feat_enrollment_log`.
+
+---
+
 ## 2026-03-23 · Option C — Point-in-Time AACT Status (feat_completed_at_event_flag + feat_active_not_recruiting_at_event_flag)
 
 **STATUS: ✓ IMPLEMENTED** — AACT monthly flat-file archives fetched (~39 months, Jan 2023–Mar 2026); two SNAPSHOT_UNSAFE features replaced by ground-truth point-in-time variants.

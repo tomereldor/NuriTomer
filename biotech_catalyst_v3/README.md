@@ -353,6 +353,32 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.41 — 2026-03-24 (foundational feature port + INVALID roster cleanup → v9 retrain)
+
+- **Root cause fix:** Three legacy root-level scripts (`build_ml_ready_features.py`, `add_high_value_predictors.py`, `completeness_pass.py`) were never ported when dataset expanded from 831 → 2379 rows. ~12 foundational features were absent from training.
+- **Features ported into `add_high_signal_features.py`** (Steps 0a–0d, all pre-event safe):
+  - Clinical core: `feat_phase_num`, `feat_late_stage_flag`, `feat_enrollment_log`, `feat_randomized_flag`, `feat_design_quality_score`
+  - Regulatory flags: `feat_orphan_flag`, `feat_fast_track_flag`, `feat_breakthrough_flag`, `feat_nda_bla_flag`, `feat_regulatory_stage_score`
+  - Trial quality: `feat_trial_quality_score`
+  - Company foundation: `feat_n_trials_for_company`, `feat_n_unique_drugs_for_company`, `feat_single_asset_company_flag`, `feat_lead_asset_dependency_score`
+  - `feat_volatility` (pre-event ATR, strictly backward-looking)
+  - `feat_mesh_level1_encoded` (ordinal int, therapeutic area)
+- **INVALID_FOR_PRE_EVENT additions:**
+  - `feat_short_squeeze_flag`, `feat_ownership_low_flag` — SNAPSHOT_UNSAFE (yfinance current snapshot)
+  - `feat_event_proximity_bucket` — anchored to realized event_date; cannot be reproduced pre-event
+- **v9 retrain:** `ml_baseline_train_20260323_v9.csv` (701 rows, 42 features)
+  - Best model: LightGBM — Test AUC **0.664**, CV AUC 0.784 ± 0.045
+  - Top features: `feat_cash_runway_proxy` (#1), `feat_volatility` (#2), `feat_n_trials_for_company` (#3)
+  - Test AUC ~flat vs v8 (0.665); CV AUC improvement +0.025 vs v7 (0.759) reflects richer feature set
+- **Features CSV:** `ml_dataset_features_20260323_v6.csv` (2379 rows × 135 cols, 73 feat_ columns)
+
+### v3.40 — 2026-03-24 (Option C: AACT point-in-time status → v8 retrain)
+
+- **AACT monthly snapshots:** `fetch_aact_status_history.py` fetched ~39 months of AACT flat files (Jan 2023–Mar 2026) for 710 unique NCT IDs → `ct_status_at_event` column in master CSV
+- **New features:** `feat_completed_at_event_flag` + `feat_active_not_recruiting_at_event_flag` (AACT point-in-time, replaces snapshot/date-proxy versions)
+- **SNAPSHOT_UNSAFE features removed from training:** `feat_active_not_recruiting_flag`, `feat_completed_before_event` (date proxy)
+- **v8 retrain:** `ml_baseline_train_20260323_v8.csv` (701 rows, 41 features) — Test AUC 0.665, CV AUC 0.788 ± 0.045
+
 ### v3.39 — 2026-03-23 (feat_completed_flag leakage fix → v6 retrain)
 - **Leakage fix (Option B):** `feat_completed_flag` (CT.gov snapshot — SNAPSHOT_UNSAFE) removed from training feature set
   - Root cause: `ct_status == "COMPLETED"` reflects current CT.gov state (March 2026 fetch), not trial status at event time. For 2024 events this leaks future information.
