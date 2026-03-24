@@ -116,6 +116,28 @@ The AACT archive starts Jan 2023. The training cohort is also 2023+ only (older 
 
 **Do not use `feat_completed_before_event` as fallback for the 54 null rows.** The date proxy has 27% disagreement with PIT (145 false positives in 530 validated comparisons), and those false positives are exactly the leakage pattern Option C was designed to fix. Imputing 0 is safer.
 
+### Why not add feat_completed_before_event back as a separate training feature?
+
+Short answer: it adds almost no marginal coverage and is unreliable as a standalone signal.
+
+`ct_primary_completion` is **not a fixed planned date** — CT.gov updates it from "estimated" to "actual" after the trial completes, and sponsors amend it when trials are delayed. The value in our March 2026 fetch is partially post-hoc, not the original protocol date. We have no `_type` field to distinguish estimated vs actual.
+
+Semantic breakdown of the 530 training rows where both PIT and proxy are available:
+
+| Bucket | Count | Meaning |
+|---|---|---|
+| PIT=1, proxy=1 | 126 | Completed on schedule |
+| PIT=0, proxy=0 | 251 | Not yet complete, not expected yet |
+| PIT=0, proxy=1 | 145 | Scheduled to finish, still running → behind schedule / delayed |
+| PIT=1, proxy=0 | 8 | Completed later than originally scheduled |
+
+The PIT=0/proxy=1 bucket (145 rows) is conceptually interesting — it signals a delayed trial. But:
+- Marginal coverage gain: only **6 additional rows** where proxy is available and PIT is null (negligible)
+- The proxy has lower total coverage (75.4%) than PIT (92.4%) — adding it as a standalone feature would degrade coverage
+- `ct_primary_completion` isn't a reliable "planned date" signal because it gets updated post-hoc
+
+**Decision: `feat_completed_before_event` remains in features CSV for pipeline compatibility but is not added to training.** The PIT feature supersedes it entirely.
+
 ### Watch list (updated)
 
 | Feature | Status |
