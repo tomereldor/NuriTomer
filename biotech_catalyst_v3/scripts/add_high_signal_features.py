@@ -504,11 +504,42 @@ def build_company_foundation(df):
         df["feat_lead_asset_dependency_score"] * late_frac
     ).round(4)
 
-    n = len(df)
+    # feat_company_historical_hit_rate: backward-looking large-move rate per ticker.
+    # For event X: mean(target_large_move) over all PRIOR events for the same ticker,
+    # sorted by v_actual_date. Fold-safe — uses only prior rows via shift(1).
+    # NaN for the first event per ticker (no history) and where price data is missing.
+    #
+    # Large-move definition: |ATR-normalized move| >= 3.0 AND |move_pct| >= 10%
+    # (same as target_large_move in build_pre_event_train_v2.py).
+    date_col = "v_actual_date" if "v_actual_date" in df.columns else "event_date"
+    evt_date  = pd.to_numeric(pd.to_datetime(df[date_col], errors="coerce"))
+    abs_atr   = pd.to_numeric(df.get("stock_movement_atr_normalized"), errors="coerce").abs()
+    abs_pct   = pd.to_numeric(df.get("move_pct"),                       errors="coerce").abs()
+    large_move_raw = ((abs_atr >= 3.0) & (abs_pct >= 10.0)).astype(float)
+    large_move_raw[abs_atr.isna() | abs_pct.isna()] = np.nan
+
+    tmp = df[["ticker", date_col]].copy()
+    tmp["_orig_idx"]   = np.arange(len(df))
+    tmp["_large_move"] = large_move_raw.values
+    tmp["_evt_ts"]     = evt_date.values
+    tmp_sorted = tmp.sort_values("_evt_ts")
+
+    # Expanding mean over shifted series = hit rate of strictly prior events
+    tmp_sorted["feat_company_historical_hit_rate"] = (
+        tmp_sorted.groupby("ticker")["_large_move"]
+        .transform(lambda s: s.shift(1).expanding().mean())
+    )
+    # Restore original order
+    tmp_sorted = tmp_sorted.set_index("_orig_idx").reindex(range(len(df)))
+    df["feat_company_historical_hit_rate"] = tmp_sorted["feat_company_historical_hit_rate"].values
+
+    nn = df["feat_company_historical_hit_rate"].notna().sum()
     print(f"  n_trials_for_company: mean={df['feat_n_trials_for_company'].mean():.1f}")
     print(f"  n_unique_drugs: mean={df['feat_n_unique_drugs_for_company'].mean():.1f}, "
           f"single_asset_events={df['feat_single_asset_company_flag'].sum()}")
     print(f"  n_late_stage_for_company: mean={df['feat_n_late_stage_trials_for_company'].mean():.1f}")
+    print(f"  company_historical_hit_rate: {nn}/{len(df)} non-null, "
+          f"mean={df['feat_company_historical_hit_rate'].mean():.3f}")
     return df
 
 
@@ -778,6 +809,9 @@ def build_financial_context(df):
     """
     feat_cash_runway_proxy = cash_position_m / market_cap_m (SNAPSHOT_UNSAFE — not in training)
     feat_volatility = atr_pct (pre-event 20-day ATR — strictly backward-looking, SAFE)
+    feat_log_market_cap = log10(market_cap_m) — mildly SNAPSHOT_UNSAFE (yfinance current)
+                          but stable at order-of-magnitude level; in training roster
+    feat_market_cap_bucket = micro/small/mid/large categorical bucketing of market_cap_m
     """
     cash = pd.to_numeric(df.get("cash_position_m"), errors="coerce")
     mcap = pd.to_numeric(df.get("market_cap_m"),    errors="coerce").replace(0, np.nan)
@@ -788,11 +822,34 @@ def build_financial_context(df):
     atr = pd.to_numeric(df.get("atr_pct"), errors="coerce")
     df["feat_volatility"] = atr
 
+    # feat_log_market_cap: log10(market_cap_m). market_cap_m comes from yfinance current
+    # snapshot (mildly SNAPSHOT_UNSAFE) but is stable at order-of-magnitude level.
+    # Was in training roster since v1 but never computed — imputed to median. Fixed here.
+    df["feat_log_market_cap"] = np.log10(mcap.clip(lower=1e-3))
+
+    # feat_market_cap_bucket: standard biotech market cap tiers (in $M).
+    # Thresholds: micro <$300M, small $300M-$2B, mid $2B-$10B, large >$10B.
+    # Used as groupby key for fold-safe prior feat_prior_mean_abs_move_atr_by_market_cap_bucket.
+    _bucket_bins   = [0, 300, 2_000, 10_000, np.inf]
+    _bucket_labels = ["micro", "small", "mid", "large"]
+    df["feat_market_cap_bucket"] = pd.cut(
+        mcap,
+        bins=_bucket_bins,
+        labels=_bucket_labels,
+        right=False,
+    ).astype(object)
+    # Preserve NaN for rows with missing market_cap_m
+    df.loc[mcap.isna(), "feat_market_cap_bucket"] = np.nan
+
     nn = df["feat_cash_runway_proxy"].notna().sum()
     above1 = (df["feat_cash_runway_proxy"] > 1.0).sum()
-    vol_nn = df["feat_volatility"].notna().sum()
+    vol_nn  = df["feat_volatility"].notna().sum()
+    mcap_nn = df["feat_log_market_cap"].notna().sum()
+    bucket_counts = df["feat_market_cap_bucket"].value_counts(dropna=False).to_dict()
     print(f"  cash_runway_proxy: {nn}/{len(df)} non-null, {above1} rows with cash > market_cap")
     print(f"  feat_volatility (atr_pct): {vol_nn}/{len(df)} non-null")
+    print(f"  feat_log_market_cap: {mcap_nn}/{len(df)} non-null")
+    print(f"  feat_market_cap_bucket: {bucket_counts}")
     return df
 
 
@@ -976,6 +1033,23 @@ NEW_FEATURE_META = [
     ("feat_volatility",                            "pass4", "feat",
      "atr_pct — pre-event 20-day Wilder ATR as fraction of price; strictly backward-looking, pre-event safe",
      "atr_pct", "deterministic"),
+    ("feat_log_market_cap",                        "pass4", "feat",
+     "log10(market_cap_m) — order-of-magnitude market cap signal. market_cap_m is from yfinance "
+     "current snapshot (mildly SNAPSHOT_UNSAFE) but stable at order-of-magnitude level. "
+     "Was in training roster since v1 but never computed (imputed to median). Fixed in v12.",
+     "market_cap_m", "deterministic"),
+    ("feat_market_cap_bucket",                     "pass4", "feat",
+     "Biotech market cap tier: micro (<$300M), small ($300M-$2B), mid ($2B-$10B), large (>$10B). "
+     "Used as groupby key for fold-safe prior feat_prior_mean_abs_move_atr_by_market_cap_bucket. "
+     "Fixed in v12 (was missing, causing prior to fall back to global mean for every row).",
+     "market_cap_m", "deterministic"),
+    # ── Step 0d extension: Company historical hit rate ─────────────────────────
+    ("feat_company_historical_hit_rate",           "pass4_0d", "feat",
+     "Fraction of PRIOR events for the same ticker that were large moves "
+     "(|ATR-norm move| >= 3.0 AND |move_pct| >= 10%). Backward-looking only — "
+     "computed via shift(1) on date-sorted data. NaN for first ticker event. "
+     "Fold-safe: uses only prior events in chronological order. Added v14.",
+     "ticker, stock_movement_atr_normalized, move_pct, v_actual_date", "deterministic"),
 ]
 
 

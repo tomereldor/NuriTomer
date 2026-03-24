@@ -32,9 +32,19 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 11  # Add LLM-derived disease biology features: feat_has_predictive_biomarker,
-               # feat_genetic_basis (categorical), feat_targeted_therapy_exists.
-               # Static medical knowledge — pre-event safe.
+VERSION  = 14  # Add feat_company_historical_hit_rate (Tier 3 new feature): backward-looking
+               # large-move rate per ticker, computed via shift(1) on date-sorted data.
+               # Fold-safe. All v13 changes carried forward.
+               # Timing features now use prediction_date = v_actual_date - 1 day as anchor
+               # (instead of v_actual_date). This makes them valid for pre-event inference:
+               # at inference time, prediction_date = today. The 5 features removed from
+               # INVALID_FOR_PRE_EVENT and added to training roster:
+               # - feat_days_to_primary_completion (numeric)
+               # - feat_primary_completion_imminent_30d (binary)
+               # - feat_primary_completion_imminent_90d (binary)
+               # - feat_time_since_last_company_event (numeric)
+               # - feat_time_since_last_asset_event (numeric)
+               # All v12 changes carried forward.
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data, which would make the train split almost label-free)
@@ -75,13 +85,13 @@ MIN_EVENT_YEAR = 2023
 # use pd.Timestamp.now() at inference.
 # ---------------------------------------------------------------------------
 INVALID_FOR_PRE_EVENT = [
-    "feat_days_to_primary_completion",
-    "feat_primary_completion_imminent_30d",
-    "feat_primary_completion_imminent_90d",
+    # feat_days_to_primary_completion  ← FIXED in v13: now anchored to prediction_date
+    # feat_primary_completion_imminent_30d  ← FIXED in v13
+    # feat_primary_completion_imminent_90d  ← FIXED in v13
+    # feat_time_since_last_company_event  ← FIXED in v13
+    # feat_time_since_last_asset_event  ← FIXED in v13
     "feat_completion_recency_bucket",
     "feat_recent_completion_flag",
-    "feat_time_since_last_company_event",
-    "feat_time_since_last_asset_event",
     "feat_recent_company_event_flag",
     "feat_recent_asset_event_flag",
     # feat_event_proximity_bucket: bucket of (ct_primary_completion - event_date).days
@@ -133,6 +143,12 @@ NUMERIC_FEATURES_V1 = [
     "feat_volatility",
     "feat_log_market_cap",
     "feat_cash_runway_proxy",
+    # ── v12: CT.gov pipeline maturity signals (computed but previously unused) ──
+    "feat_ctgov_pipeline_maturity_score",        # composite sponsor pipeline maturity
+    "feat_ctgov_n_late_stage_trials_sponsor",    # late-stage pipeline depth
+    "feat_ctgov_asset_maturity_score",           # drug-level maturity score
+    # ── v14: Company historical hit rate (new Tier 3 feature) ──
+    "feat_company_historical_hit_rate",          # backward-looking large-move rate per ticker
 ]
 
 BINARY_FEATURES_V1 = [
@@ -166,23 +182,31 @@ BINARY_FEATURES_V1 = [
     # ── v11: Disease biology (LLM-derived, pre-event safe) ──
     "feat_has_predictive_biomarker",
     "feat_targeted_therapy_exists",
+    # ── v12: Trial design and CT.gov activity signals (computed but previously unused) ──
+    "feat_controlled_flag",               # controlled trial (randomized or blinded)
+    "feat_priority_review_flag",          # FDA priority review / PDUFA designation
+    "feat_primary_endpoint_known_flag",   # trial has a clearly stated primary endpoint
+    "feat_recent_ctgov_update_flag",      # CT.gov updated within 90 days before event
 ]
 
-# Timing features: ordinal sequence numbers are valid (pre-event knowable).
-# Time-since and imminence features are EXCLUDED (INVALID_FOR_PRE_EVENT).
+# Timing features: all valid as of v13 (anchored to prediction_date = v_actual_date - 1).
+# Ordinal sequence numbers were already valid; time-since and imminence features are
+# now fixed with prediction_date anchor (removed from INVALID_FOR_PRE_EVENT above).
 NEW_NUMERIC_FEATURES = [
-    # feat_days_to_primary_completion   ← EXCLUDED (also removed from v1 above)
-    # feat_time_since_last_company_event ← EXCLUDED (INVALID_FOR_PRE_EVENT)
-    # feat_time_since_last_asset_event   ← EXCLUDED (INVALID_FOR_PRE_EVENT)
     "feat_asset_event_sequence_num",           # ordinal count — valid, no anchor needed
     "feat_company_event_sequence_num",         # ordinal count — valid, no anchor needed
+    # ── v13: Fixed with prediction_date anchor ──
+    "feat_days_to_primary_completion",         # ct_primary_completion - (v_actual_date - 1)
+    "feat_time_since_last_company_event",      # pred_date - prev_company_event_date
+    "feat_time_since_last_asset_event",        # pred_date - prev_asset_event_date
 ]
 
 NEW_BINARY_FEATURES = [
-    # feat_primary_completion_imminent_30d  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
-    # feat_primary_completion_imminent_90d  ← EXCLUDED (INVALID_FOR_PRE_EVENT)
-    # feat_recent_company_event_flag        ← EXCLUDED (INVALID_FOR_PRE_EVENT)
-    # feat_recent_asset_event_flag          ← EXCLUDED (INVALID_FOR_PRE_EVENT)
+    # ── v13: Fixed with prediction_date anchor ──
+    "feat_primary_completion_imminent_30d",    # completion within 30 days of pred_date
+    "feat_primary_completion_imminent_90d",    # completion within 90 days of pred_date
+    # feat_recent_company_event_flag        ← still EXCLUDED (not in plan for v13)
+    # feat_recent_asset_event_flag          ← still EXCLUDED (not in plan for v13)
 ]
 
 NEW_CATEGORICAL_FEATURES = [

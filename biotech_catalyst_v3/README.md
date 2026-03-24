@@ -353,6 +353,45 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.46 — 2026-03-24 (feat_company_historical_hit_rate → v14 retrain)
+
+- **New feature:** `feat_company_historical_hit_rate` (Tier 3) — backward-looking large-move rate per ticker, computed via `shift(1).expanding().mean()` on date-sorted data. Fold-safe. Coverage 86.2%.
+- **v14 retrain:** `ml_baseline_train_20260323_v14.csv` (701 rows, 64 base + 6 priors = 70 features)
+  - Test AUC **0.681** (+0.013 vs v13), PR-AUC **0.603** (exceeds v11 baseline of 0.573!), Prec@top5% **0.800**
+  - CV AUC **0.762 ± 0.075**, best model: LightGBM
+  - `feat_days_to_primary_completion` confirmed as #4 importance (was #1 historically)
+  - `feat_company_historical_hit_rate` ranks #23 — limited by pre-2023 quiet-completion rows having ~0% positive rate (biased history). Valid feature, limited signal in current dataset.
+- **Files changed:** `scripts/add_high_signal_features.py` (Step 0d extension), `scripts/build_pre_event_train_v2.py` (VERSION=14)
+
+### v3.45 — 2026-03-24 (fix timing feature anchors + 5 timing features → v13 retrain)
+
+- **Root cause fix:** All timing features in `add_pre_event_timing_features.py` now use `prediction_date = v_actual_date - 1 day` as anchor instead of `v_actual_date`. This makes them valid for pre-event inference (at inference: `prediction_date = today`).
+- **5 features removed from `INVALID_FOR_PRE_EVENT` and added to training roster:**
+  - Numeric: `feat_days_to_primary_completion`, `feat_time_since_last_company_event`, `feat_time_since_last_asset_event`
+  - Binary: `feat_primary_completion_imminent_30d`, `feat_primary_completion_imminent_90d`
+- **v13 retrain:** `ml_baseline_train_20260323_v13.csv` (701 rows, 63 base + 6 priors = 69 features)
+  - Test AUC **0.668** (+0.009 vs v12; best model: LogReg), CV AUC **0.758 ± 0.081**
+  - `feat_primary_completion_imminent_90d` → #3 importance, `feat_primary_completion_imminent_30d` → #4 — real signal confirmed
+  - Note: LightGBM underperforming LogReg; 701 rows + 69 features may benefit from regularization tuning
+- **Files changed:** `scripts/add_pre_event_timing_features.py` (prediction_date anchor), `scripts/build_pre_event_train_v2.py` (VERSION=13, removed 5 from INVALID list)
+- **Feature files:** `ml_dataset_features_20260323_v1.csv` (2379 × 145), `ml_baseline_train_20260323_v13.csv` (701 × 70)
+
+### v3.44 — 2026-03-24 (fix broken market cap features + 7 Tier 1 features → v12 retrain)
+
+- **Bug fixes (critical):**
+  - `feat_log_market_cap`: was in training roster since v1 but never computed — every row was silently imputed to median. Now correctly computed as `log10(market_cap_m)`. Confirmed as #3 feature importance.
+  - `feat_market_cap_bucket`: referenced by fold-safe prior `feat_prior_mean_abs_move_atr_by_market_cap_bucket` but never computed — prior fell back to global mean for every row. Fixed; buckets: micro (<$300M), small ($300M-$2B), mid ($2B-$10B), large (>$10B). Coverage: 62.2%.
+- **7 Tier 1 features added to training roster** (all pre-computed but excluded from roster):
+  - Binary: `feat_controlled_flag`, `feat_priority_review_flag`, `feat_primary_endpoint_known_flag`, `feat_recent_ctgov_update_flag`
+  - Numeric: `feat_ctgov_pipeline_maturity_score`, `feat_ctgov_n_late_stage_trials_sponsor`, `feat_ctgov_asset_maturity_score`
+- **v12 retrain:** `ml_baseline_train_20260323_v12.csv` (701 rows, 58 base + 6 priors = 64 features)
+  - Test AUC **0.659** (−0.026 vs v11; within noise on 112-row test set), PR-AUC **0.562**
+  - CV AUC **0.770 ± 0.036** (−0.011 vs v11; lower variance)
+  - Top 10: `feat_volatility`, `feat_cash_runway_proxy`, `feat_log_market_cap` ✓ (now real), `feat_ctgov_asset_maturity_score`, `feat_enrollment_log`, `feat_company_event_sequence_num`, `feat_ctgov_pipeline_maturity_score`, `feat_n_trials_for_company`, `feat_ctgov_n_late_stage_trials_sponsor`, `feat_asset_trial_share`
+  - Test AUC regression likely noise (112 test rows); CV is more reliable signal
+- **Files changed:** `scripts/add_high_signal_features.py` (Step 7 + NEW_FEATURE_META), `scripts/build_pre_event_train_v2.py` (VERSION=12, feature rosters)
+- **Feature files:** `ml_dataset_features_20260323_v9.csv` (2379 rows × 145 cols), `ml_baseline_train_20260323_v12.csv` (701 × 65 cols)
+
 ### v3.43 — 2026-03-24 (LLM-derived disease biology features → v11 retrain)
 
 - **New features:** Three disease biology features classified via Perplexity (sonar, temp=0) from the `indication` column (1,152 unique diseases, 96.9% coverage):

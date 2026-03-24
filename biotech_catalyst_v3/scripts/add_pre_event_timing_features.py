@@ -83,27 +83,31 @@ def _parse_dates(series):
 
 NEW_FEATURES_META = [
     ("feat_days_to_primary_completion",
-     "Days from event date to ct_primary_completion date; negative = event after completion",
+     "Days from prediction_date (v_actual_date - 1) to ct_primary_completion; "
+     "negative = completion already past. Anchored to day-before event, valid at inference.",
      "ct_primary_completion, v_actual_date",
      "deterministic"),
     ("feat_primary_completion_imminent_30d",
-     "1 if primary completion is within next 0–30 days from event date; 0 otherwise",
+     "1 if primary completion is within next 0–30 days from prediction_date; 0 otherwise",
      "feat_days_to_primary_completion",
      "deterministic"),
     ("feat_primary_completion_imminent_90d",
-     "1 if primary completion is within next 0–90 days from event date; 0 otherwise",
+     "1 if primary completion is within next 0–90 days from prediction_date; 0 otherwise",
      "feat_days_to_primary_completion",
      "deterministic"),
     ("feat_completion_recency_bucket",
-     "Categorical: imminent_0_30 / near1_90 / medium_91_180 / far_180_plus / past / unknown",
+     "Categorical: imminent_0_30 / near1_90 / medium_91_180 / far_180_plus / past / unknown "
+     "(anchored to prediction_date = v_actual_date - 1)",
      "feat_days_to_primary_completion",
      "deterministic"),
     ("feat_time_since_last_company_event",
-     "Days since prior clinical event for same ticker; NaN for first company event",
+     "Days from prediction_date (v_actual_date - 1) to prior company event date; "
+     "NaN for first company event. Valid at inference (prior events are known history).",
      "ticker, v_actual_date",
      "deterministic"),
     ("feat_time_since_last_asset_event",
-     "Days since prior clinical event for same ticker+drug_name; NaN for first asset event",
+     "Days from prediction_date (v_actual_date - 1) to prior asset event date; "
+     "NaN for first asset event. Valid at inference.",
      "ticker, drug_name, v_actual_date",
      "deterministic"),
     ("feat_asset_event_sequence_num",
@@ -135,6 +139,10 @@ def build_timing_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute all timing/sequence features.
     Returns a new DataFrame with same index and ALL original + new columns.
+
+    PREDICTION DATE: All timing anchors use prediction_date = v_actual_date - 1 day.
+    This simulates "day-before" knowledge, making features valid for pre-event inference
+    (at inference time, prediction_date = today; events are unknown until announced).
     """
     out = df.copy()
 
@@ -142,14 +150,19 @@ def build_timing_features(df: pd.DataFrame) -> pd.DataFrame:
     date_col = "v_actual_date" if "v_actual_date" in out.columns else "event_date"
     evt_date = _parse_dates(out[date_col])
 
+    # prediction_date simulates "yesterday" = the last moment of pre-event knowledge.
+    # For training: prediction_date = v_actual_date - 1 business day (1 calendar day).
+    # For inference: prediction_date = today (passed as argument in production; here
+    # we apply the training convention across all rows in the batch).
+    pred_date = evt_date - pd.Timedelta(days=1)
+
     # ── Primary completion date ───────────────────────────────────────────────
     prim_comp = _parse_dates(out["ct_primary_completion"]) if "ct_primary_completion" in out.columns else pd.NaT
 
     # ── 1. feat_days_to_primary_completion ────────────────────────────────────
-    days_to_pc = (prim_comp - evt_date).dt.days
-    # Preserve prior values where recomputed is null
-    if "feat_days_to_primary_completion" in out.columns:
-        days_to_pc = days_to_pc.combine_first(out["feat_days_to_primary_completion"])
+    # Anchored to prediction_date (not event date) so it's reproducible at inference.
+    # ct_primary_completion is prospective CT.gov metadata, known before the event.
+    days_to_pc = (prim_comp - pred_date).dt.days
     out["feat_days_to_primary_completion"] = days_to_pc
     dtpc = out["feat_days_to_primary_completion"]
 
@@ -182,7 +195,8 @@ def build_timing_features(df: pd.DataFrame) -> pd.DataFrame:
     # ── Sequence / time-since features require sorted order ──────────────────
     # Add a temp sort key, compute features, then sort back to original order
     out["_orig_idx"] = np.arange(len(out))
-    out["_evt_date"] = evt_date
+    out["_evt_date"]  = evt_date   # actual event date — used only for sorting
+    out["_pred_date"] = pred_date  # prediction date (evt_date - 1) — used for time gaps
     out["_ticker"]   = out["ticker"].fillna("__unk__")
     out["_drug"]     = out["drug_name"].fillna("__unk__") if "drug_name" in out.columns else "__unk__"
     out["_comp_grp"] = out["_ticker"]
@@ -191,15 +205,17 @@ def build_timing_features(df: pd.DataFrame) -> pd.DataFrame:
     sorted_df = out.sort_values("_evt_date").copy()
 
     # ── 6. feat_time_since_last_company_event ────────────────────────────────
+    # Gap between prediction_date and the previous company event's actual date.
+    # At inference: prediction_date = today; prior event dates are known from history.
     sorted_df["_prev_comp"] = sorted_df.groupby("_comp_grp")["_evt_date"].shift(1)
     sorted_df["feat_time_since_last_company_event"] = (
-        sorted_df["_evt_date"] - sorted_df["_prev_comp"]
+        sorted_df["_pred_date"] - sorted_df["_prev_comp"]
     ).dt.days
 
     # ── 7. feat_time_since_last_asset_event ──────────────────────────────────
     sorted_df["_prev_asset"] = sorted_df.groupby("_asset_grp")["_evt_date"].shift(1)
     sorted_df["feat_time_since_last_asset_event"] = (
-        sorted_df["_evt_date"] - sorted_df["_prev_asset"]
+        sorted_df["_pred_date"] - sorted_df["_prev_asset"]
     ).dt.days
 
     # ── 8. feat_asset_event_sequence_num ─────────────────────────────────────
@@ -241,7 +257,7 @@ def build_timing_features(df: pd.DataFrame) -> pd.DataFrame:
     out = out.reset_index(drop=True)
 
     # ── Clean temp cols ───────────────────────────────────────────────────────
-    tmp_cols = ["_evt_date", "_ticker", "_drug", "_comp_grp", "_asset_grp"]
+    tmp_cols = ["_evt_date", "_pred_date", "_ticker", "_drug", "_comp_grp", "_asset_grp"]
     out = out.drop(columns=[c for c in tmp_cols if c in out.columns], errors="ignore")
 
     return out
