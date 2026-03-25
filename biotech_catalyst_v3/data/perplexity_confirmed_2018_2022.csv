@@ -1,0 +1,112 @@
+ticker,event_date,move_pct,atr_pct,normalized_move,market_cap_m,catalyst_type,drug,indication,phase,confidence
+AMRN,2018-09-24,314.72,5.24,60.08,286.9,clinical_trial,Vascepa,cardiovascular events,Phase 3,high
+PHVS,2022-12-08,356.57,7.52,47.41,1844.2,clinical_trial,deucrictibant,hereditary angioedema (HAE),Phase 3,high
+SVRA,2019-12-30,183.82,6.55,28.05,1224.9,clinical_trial,ludovercel,Parkinson's disease,Phase 3,high
+PLRX,2022-07-11,159.01,5.91,26.92,79.9,clinical_trial,PLX2853,solid tumors,Phase 1,high
+ALT,2018-09-19,285.48,11.34,25.18,539.7,clinical_trial,,,,high
+VKTX,2018-05-31,101.01,6.09,16.59,3910.4,clinical_trial,VK2809,fatty liver disease,Phase 2,high
+SAVA,2021-02-02,141.15,8.78,16.07,110.1,clinical_trial,simufilam,Alzheimer’s disease,,high
+ARVN,2020-12-14,95.06,6.23,15.25,974.3,clinical_trial,ARV-471,breast cancer,Phase 3,medium
+VKTX,2022-12-19,73.88,5.14,14.37,3910.4,clinical_trial,VK2809,NASH,Phase 2,high
+NVAX,2020-01-21,71.08,5.16,13.77,1647.7,clinical_trial,,COVID-19,,low
+RCKT,2020-12-09,83.39,6.09,13.68,542.2,clinical_trial,,,,low
+SPRB,2021-12-17,102.82,7.58,13.56,58.8,clinical_trial,,,,low
+ELVN,2022-09-07,71.79,5.31,13.51,1762.0,clinical_trial,,,,low
+SLNO,2022-12-19,103.74,8.29,12.52,2098.5,fda_decision,DCCR,Prader-Willi Syndrome,NDA,high
+ACAD,2019-09-09,63.24,5.44,11.63,4155.1,fda_decision,Zemaira,hematological disorder,,high
+RCUS,2020-04-16,89.35,7.73,11.55,2520.4,clinical_trial,RCS-006,complement-mediated disease,Phase 1,high
+OMER,2020-03-03,55.36,4.88,11.33,854.4,clinical_trial,MOMENTUM 3,Duchenne muscular dystrophy,Phase 3,high
+PBYI,2019-03-01,39.99,4.34,9.21,287.2,fda_decision,Cyramza,gastric cancer,BLA,high
+CRVS,2020-07-07,80.84,8.84,9.14,1529.6,clinical_trial,CRVS-401,cancer,Phase 1,high
+CABA,2022-10-20,50.77,6.33,8.02,319.6,clinical_trial,rese-cel,autoimmune diseases,Phase 1/2,medium
+SRPT,2019-12-13,31.43,3.95,7.95,1756.2,fda_decision,EXONDYS 51,DMD,,high
+SAVA,2021-02-03,58.64,7.45,7.87,110.1,clinical_trial,savaisept,Alzheimer's disease,Phase 2b/3,high
+MBOT,2019-12-24,61.03,7.77,7.86,161.9,clinical_trial,MB-106,B-cell malignancies,Phase 2,high
+TGTX,2020-12-10,40.85,5.8,7.04,4777.1,fda_decision,ukonitinib,relapsed or refractory marginal zone lymphoma,BLA,high
+TGTX,2019-02-28,31.02,4.41,7.03,4777.1,clinical_trial,TG-1101 (ublituximab),chronic lymphocytic leukemia,Phase 3,high
+MESO,2019-09-10,20.87,2.97,7.03,2103.1,clinical_trial,Meso Scale Discovery platform,,,medium
+TNXP,2020-02-27,92.22,13.12,7.03,178.6,clinical_trial,TNX-102 SL,PTSD,Phase 3,high
+SAVA,2019-12-23,59.56,8.5,7.01,110.1,clinical_trial,savaisekel,Alzheimer's disease,Phase 2b/3,high
+AVXL,2021-02-03,37.85,5.59,6.78,410.5,clinical_trial,,Alzheimer's disease,Phase 2b,high
+VALN,2021-10-18,39.79,5.91,6.74,963.5,clinical_trial,VLA2001,COVID-19,Phase 3,high
+NRXP,2021-10-12,61.06,9.16,6.66,55.1,fda_decision,ZYESAMI,Covid-19 treatment,,high
+AMRX,2019-12-12,44.83,6.89,6.51,4341.4,fda_decision,Galafold,Fabry disease,NDA,high
+SAVA,2021-01-13,39.98,6.15,6.5,110.1,clinical_trial,SavaKey,Alzheimer's disease,Phase 2,high
+ENTX,2021-03-12,70.79,11.14,6.36,63.7,clinical_trial,EB613,Osteoporosis,Phase 2,medium
+FHTX,2021-12-13,54.96,8.72,6.3,332.7,clinical_trial,leronlimab,HIV,Phase 2,high
+MREO,2020-06-04,55.61,8.84,6.29,59.0,clinical_trial,Setrusumab,osteogenesis imperfecta,Phase 2,high
+IBRX,2020-12-21,56.14,8.93,6.29,9633.0,fda_decision,ANKTIVA,bladder cancer,BLA,medium
+AXSM,2022-08-19,40.35,6.45,6.26,8383.5,fda_decision,Auvelity,depression,NDA,high
+SAVA,2020-09-18,42.03,7.06,5.96,110.1,clinical_trial,simufilam,Alzheimer's disease,Phase 3,medium
+ENLV,2020-10-05,38.16,6.41,5.95,273.0,clinical_trial,,cancer,Phase 1,medium
+MBOT,2020-04-24,47.91,8.05,5.95,161.9,fda_decision,,,,high
+BNTC,2019-09-17,50.82,8.77,5.79,373.4,clinical_trial,BB-94,solid tumors,Phase 1,high
+VNDA,2019-08-01,26.83,4.65,5.77,526.7,fda_decision,BYSANTI (milsaperidone),schizophrenia and bipolar I disorder,,high
+SLNO,2021-02-04,29.25,5.12,5.71,2098.5,clinical_trial,DCCR,Prader-Willi Syndrome,Phase 3,high
+IMMP,2021-03-25,39.92,7.17,5.57,412.1,clinical_trial,,unresectable or untreated metastatic melanoma,Phase 3,high
+NERV,2022-08-24,66.52,12.3,5.41,285.6,fda_decision,roluperidone,negative symptoms in schizophrenia,NDA,high
+BYSI,2022-12-13,35.88,6.85,5.24,55.5,clinical_trial,Plinabulin,Non-Small Cell Lung Cancer,Phase 3,medium
+KPTI,2019-07-03,36.02,6.92,5.21,172.6,fda_decision,selinexor,multiple myeloma,,high
+BCRX,2022-01-10,27.85,5.39,5.17,2190.7,fda_decision,ORLADEYO,,,high
+VSTM,2018-06-18,31.39,6.16,5.1,430.8,clinical_trial,duvelisib,CLL,,high
+RLMD,2019-10-21,51.44,10.23,5.03,334.4,clinical_trial,NDV-01,,Phase 2,high
+OMER,2018-03-22,35.31,7.09,4.98,854.4,clinical_trial,,,Phase 2,high
+VTYX,2022-08-16,31.99,6.44,4.97,1002.3,clinical_trial,,,Phase 2,medium
+VNDA,2018-12-03,25.68,5.28,4.87,526.7,fda_decision,,,,medium
+GALT,2021-04-06,35.27,7.27,4.85,192.1,clinical_trial,belapectin,MASH cirrhosis,Phase 2b/3,medium
+GERN,2022-03-30,25.0,5.25,4.76,1072.4,clinical_trial,imetelstat,lower risk MDS,Phase 3,high
+MBOT,2019-01-08,47.09,10.04,4.69,161.9,clinical_trial,Self-Cleaning Shunt (SCS),hydrocephalus,,high
+ENTX,2021-06-17,24.76,5.3,4.67,63.7,clinical_trial,EB613,osteoporosis,Phase 2,high
+PRTA,2019-12-20,23.54,5.1,4.61,466.7,clinical_trial,PRX002,Parkinson's Disease,Phase 2,high
+SRPT,2021-08-05,16.36,3.72,4.4,1756.2,fda_decision,Elevidys,Duchenne muscular dystrophy,BLA,high
+RZLT,2019-02-20,20.0,4.54,4.4,307.2,clinical_trial,SL-801,undifferentiated pleomorphic sarcoma,Phase 1/2,high
+ARDX,2021-11-30,32.25,7.47,4.32,1591.5,fda_decision,tenapanor,hyperphosphatemia,NDA,medium
+VTVT,2021-02-02,30.39,7.25,4.19,150.3,fda_decision,cadisegliatin,type 1 diabetes,Phase 2,medium
+CYTK,2019-03-20,19.04,4.55,4.18,7607.3,clinical_trial,omecamtiv mecarbil,heart failure,Phase 3,high
+PLX,2018-09-19,19.23,4.6,4.18,231.6,fda_decision,libmelty,dermatofibrosarcoma protuberans,approval,medium
+ORMP,2021-01-22,20.74,4.97,4.17,136.1,clinical_trial,ondansetron oral soluble film,nausea and vomiting,NDA,high
+LQDA,2019-12-26,43.47,10.48,4.15,2698.6,fda_decision,YUTREPIA,pulmonary arterial hypertension,,medium
+PALI,2022-11-22,81.9,22.14,3.7,264.1,fda_decision,LB1148,post-surgical bowel dysfunction,,high
+LPCN,2020-01-16,26.67,7.25,3.68,55.3,fda_decision,TLANDO,testosterone replacement therapy in adult males with hypogonadism,,medium
+LNTH,2021-05-27,16.76,4.59,3.65,5093.4,fda_decision,Pylarify,prostate cancer,,high
+TMDX,2021-02-09,23.73,6.52,3.64,4964.2,clinical_trial,OCS Heart System,heart transplant from donors after circulatory death,clinical trial,medium
+URGN,2022-03-08,23.31,6.46,3.61,1015.8,clinical_trial,UGN-102,low-grade intermediate-risk non-muscle invasive bladder cancer,Phase 3,high
+BYSI,2022-12-12,24.26,6.73,3.61,55.5,clinical_trial,,,,medium
+RZLT,2020-07-17,31.89,8.87,3.59,307.2,fda_decision,,,,low
+PRTC,2021-03-16,10.34,2.91,3.55,405.3,fda_decision,Teplizumab,diabetes,,medium
+BCRX,2022-04-08,-37.81,10.7,3.53,2190.7,clinical_trial,,,,high
+PTCT,2018-06-19,-30.58,8.83,3.46,5474.9,fda_decision,Translarna (ataluren),Duchenne muscular dystrophy,NDA,high
+CORT,2019-11-20,-22.05,6.37,3.46,3797.6,clinical_trial,miricorilant,Cushing's syndrome,Phase 3,high
+BNTC,2022-09-08,35.86,10.39,3.45,373.4,clinical_trial,BB-1701,solid tumors,Phase 1,high
+TRVI,2020-06-01,24.09,6.97,3.45,1528.5,clinical_trial,triciribine,breast cancer,Phase 2,medium
+AMRN,2020-09-02,-30.58,9.02,3.39,286.9,fda_decision,alisporivir,COVID-19,,high
+LAB,2022-11-11,26.42,7.8,3.39,434.6,clinical_trial,resmetirom,MASH,Phase 3,high
+AUPH,2018-05-14,11.25,3.32,3.39,1868.2,clinical_trial,Blarcamesine,Dementia,Phase 2/3,high
+GOSS,2019-12-16,-37.09,10.96,3.39,98.3,clinical_trial,GB001,asthma,Phase 3,high
+DBVT,2021-12-21,-48.52,14.47,3.35,1153.6,fda_decision,,,,high
+URGN,2021-08-27,11.7,3.49,3.35,1015.8,clinical_trial,,,,medium
+IMVT,2019-12-19,15.13,4.55,3.33,5643.9,clinical_trial,BMS-986218,solid tumors,Phase 1,high
+CRDF,2020-09-17,39.59,11.88,3.33,130.7,clinical_trial,CRDF-004,pancreatic cancer,Phase 1,high
+IMUX,2021-02-16,21.58,6.5,3.32,122.7,clinical_trial,IMU-838,COVID-19,Phase 2,high
+SAVA,2020-11-04,25.57,7.71,3.32,110.1,clinical_trial,simufilam,Alzheimer's disease,Phase 2,medium
+AXSM,2022-04-19,25.14,7.62,3.3,8383.5,clinical_trial,AXS-05,Alzheimer's disease agitation,Phase 3,high
+EDIT,2021-08-05,18.37,5.59,3.29,214.8,clinical_trial,,,Phase 1/2,medium
+IMVT,2022-10-04,23.98,7.29,3.29,5643.9,clinical_trial,batefenterol,rheumatoid arthritis,Phase 2,high
+EYPT,2018-07-19,16.98,5.24,3.24,1453.7,fda_decision,YUTIQ and DEXYCU,ocular diseases,,medium
+EOLS,2019-02-07,20.16,6.23,3.24,278.7,fda_decision,Jeuveau,frown lines,BLA,medium
+NKTR,2019-08-09,-29.25,9.21,3.18,1930.0,fda_decision,bempegaldesleukin,melanoma,,high
+QURE,2022-08-08,-27.02,8.52,3.17,973.6,clinical_trial,AMT-130,Huntington's disease,Phase 1/2,high
+NERV,2022-08-22,47.83,15.08,3.17,285.6,fda_decision,roluperidone,negative symptoms in schizophrenia,NDA,high
+IOVA,2019-11-08,14.33,4.55,3.15,1532.3,clinical_trial,Lifileucel (Amtagvi),Advanced Melanoma,Phase 2,high
+BHC,2018-06-18,-12.29,3.92,3.14,2201.5,fda_decision,IDP-118,psoriasis,,high
+BEAM,2021-06-30,16.17,5.19,3.12,2888.0,clinical_trial,BEAM-101,sickle cell disease,IND,high
+BEAM,2021-06-28,15.98,5.17,3.09,2888.0,clinical_trial,BEAM-101,sickle cell disease,IND,high
+OCUL,2021-10-22,-36.2,11.87,3.05,1946.2,clinical_trial,,,Phase 3,medium
+FENC,2022-09-20,15.78,5.22,3.03,290.0,fda_decision,PEDMARK,neuroblastoma,NDA,high
+ACAD,2019-12-05,14.0,4.63,3.03,4155.1,clinical_trial,pimavanserin,dementia-related psychosis,Phase 3,high
+CRDF,2022-06-23,31.61,10.48,3.02,130.7,clinical_trial,onvansertib,RAS-mutated mCRC,Phase 2,medium
+CDNA,2020-01-13,13.33,4.42,3.01,998.5,fda_decision,AlloSeq cfDNA,transplant diagnostics,,high
+ZVRA,2021-02-08,28.61,9.5,3.01,502.7,fda_decision,arimoclomol,Niemann-Pick disease Type C,NDA,high
+RIGL,2020-12-16,14.86,4.93,3.01,630.6,fda_decision,Zokinvy (lonafarnib),Progeria and Progeroid Laminopathies,NDA,high
+APLS,2021-09-10,-37.19,12.35,3.01,2679.3,clinical_trial,mitapivat,Pyruvate kinase deficiency,Phase 3,high
+AMRX,2019-07-10,-35.98,11.96,3.01,4341.4,fda_decision,Galafold (migalastat),Fabry disease,NDA,high

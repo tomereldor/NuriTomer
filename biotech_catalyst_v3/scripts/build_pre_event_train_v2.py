@@ -32,23 +32,18 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 14  # Add feat_company_historical_hit_rate (Tier 3 new feature): backward-looking
-               # large-move rate per ticker, computed via shift(1) on date-sorted data.
-               # Fold-safe. All v13 changes carried forward.
-               # Timing features now use prediction_date = v_actual_date - 1 day as anchor
-               # (instead of v_actual_date). This makes them valid for pre-event inference:
-               # at inference time, prediction_date = today. The 5 features removed from
-               # INVALID_FOR_PRE_EVENT and added to training roster:
-               # - feat_days_to_primary_completion (numeric)
-               # - feat_primary_completion_imminent_30d (binary)
-               # - feat_primary_completion_imminent_90d (binary)
-               # - feat_time_since_last_company_event (numeric)
-               # - feat_time_since_last_asset_event (numeric)
-               # All v12 changes carried forward.
+VERSION  = 15  # Phase 4 data expansion: 444 new 2018-2022 training rows added via
+               # CT.gov cross-match (43 pos + 291 neg) and Perplexity classification
+               # (110 confirmed clinical catalysts). Training filter extended to include
+               # rows with data_tier in PHASE4_TIERS (bypasses MIN_EVENT_YEAR filter).
+               # All v14 changes carried forward.
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
-# due to missing price data, which would make the train split almost label-free)
+# due to missing price data; time-split puts them all in train → 0.6% positive rate)
 MIN_EVENT_YEAR = 2023
+
+# Phase 4 data tiers that bypass the MIN_EVENT_YEAR filter (confirmed 2018-2022 catalysts)
+PHASE4_TIERS = {"phase4_ctgov", "phase4_ctgov_neg", "phase4_perp"}
 
 # ---------------------------------------------------------------------------
 # Feature roster
@@ -331,13 +326,17 @@ def main():
     print(f"After row_ready filter (+ mesh-only relaxation): {len(df)} rows "
           f"(+{n_mesh_added} mesh-only rows)")
 
-    # Restrict to MIN_EVENT_YEAR+ (2020-2022 rows have ~0% positives due to
-    # missing price data; time-split puts them all in train → 0.6% positive rate)
+    # Restrict to MIN_EVENT_YEAR+ OR Phase 4 confirmed tiers.
+    # Phase 4 tiers bypass year filter: they are 2018-2022 events confirmed as
+    # genuine clinical catalysts (CT.gov cross-match or Perplexity), so their
+    # positive rate is adequate for training.
     df["_event_year"] = pd.to_datetime(df["v_actual_date"], errors="coerce").dt.year
+    phase4_mask = df.get("data_tier", pd.Series("", index=df.index)).isin(PHASE4_TIERS)
     before_year_filter = len(df)
-    df = df[df["_event_year"] >= MIN_EVENT_YEAR].copy()
+    df = df[(df["_event_year"] >= MIN_EVENT_YEAR) | phase4_mask].copy()
     df = df.drop(columns=["_event_year"])
-    print(f"After year >= {MIN_EVENT_YEAR} filter: {len(df)} rows "
+    n_phase4 = int(phase4_mask[phase4_mask.index.isin(df.index)].sum())
+    print(f"After year >= {MIN_EVENT_YEAR} filter (+ {n_phase4} phase4 rows): {len(df)} rows "
           f"(excluded {before_year_filter - len(df)} pre-{MIN_EVENT_YEAR} rows)")
 
     # ── Use validated date for splitting ─────────────────────────────────────

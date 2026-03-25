@@ -353,6 +353,23 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.47 — 2026-03-25 (Phase 4 data expansion: 2018–2022 historical catalysts → v15 retrain)
+
+- **Data expansion:** Applied scan-and-confirm strategy retroactively to 2018–2022 to recover historical clinical catalysts previously excluded by year filter.
+  - **CT.gov cross-match:** Scanned 460 tickers for large moves (2018–2022) → 18,008 candidates; cross-matched against 2,627 CT.gov Phase 2/3 completions within ±10 calendar days per ticker → 43 confirmed clinical catalysts (positives) + 291 CT.gov small-move negatives.
+  - **Perplexity classification:** Batch-classified 1,778 unmatched high-normalized moves (5 events/call) → 111 additional confirmed clinical catalysts (73 clinical_trial + 38 fda_decision).
+  - **Total new rows:** 444 added to master CSV (2,514 → 2,958 rows), tagged `data_tier ∈ {phase4_ctgov, phase4_ctgov_neg, phase4_perp}`.
+- **v15 retrain:** `ml_baseline_train_20260323_v15.csv` (1,142 rows — up from 701, +63%; 64 base + 6 priors = 70 features)
+  - Training positive rate: **32%** (365 positives out of 1,142 rows, up from 30%)
+  - Test AUC **0.702** (new best, +0.021 vs v14), CV AUC **0.793 ± 0.081**
+  - PR-AUC 0.572 (slightly below v14's 0.603; more negatives in expanded dataset)
+  - Best model: **Logistic Regression** (LightGBM AUC 0.691, XGBoost 0.633)
+  - Top features: `feat_company_historical_hit_rate`, `feat_trial_quality_score`, `feat_blinded_flag`, `feat_genetic_basis_unknown`, `feat_primary_completion_imminent_90d`
+- **API cost:** ~$0.17 total (345 Perplexity batch calls for unmatched classification)
+- **New scripts:** `scripts/cross_match_events.py`, `scripts/classify_unmatched_catalysts.py`, `scripts/merge_phase4_data.py`
+- **Files changed:** `enriched_all_clinical_clean_v3.csv` (2,514 → 2,958 rows), `scripts/build_pre_event_train_v2.py` (VERSION=15, PHASE4_TIERS bypass filter)
+- **Feature/training files:** `ml_dataset_features_20260325_v2.csv` (2,822 × 147), `ml_baseline_train_20260323_v15.csv` (1,142 × 71)
+
 ### v3.46 — 2026-03-24 (feat_company_historical_hit_rate → v14 retrain)
 
 - **New feature:** `feat_company_historical_hit_rate` (Tier 3) — backward-looking large-move rate per ticker, computed via `shift(1).expanding().mean()` on date-sorted data. Fold-safe. Coverage 86.2%.

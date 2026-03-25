@@ -7,6 +7,142 @@ Each run of `train_pre_event_v3.py` prepends a new section here.
 
 # Biotech Pre-Event Model v3 — Timing + Fold-Safe Priors
 
+**Date:** 2026-03-25
+**Objective:** Predict large stock move from public pre-event information only.
+**No press release content used.**
+**Version:** v3 — adds 9 timing features + 6 train-fold-safe reaction priors vs v2 baseline.
+
+---
+
+## 1. New Features Added
+
+### Timing features (9 new columns, deterministic)
+
+| Feature | Coverage |
+|---|---|
+| feat_primary_completion_imminent_30d | 2330/2822 | 82.6% |
+| feat_primary_completion_imminent_90d | 2330/2822 | 82.6% |
+| feat_completion_recency_bucket (6 one-hot) | 2822/2822 | 100.0% |
+| feat_time_since_last_company_event | 2441/2822 | 86.5% |
+| feat_time_since_last_asset_event | 978/2822 | 34.7% |
+| feat_asset_event_sequence_num | 2822/2822 | 100.0% |
+| feat_company_event_sequence_num | 2822/2822 | 100.0% |
+| feat_recent_company_event_flag | 2822/2822 | 100.0% |
+| feat_recent_asset_event_flag | 2822/2822 | 100.0% |
+
+**feat_days_to_study_completion:** SKIPPED — no `ct_study_completion` column in dataset.
+
+All timing features use `v_actual_date` (validated event date) as anchor.
+Sequence/time-since features sorted globally by date within company/asset groups.
+
+### Train-fold-safe priors (6 columns, injected inside folds)
+
+| Prior feature | Group key | Target stat |
+|---|---|---|
+| feat_prior_mean_abs_move_atr_by_phase | feat_phase_num | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_therapeutic_superclass | feat_therapeutic_superclass | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_phase_x_therapeutic_superclass | phase × superclass | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_market_cap_bucket | feat_market_cap_bucket | mean(|ATR-norm move|) |
+| feat_prior_large_move_rate_by_phase | feat_phase_num | P(large move) |
+| feat_prior_large_move_rate_by_therapeutic_superclass | feat_therapeutic_superclass | P(large move) |
+
+Priors fit on TRAIN split only; fallback = global train mean for unseen categories.
+Interaction prior requires ≥5 samples per cell, else falls back to phase-level prior.
+
+---
+
+## 2. Time-Aware Cross-Validation (LightGBM + Priors)
+
+Mean ROC-AUC = 0.793 ± 0.081
+Mean PR-AUC  = 0.704 ± 0.164
+Mean Prec@10% = 0.847 ± 0.153
+
+| Fold | Val n / Train n | ROC-AUC | PR-AUC | P@5% | P@10% | P@20% |
+|---|---|---|---|---|---|---|
+| fold_0 | 176/174 | 0.931 | 0.949 | 1.000 | 1.000 | 1.000 |
+| fold_1 | 350/174 | 0.740 | 0.741 | 1.000 | 1.000 | 0.912 |
+| fold_2 | 524/174 | 0.796 | 0.658 | 0.750 | 0.824 | 0.765 |
+| fold_3 | 698/174 | 0.734 | 0.496 | 0.625 | 0.647 | 0.529 |
+| fold_4 | 872/174 | 0.764 | 0.674 | 1.000 | 0.765 | 0.676 |
+
+---
+
+## 3. Model Comparison — Test Set (v3 features)
+
+| Model | ROC-AUC | PR-AUC | Prec@5% | Prec@10% | Prec@20% |
+|---|---|---|---|---|---|
+| LogReg | 0.702 | 0.572 | 0.800 | 0.571 | 0.571 |
+| LightGBM | 0.691 | 0.494 | 0.400 | 0.476 | 0.524 |
+| XGBoost | 0.633 | 0.451 | 0.500 | 0.381 | 0.524 |
+
+★ **Best model: LogReg**
+Test ROC-AUC = 0.702 | PR-AUC = 0.572
+Prec@top 5% = 0.800 | @top 10% = 0.571 | @top 20% = 0.571
+
+---
+
+## 4. Comparison vs v2 Baseline
+
+| Metric | v2 Baseline | v3 (timing+priors) | Change |
+|---|---|---|---|
+| Best ROC-AUC (test) | N/A | 0.702 | unknown |
+| Best Prec@10% (test) | N/A | 0.571 | — |
+| Feature count | 49 | 70 | +21 |
+
+**Overall verdict: unknown**
+
+---
+
+## 5. Threshold / Ranking Strategy
+
+### High-precision watchlist
+Threshold ≈ 0.94: prec=1.000  rec=0.014  n=1
+
+### Broad candidate list (best F1)
+Threshold ≈ 0.59: prec=0.545  rec=0.649  n=88
+
+---
+
+## 6. Top 10 Feature Importances (LogReg)
+
+| Rank | Feature | Importance |
+|---|---|---|
+| 1 | feat_company_historical_hit_rate | 0.7981 |
+| 2 | feat_trial_quality_score | 0.6661 |
+| 3 | feat_blinded_flag | 0.4975 |
+| 4 | feat_genetic_basis_unknown | 0.4801 |
+| 5 | feat_primary_completion_imminent_90d | 0.4389 |
+| 6 | feat_enrollment_log | 0.3762 |
+| 7 | feat_prior_large_move_rate_by_phase | 0.3714 |
+| 8 | feat_small_trial_flag | 0.3412 |
+| 9 | feat_late_stage_flag | 0.3374 |
+| 10 | feat_single_asset_company_flag | 0.3369 |
+
+---
+
+## 7. Key Findings
+
+- **Timing features** add coverage of trial completion proximity, which was missing in v2.
+  `feat_completion_recency_bucket` and `feat_primary_completion_imminent_*` capture
+  the "hot zone" where readout is imminent — a known driver of pre-event moves.
+- **Sequence features** (`feat_company/asset_event_sequence_num`) encode whether this
+  is a company's first major readout or a follow-on event. Later-stage companies with
+  repeat catalysts may have more predictable patterns.
+- **Fold-safe priors** prevent leakage that the static precomputed priors in the dataset
+  would cause. They encode the average magnitude/rate of moves for similar phase/disease.
+- **Time-since-last-event** features encode event clustering and momentum dynamics.
+
+## 8. Figures
+
+- `figures/cv_folds_20260312_v3.png`
+- `figures/model_comparison_20260312_v3.png`
+- `figures/roc_pr_20260312_v3.png`
+- `figures/feature_importance_20260312_v3.png`
+
+---
+
+# Biotech Pre-Event Model v3 — Timing + Fold-Safe Priors
+
 **Date:** 2026-03-24
 **Objective:** Predict large stock move from public pre-event information only.
 **No press release content used.**
