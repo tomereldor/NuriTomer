@@ -5,6 +5,117 @@ Newest entry at top.
 
 ---
 
+## 2026-03-25 · v12–v16 Feature Engineering Sprint (Phases 1–5)
+
+Five-phase improvement run. All changes are pre-event safe (CT.gov protocol metadata; no event-day or post-event information).
+
+---
+
+### Phase 1 (v12) — Fix Broken Features + Add 7 Tier-1 CT.gov Features
+
+**Bugs fixed:**
+
+| Feature | Bug | Fix |
+|---|---|---|
+| `feat_log_market_cap` | In training roster but **never computed** — silently imputed to median for all rows | Added `np.log10(market_cap_m.clip(lower=1e-3))` in `add_high_signal_features.py` |
+| `feat_market_cap_bucket` | Never computed → fold prior `feat_prior_mean_abs_move_atr_by_market_cap_bucket` silently fell back to global mean for every row | Added 4-bucket encoding (micro/small/mid/large) in `add_high_signal_features.py` |
+
+**7 Tier-1 CT.gov features added to training roster** (computed but previously excluded):
+
+| Feature | Source | Why included |
+|---|---|---|
+| `feat_ctgov_pipeline_maturity_score` | `build_ctgov_pipeline_proxies.py` | Composite sponsor maturity signal. Rated High in prior audit. |
+| `feat_ctgov_n_late_stage_trials_sponsor` | Same | Late-stage pipeline depth. |
+| `feat_ctgov_asset_maturity_score` | Same | Drug-level maturity. |
+| `feat_recent_ctgov_update_flag` | `refresh_ctgov_features.py` | Recent CT.gov update signals imminent readout. |
+| `feat_controlled_flag` | `add_high_signal_features.py` | Controlled trials → more rigorous design → larger credible moves. |
+| `feat_priority_review_flag` | Same | Direct regulatory signal. |
+| `feat_primary_endpoint_known_flag` | Same | Trials with clear endpoints have more interpretable readouts. |
+
+All 7 are derived from CT.gov protocol registration metadata. Pre-event safe.
+
+**v12 retrain:** 701 rows, 58+6=64 features. Test AUC 0.659, CV AUC 0.770 ± 0.036.
+
+---
+
+### Phase 2 (v13) — Fix Timing Feature Anchors
+
+**Root cause:** All timing features in `add_pre_event_timing_features.py` were computing days relative to `v_actual_date` (the event date), making them event-date-anchored and therefore INVALID\_FOR\_PRE\_EVENT. At inference time, the event date is unknown.
+
+**Fix:** Added `prediction_date` parameter (default `v_actual_date - 1 day` in training; `today` at inference). All relative-time computations anchored to `prediction_date`.
+
+**5 features restored from INVALID\_FOR\_PRE\_EVENT to training roster:**
+
+| Feature | Pre-event validity | Signal |
+|---|---|---|
+| `feat_days_to_primary_completion` | `ct_primary_completion - prediction_date` (protocol metadata) | Countdown to trial completion — was #2 importance historically |
+| `feat_primary_completion_imminent_30d` | Binary: completion within 30 days of prediction | Imminent readout flag |
+| `feat_primary_completion_imminent_90d` | Binary: completion within 90 days of prediction | Broader readout window |
+| `feat_time_since_last_company_event` | Days since last company event before `prediction_date` | Event clustering signal |
+| `feat_time_since_last_asset_event` | Days since last asset event before `prediction_date` | Asset-level clustering |
+
+**v13 retrain:** 701 rows, 63+6=69 features. Test AUC 0.668, CV AUC 0.758 ± 0.081.
+`feat_primary_completion_imminent_90d` → #3 importance. Real signal confirmed.
+
+---
+
+### Phase 3 (v14) — Company Historical Hit Rate
+
+**New feature:** `feat_company_historical_hit_rate`
+
+- **Definition:** Fraction of a company's prior catalyst events (before the current one) that produced a large move (target=1).
+- **Implementation:** Sort all rows by `v_actual_date`. For each row, compute `shift(1).expanding().mean()` on the binary target, grouped by ticker. This is strictly backward-looking.
+- **Fold safety:** Computed once on the full dataset (time-sorted); no future data bleeds into any row's value because `shift(1)` skips the current event. FoldPriorEncoder is not used (this is a per-row static feature, not a per-fold aggregate).
+- **Coverage:** 86.2% of rows (tickers with ≥ 1 prior event in the dataset).
+- **Caveat:** Pre-2023 quiet-completion rows are near-0% positive rate by construction (CT.gov selection bias), so this feature underestimates true hit rates for older companies. Signal is expected to improve as more Phase 4 historical data is added.
+
+**v14 retrain:** 701 rows, 64+6=70 features. Test AUC 0.681, PR-AUC 0.603, CV AUC 0.762 ± 0.075.
+
+---
+
+### Phase 4 (v15) — Data Expansion: 2018–2022 Historical Catalysts
+
+**Motivation:** Training was limited to 701 rows (2023+ only) because pre-2023 CT.gov rows were captured via "quiet completion" scanning — near-0% positive rate due to selection bias. This phase retroactively applies scan-and-confirm to 2018–2022.
+
+**Method:**
+
+1. **Scan large moves** (`scan_large_moves.py`): 460 tickers, 2018–2022. Result: 18,008 large daily moves (≥10% absolute).
+2. **Fetch CT.gov completions** (`find_clinical_events.py`): Phase 2/3 completions with yfinance price data. Result: 2,627 events.
+3. **Cross-match** (`cross_match_events.py`): Within ±10 calendar days per ticker. Result: 327 matched pairs → 43 positives (ATR-normalized ≥ 3.0 AND |move_pct| ≥ 10%) + 291 small-move CT.gov negatives.
+4. **Perplexity batch classification** (`classify_unmatched_catalysts.py`): 1,778 high-normalized unmatched large moves, 5 events/call. Result: 111 confirmed clinical catalysts (73 clinical\_trial + 38 fda\_decision). API cost: ~$0.17 (345 calls).
+5. **Merge** (`merge_phase4_data.py`): Deduplicate against master, align columns, archive old version.
+
+**New data tiers:**
+
+| `data_tier` value | Count | Description |
+|---|---|---|
+| `phase4_ctgov` | 43 | CT.gov cross-match positives — large-move events confirmed by CT.gov completion within ±10 days |
+| `phase4_ctgov_neg` | 291 | CT.gov small-move completions — genuine clinical events with no market impact |
+| `phase4_perp` | 110 | Perplexity-confirmed unmatched large moves — clinical catalyst confirmed by LLM |
+
+**Master CSV:** 2,514 → 2,958 rows. Training bypass: `data_tier ∈ PHASE4_TIERS` bypasses `MIN_EVENT_YEAR=2023` filter in `build_pre_event_train_v2.py`.
+
+**Cross-match yield note:** Only 43/327 matched pairs had ATR-normalized ≥ 3.0. CT.gov primary completion dates frequently lag press release dates by weeks–months, reducing match yield. Perplexity classification captured a complementary set.
+
+**v15 retrain:** 1,142 rows (+63%), 32% positive rate, 64+6=70 features. Test AUC 0.702 (new best), CV AUC 0.793 ± 0.081. Best model: LogReg.
+
+---
+
+### Phase 5 (v16) — Extended Fold-Safe Priors
+
+**2 new priors added to `add_train_fold_priors.py`:**
+
+| Feature | Group key | Target | Note |
+|---|---|---|---|
+| `feat_prior_large_move_rate_by_market_cap_bucket` | `feat_market_cap_bucket` | `target_large_move` | Complements existing mean-abs-move prior for same key; directly models positive rate |
+| `feat_prior_large_move_rate_by_phase_x_therapeutic_superclass` | `(feat_phase_num, feat_therapeutic_superclass)` | `target_large_move` | Interaction; cells with < 5 samples fall back to phase-level rate prior |
+
+**Total priors:** 6 → 8. Fallback cascade for interaction: cell → phase-level `feat_prior_large_move_rate_by_phase` → global train mean.
+
+**v16 retrain:** 1,142 rows, 64+8=72 features. Test AUC 0.695, CV AUC 0.785 ± 0.077. New priors rank #1 and #4 by LogReg importance. Marginal test-set regression vs v15 (0.695 vs 0.702) is within noise for the 172-row holdout; LightGBM shows larger degradation from sparse interaction cells. Best model remains LogReg.
+
+---
+
 ## 2026-03-24 · v11 — LLM-Derived Disease Biology Features
 
 **STATUS: IMPLEMENTED** — Three new features classify each indication's biological properties using Perplexity (sonar model). All are static medical knowledge — inherent to the disease, not the trial or event — and are pre-event safe.

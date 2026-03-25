@@ -66,14 +66,24 @@ PRIOR_CONFIGS = [
      "feat_therapeutic_superclass",
      TARGET_LARGE,
      "mean"),
+    ("feat_prior_large_move_rate_by_market_cap_bucket",
+     "feat_market_cap_bucket",
+     TARGET_LARGE,
+     "mean"),
 ]
 
 INTERACTION_CONFIGS = [
-    # (output_col_name, group_cols, target_col, stat)
+    # (output_col_name, group_cols, target_col, stat, fallback_single_prior)
     ("feat_prior_mean_abs_move_atr_by_phase_x_therapeutic_superclass",
      ["feat_phase_num", "feat_therapeutic_superclass"],
      TARGET_ABS_MOVE,
-     "mean"),
+     "mean",
+     "feat_prior_mean_abs_move_atr_by_phase"),
+    ("feat_prior_large_move_rate_by_phase_x_therapeutic_superclass",
+     ["feat_phase_num", "feat_therapeutic_superclass"],
+     TARGET_LARGE,
+     "mean",
+     "feat_prior_large_move_rate_by_phase"),
 ]
 
 
@@ -119,7 +129,7 @@ class FoldPriorEncoder:
             self.lookup_[col_out] = grp.to_dict()
 
         # ── Interaction prior ────────────────────────────────────────────────
-        for col_out, group_cols, target_col, stat in INTERACTION_CONFIGS:
+        for col_out, group_cols, target_col, stat in [c[:4] for c in INTERACTION_CONFIGS]:
             if target_col not in train_df.columns or any(
                 c not in train_df.columns for c in group_cols
             ):
@@ -163,28 +173,29 @@ class FoldPriorEncoder:
             df[col_out] = df[group_col].map(lookup).fillna(fallback).astype(float)
 
         # ── Interaction prior ────────────────────────────────────────────────
-        for col_out, group_cols, target_col, stat in INTERACTION_CONFIGS:
+        for config in INTERACTION_CONFIGS:
+            col_out, group_cols, target_col, stat = config[:4]
+            fallback_prior = config[4] if len(config) > 4 else "feat_prior_mean_abs_move_atr_by_phase"
+
             lookup   = self.lookup_.get(col_out, {})
             fallback = self.fallback_.get(col_out, np.nan)
 
-            # Fallback cascade: cell → phase-level → global
-            phase_lookup = self.lookup_.get(
-                "feat_prior_mean_abs_move_atr_by_phase", {}
-            )
+            # Fallback cascade: cell → single-dim phase prior → global
+            phase_lookup = self.lookup_.get(fallback_prior, {})
 
-            def _lookup_interaction(row):
+            def _lookup_interaction(row, _lookup=lookup, _phase=phase_lookup, _fb=fallback):
                 # Build interaction key
                 keys = tuple(row[c] for c in group_cols)
                 if any(pd.isna(k) for k in keys):
-                    return fallback
-                val = lookup.get(keys)
+                    return _fb
+                val = _lookup.get(keys)
                 if val is not None:
                     return val
                 # Phase-level fallback
-                phase_val = phase_lookup.get(keys[0])
+                phase_val = _phase.get(keys[0])
                 if phase_val is not None:
                     return phase_val
-                return fallback
+                return _fb
 
             if all(c in df.columns for c in group_cols):
                 df[col_out] = df[group_cols].apply(_lookup_interaction, axis=1).astype(float)
@@ -277,7 +288,7 @@ def get_prior_col_names() -> list:
     """Return the list of column names produced by FoldPriorEncoder."""
     return (
         [c for c, _, _, _ in PRIOR_CONFIGS] +
-        [c for c, _, _, _ in INTERACTION_CONFIGS]
+        [c[0] for c in INTERACTION_CONFIGS]
     )
 
 

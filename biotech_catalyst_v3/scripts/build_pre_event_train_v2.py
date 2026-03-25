@@ -32,11 +32,10 @@ BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
 DATE_TAG = "20260323"
-VERSION  = 15  # Phase 4 data expansion: 444 new 2018-2022 training rows added via
-               # CT.gov cross-match (43 pos + 291 neg) and Perplexity classification
-               # (110 confirmed clinical catalysts). Training filter extended to include
-               # rows with data_tier in PHASE4_TIERS (bypasses MIN_EVENT_YEAR filter).
-               # All v14 changes carried forward.
+VERSION  = 16  # Phase 5: Extended fold-safe priors — added
+               # feat_prior_large_move_rate_by_market_cap_bucket (Tier 4, simple)
+               # feat_prior_large_move_rate_by_phase_x_therapeutic_superclass (Tier 4, interaction)
+               # Total priors: 6 → 8. All v15 data/features carried forward.
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data; time-split puts them all in train → 0.6% positive rate)

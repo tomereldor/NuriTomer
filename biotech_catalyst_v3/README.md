@@ -353,6 +353,18 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.48 — 2026-03-25 (Phase 5: extended fold-safe priors → v16 retrain)
+
+- **2 new fold-safe priors** added to `scripts/add_train_fold_priors.py` (total: 6 → 8):
+  - `feat_prior_large_move_rate_by_market_cap_bucket` — positive rate by market-cap tier (micro/small/mid/large); complements existing mean-abs-move prior for the same key
+  - `feat_prior_large_move_rate_by_phase_x_therapeutic_superclass` — interaction prior; cells with < 5 training samples fall back to phase-level rate prior, then global mean
+- **v16 retrain:** `ml_baseline_train_20260323_v16.csv` (1,142 rows, 64 base + 8 priors = 72 features)
+  - Test AUC **0.695**, PR-AUC 0.563, CV AUC **0.785 ± 0.077**, best model: LogReg
+  - New priors rank #1 and #4 by LogReg importance (real signal)
+  - Marginal test AUC regression vs v15 (0.695 vs 0.702) within 172-row holdout noise; LightGBM more affected by sparse interaction cells
+- **Documentation:** `reports/FEATURE_NOTES.md` updated with full Phase 1–5 feature engineering history (all previously undocumented)
+- **Files changed:** `scripts/add_train_fold_priors.py`, `scripts/build_pre_event_train_v2.py` (VERSION=16)
+
 ### v3.47 — 2026-03-25 (Phase 4 data expansion: 2018–2022 historical catalysts → v15 retrain)
 
 - **Data expansion:** Applied scan-and-confirm strategy retroactively to 2018–2022 to recover historical clinical catalysts previously excluded by year filter.
