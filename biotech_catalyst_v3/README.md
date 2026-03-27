@@ -353,6 +353,19 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 
 ## Changelog
 
+### v3.49 — 2026-03-27 (Pass-9: biological feature families → v17 retrain)
+
+- **7 new biological features** in two families — zero new LLM API calls, derived from existing `disease_genetic_basis` column and trial registration metadata:
+  - **Family A — Heritability (3 features):** `feat_genetic_basis_encoded` (ordinal 0–3), `feat_heritability_proxy_score` (float 0–1; monogenic=0.85, somatic=0.45, polygenic=0.35, none=0.10), `feat_heritability_level` (ordinal bin: low/moderate/high)
+  - **Family B — Enrichment Relevance (4 features):** `feat_biomarker_stratified_flag` (trial-level keyword match on indication + ct_official_title), `feat_targeted_mechanism_flag` (drug-name suffix rules: mAb/nib/inhibitor/etc. + monogenic disease proxy), `feat_disease_molecular_heterogeneity_score` (disease tractability), `feat_enrichment_relevance_score` (weighted composite)
+- **v17 retrain:** `ml_baseline_train_20260327_v17.csv` (1,142 rows, 71 base + 8 priors = 79 features)
+  - Test AUC **0.694** (vs v16: 0.695 — flat, within holdout noise), PR-AUC 0.564, CV AUC **0.786 ± 0.077**, best model: LogReg
+  - `feat_heritability_level` ranks #20, `feat_genetic_basis_encoded` #24 in LightGBM importance — contributing but modest signal
+  - No leakage risk: all 7 features derived from pre-registration metadata and static disease classifications known before the event
+- **New script:** `scripts/add_biological_features.py` (Pass-9); idempotent, no external API calls
+- **Documentation:** `reports/FEATURE_NOTES.md` updated with Pass-9 entry; `reports/MODEL_REPORTS.md` updated
+- **Files changed:** `scripts/add_biological_features.py` (new), `scripts/build_pre_event_train_v2.py` (VERSION=17), `reports/FEATURE_NOTES.md`
+
 ### v3.48 — 2026-03-25 (Phase 5: extended fold-safe priors → v16 retrain)
 
 - **2 new fold-safe priors** added to `scripts/add_train_fold_priors.py` (total: 6 → 8):

@@ -31,11 +31,12 @@ SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 
-DATE_TAG = "20260323"
-VERSION  = 16  # Phase 5: Extended fold-safe priors — added
-               # feat_prior_large_move_rate_by_market_cap_bucket (Tier 4, simple)
-               # feat_prior_large_move_rate_by_phase_x_therapeutic_superclass (Tier 4, interaction)
-               # Total priors: 6 → 8. All v15 data/features carried forward.
+DATE_TAG = "20260327"
+VERSION  = 17  # Pass-9: 7 biological features (heritability + enrichment relevance families)
+               # feat_genetic_basis_encoded, feat_heritability_proxy_score, feat_heritability_level
+               # feat_biomarker_stratified_flag, feat_targeted_mechanism_flag
+               # feat_disease_molecular_heterogeneity_score, feat_enrichment_relevance_score
+               # Zero new LLM calls. All derived from existing disease_genetic_basis + trial metadata.
 
 # Only train on events from 2023+ (2020-2022 rows have near-zero positive rate
 # due to missing price data; time-split puts them all in train → 0.6% positive rate)
@@ -143,6 +144,10 @@ NUMERIC_FEATURES_V1 = [
     "feat_ctgov_asset_maturity_score",           # drug-level maturity score
     # ── v14: Company historical hit rate (new Tier 3 feature) ──
     "feat_company_historical_hit_rate",          # backward-looking large-move rate per ticker
+    # ── v17: Biological features — heritability (pass9) ──
+    "feat_heritability_proxy_score",             # float 0-1; monogenic=0.85, somatic=0.45, polygenic=0.35, none=0.10
+    "feat_disease_molecular_heterogeneity_score",# float 0-1; higher = more heterogeneous target space (somatic/oncology)
+    "feat_enrichment_relevance_score",           # composite: biomarker_stratified + targeted_mechanism + (1-heterogeneity) + has_predictive_biomarker
 ]
 
 BINARY_FEATURES_V1 = [
@@ -181,6 +186,9 @@ BINARY_FEATURES_V1 = [
     "feat_priority_review_flag",          # FDA priority review / PDUFA designation
     "feat_primary_endpoint_known_flag",   # trial has a clearly stated primary endpoint
     "feat_recent_ctgov_update_flag",      # CT.gov updated within 90 days before event
+    # ── v17: Biological features — enrichment relevance (pass9) ──
+    "feat_biomarker_stratified_flag",     # trial-level: indication/title contains biomarker stratification keywords
+    "feat_targeted_mechanism_flag",       # drug-level: mAb/nib suffix, gene therapy, or monogenic disease
 ]
 
 # Timing features: all valid as of v13 (anchored to prediction_date = v_actual_date - 1).
@@ -219,6 +227,9 @@ CATEGORICAL_FEATURES = [
 
 ORDINAL_INT_FEATURES = [
     "feat_mesh_level1_encoded",
+    # ── v17: Biological features — heritability ordinal (pass9) ──
+    "feat_genetic_basis_encoded",         # ordinal: none=0, polygenic=1, somatic=2, monogenic=3
+    "feat_heritability_level",            # ordinal bin: low=0, moderate=1, high=2
 ]
 
 ALL_FEATURE_COLS = (NUMERIC_FEATURES + BINARY_FEATURES +

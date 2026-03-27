@@ -14,7 +14,10 @@ feat_ctgov_n_late_stage_trials_sponsor,feature,feat_ctgov_n_late_stage_trials_sp
 feat_ctgov_pipeline_maturity_score,feature,feat_ctgov_pipeline_maturity_score,float64,median=2.1106,157,0,numeric
 feat_days_to_primary_completion,feature,feat_days_to_primary_completion,float64,median=-1.0000,451,0,numeric
 feat_design_quality_score,feature,feat_design_quality_score,float64,median=2.0000,82,0,numeric
+feat_disease_molecular_heterogeneity_score,feature,feat_disease_molecular_heterogeneity_score,float64,none,0,0,numeric
+feat_enrichment_relevance_score,feature,feat_enrichment_relevance_score,float64,none,0,0,numeric
 feat_enrollment_log,feature,feat_enrollment_log,float64,median=5.1059,157,0,numeric
+feat_heritability_proxy_score,feature,feat_heritability_proxy_score,float64,none,0,0,numeric
 feat_lead_asset_dependency_score,feature,feat_lead_asset_dependency_score,float64,none,0,0,numeric
 feat_log_market_cap,feature,feat_log_market_cap,float64,median=2.7787,102,0,numeric
 feat_n_trials_for_company,feature,feat_n_trials_for_company,int64,none,0,0,numeric
@@ -28,6 +31,7 @@ feat_time_since_last_company_event,feature,feat_time_since_last_company_event,fl
 feat_trial_quality_score,feature,feat_trial_quality_score,float64,median=3.0000,47,0,numeric
 feat_volatility,feature,feat_volatility,float64,median=6.7950,172,0,numeric
 feat_active_not_recruiting_at_event_flag,feature,feat_active_not_recruiting_at_event_flag,float64,0 (absent),486,0,binary flag
+feat_biomarker_stratified_flag,feature,feat_biomarker_stratified_flag,float64,none,0,0,binary flag
 feat_blinded_flag,feature,feat_blinded_flag,int64,none,0,0,binary flag
 feat_breakthrough_flag,feature,feat_breakthrough_flag,int64,none,0,0,binary flag
 feat_cns_flag,feature,feat_cns_flag,int64,none,0,0,binary flag
@@ -49,10 +53,13 @@ feat_rare_disease_flag,feature,feat_rare_disease_flag,int64,none,0,0,binary flag
 feat_recent_ctgov_update_flag,feature,feat_recent_ctgov_update_flag,float64,0 (absent),155,0,binary flag
 feat_single_asset_company_flag,feature,feat_single_asset_company_flag,int64,none,0,0,binary flag
 feat_small_trial_flag,feature,feat_small_trial_flag,float64,0 (absent),157,0,binary flag
+feat_targeted_mechanism_flag,feature,feat_targeted_mechanism_flag,float64,none,0,0,binary flag
 feat_targeted_therapy_exists,feature,feat_targeted_therapy_exists,int64,none,0,0,binary flag
 feat_terminated_at_event_flag,feature,feat_terminated_at_event_flag,float64,none,0,0,binary flag
 feat_withdrawn_at_event_flag,feature,feat_withdrawn_at_event_flag,float64,none,0,0,binary flag
 feat_mesh_level1_encoded,feature,feat_mesh_level1_encoded,float64,0 (absent),254,0,ordinal int
+feat_genetic_basis_encoded,feature,feat_genetic_basis,float64,none,0,0,one-hot encoded
+feat_heritability_level,feature,feat_heritability_level,float64,none,0,0,ordinal int
 feat_therapeutic_superclass_CNS,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Cardiovascular,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Dermatology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded

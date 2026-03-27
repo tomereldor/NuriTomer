@@ -5,6 +5,45 @@ Newest entry at top.
 
 ---
 
+## 2026-03-27 · Pass-9: Biological Feature Families (Heritability & Enrichment Relevance)
+
+7 new features in two families. Zero new LLM API calls. All STRICTLY_CLEAN (pre-event safe).
+Script: `scripts/add_biological_features.py`
+Input: `ml_dataset_features_20260325_v2.csv` (147 cols) → Output: `ml_dataset_features_20260325_v3.csv` (154 cols)
+
+### Family A — Heritability (3 features)
+
+All derived deterministically from `disease_genetic_basis` (existing column, never previously encoded as a feature).
+
+| Feature | Type | Derivation | Coverage |
+|---|---|---|---|
+| `feat_genetic_basis_encoded` | ordinal int 0–3 | none=0, polygenic=1, somatic=2, monogenic=3; NaN for unknown | 82.6% (2332/2822) |
+| `feat_heritability_proxy_score` | float 0.0–1.0 | monogenic=0.85, somatic=0.45, polygenic=0.35, none=0.10, null→0.40 | 100% |
+| `feat_heritability_level` | ordinal int 0–2 | low=0 (<0.30), moderate=1 (0.30–0.60), high=2 (>0.60) | 100% |
+
+Distribution of `feat_heritability_level`: low=561 (none), moderate=2026 (polygenic+somatic+null), high=235 (monogenic).
+
+### Family B — Enrichment Relevance (4 features)
+
+| Feature | Type | Derivation | Coverage | Positive rate |
+|---|---|---|---|---|
+| `feat_biomarker_stratified_flag` | binary | Keyword match on `indication` + `ct_official_title` (mutation-specific + enrichment design terms) | 100% | 19.6% (554/2822) |
+| `feat_targeted_mechanism_flag` | binary | Drug-name suffix/keyword rules (mAb, -nib, inhibitor, gene therapy, etc.) + monogenic disease flag | 100% | 30.9% (871/2822) |
+| `feat_disease_molecular_heterogeneity_score` | float 0.0–1.0 | `disease_genetic_basis` × `mesh_level1` × rare_disease proxy | 100% | mean=0.531, std=0.217 |
+| `feat_enrichment_relevance_score` | float 0.0–1.0 | 0.35×biomarker_stratified + 0.25×targeted_mechanism + 0.25×(1−heterogeneity) + 0.15×has_predictive_biomarker | 100% | mean=0.301, std=0.215 |
+
+### Pre-event validity
+
+All 7 features derived from CT.gov registration metadata and LLM disease classifications (disease_genetic_basis) — all known before the event date. No post-event information, no snapshot-unsafe fields.
+
+### Notes
+
+- `feat_targeted_mechanism_flag` will fire for behavioral/non-targeted therapies used in monogenic diseases (e.g., ACT therapy for a monogenic indication). Acceptable heuristic — the model will learn the appropriate weight.
+- `feat_biomarker_stratified_flag` positive rate (19.6%) lower than initially estimated — reflects that explicit biomarker stratification is a subset of all trials, primarily oncology.
+- Phase 2 (deferred): extend `disease_biology_v1.json` with LLM-derived heritability fields for the 17.4% of rows with unknown genetic basis.
+
+---
+
 ## 2026-03-25 · v12–v16 Feature Engineering Sprint (Phases 1–5)
 
 Five-phase improvement run. All changes are pre-event safe (CT.gov protocol metadata; no event-day or post-event information).
