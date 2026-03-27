@@ -4,7 +4,7 @@
 
 | File | Contents |
 |---|---|
-| [`MODEL_REPORTS.md`](MODEL_REPORTS.md) | All model training results — v0.1 baseline through current v3 (LightGBM AUC 0.730) |
+| [`MODEL_REPORTS.md`](MODEL_REPORTS.md) | All model training results — v6 leakage fix through current v17 (LogReg AUC 0.694, 79 features). Includes TL;DR version history table. |
 | [`FEATURE_NOTES.md`](FEATURE_NOTES.md) | Feature validity audit, CT.gov timing notes, oncology caveats, permanently excluded features |
 | [`DATASET_NOTES.md`](DATASET_NOTES.md) | Dataset expansion strategy, binary target threshold analysis, coverage notes |
 
