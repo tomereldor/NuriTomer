@@ -6,6 +6,23 @@ No press release content is used. All predictions are based on pre-event structu
 
 ---
 
+## Current Files — Quick Reference (as of 2026-03-28)
+
+> **For Nurit:** Here are the current canonical data files and where to find them.
+
+| File | Location | Git? | Contents |
+|------|----------|------|---------|
+| **Full feature dataset** | `data/ml/ml_dataset_features_20260325_v3.csv` | ✅ committed & pushed | 2,822 rows × 154 cols — all engineered features before training-set filtering |
+| **Training table (current)** | `data/ml/ml_baseline_train_20260327_v17.csv` | ✅ committed & pushed | 1,142 rows × 79 features (71 base + 8 fold-safe priors) — what the model actually trains on |
+| **Master dataset** | `enriched_all_clinical_clean_v3.csv` | ✅ committed & pushed | 2,958 rows × 63 cols — source of truth for all events |
+| **Feature reference** | `reports/FEATURE_TABLE.md` | ✅ committed & pushed | Full table: every feature, formula, source, coverage, status |
+
+**Current model (v17):** Logistic Regression — Test AUC **0.694**, CV AUC **0.786 ± 0.077** (5-fold time-aware). 79 features, 1,142 training rows (32% positive rate).
+
+**Feature documentation:** See [`reports/FEATURE_TABLE.md`](reports/FEATURE_TABLE.md) for the complete feature reference with descriptions, formulas, and active/deprecated status.
+
+---
+
 ## Summary
 
 We built a pre-event binary classifier that predicts whether a biotech catalyst (clinical trial readout) will cause a large stock move — defined as ≥ 3× ATR-normalized AND ≥ 10% absolute — using only public information available before the announcement.
