@@ -38,6 +38,7 @@ warnings.filterwarnings("ignore")
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 REPORTS_DIR = os.path.join(BASE_DIR, "reports")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 FIGS_DIR    = os.path.join(REPORTS_DIR, "figures")
 TARGET      = "target_large_move"
 METADATA    = ["ticker", "event_date", "drug_name", "nct_id"]
@@ -479,17 +480,17 @@ def main():
     os.makedirs(FIGS_DIR, exist_ok=True)
 
     # Load artifacts
-    train_path, train_v, date_tag = _latest(BASE_DIR, "ml_baseline_train")
+    train_path, train_v, date_tag = _latest(ML_DATA_DIR, "ml_baseline_train")
     if "dict" in (train_path or ""):
         train_path = None
     # pick the non-dict file if needed
-    cands = glob.glob(os.path.join(BASE_DIR, "ml_baseline_train_2*.csv"))
+    cands = glob.glob(os.path.join(ML_DATA_DIR, "ml_baseline_train_2*.csv"))
     cands = [f for f in cands if "dict" not in f]
     train_path = max(cands, key=os.path.getmtime) if cands else None
 
     val_path   = os.path.join(REPORTS_DIR, f"predictions_val_{date_tag}_v{train_v}.csv")
     test_path  = os.path.join(REPORTS_DIR, f"predictions_test_{date_tag}_v{train_v}.csv")
-    feat_path, _, _ = _latest(BASE_DIR, "ml_dataset_features")
+    feat_path, _, _ = _latest(ML_DATA_DIR, "ml_dataset_features")
 
     print(f"Train table : {os.path.basename(train_path)}")
     print(f"Val preds   : {os.path.basename(val_path)}")

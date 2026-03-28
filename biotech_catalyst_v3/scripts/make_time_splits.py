@@ -29,6 +29,7 @@ import pandas as pd
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR     = os.path.dirname(SCRIPT_DIR)
 REPORTS_DIR  = os.path.join(BASE_DIR, "reports")
+ML_DATA_DIR  = os.path.join(BASE_DIR, "data", "ml")
 
 
 def _latest(base_dir, prefix):
@@ -46,7 +47,7 @@ def _latest(base_dir, prefix):
 def main():
     os.makedirs(REPORTS_DIR, exist_ok=True)
 
-    train_path, train_v, date_tag = _latest(BASE_DIR, "ml_baseline_train")
+    train_path, train_v, date_tag = _latest(ML_DATA_DIR, "ml_baseline_train")
     if not train_path or "dict" in train_path:
         print("ERROR: no ml_baseline_train_*.csv found", file=sys.stderr)
         sys.exit(1)

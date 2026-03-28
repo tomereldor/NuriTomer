@@ -48,6 +48,7 @@ SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR     = os.path.dirname(SCRIPT_DIR)
 MODELS_DIR   = os.path.join(BASE_DIR, "models")
 REPORTS_DIR  = os.path.join(BASE_DIR, "reports")
+ML_DATA_DIR  = os.path.join(BASE_DIR, "data", "ml")
 FIGS_DIR     = os.path.join(REPORTS_DIR, "figures")
 TARGET       = "target_large_move"
 METADATA     = {"ticker", "event_date", "drug_name", "nct_id", "split"}
@@ -507,11 +508,11 @@ def main():
         os.makedirs(d, exist_ok=True)
 
     # ── Load data ────────────────────────────────────────────────────────────
-    train_files = glob.glob(os.path.join(BASE_DIR, "ml_baseline_train_2*.csv"))
+    train_files = glob.glob(os.path.join(ML_DATA_DIR, "ml_baseline_train_2*.csv"))
     train_files = [f for f in train_files if "dict" not in f]
     train_path  = max(train_files, key=os.path.getmtime)
 
-    feat_files = glob.glob(os.path.join(BASE_DIR, "ml_dataset_features_*.csv"))
+    feat_files = glob.glob(os.path.join(ML_DATA_DIR, "ml_dataset_features_*.csv"))
     feat_path  = max(feat_files, key=os.path.getmtime)
 
     print(f"Train table : {os.path.basename(train_path)}")

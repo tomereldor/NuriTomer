@@ -42,6 +42,7 @@ import pandas as pd
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 
 
 # ---------------------------------------------------------------------------
@@ -311,14 +312,14 @@ def main():
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
     # ── Find source (check both base and archive) ─────────────────────────────
-    src_path, src_v, date_tag = _find_latest_version(BASE_DIR, ARCHIVE_DIR, "ml_dataset_features")
+    src_path, src_v, date_tag = _find_latest_version(ML_DATA_DIR, ARCHIVE_DIR, "ml_dataset_features")
     if not src_path:
         print("ERROR: no ml_dataset_features_*.csv found", file=sys.stderr)
         sys.exit(1)
 
     # If it's in archive, copy to base dir first to work from it
     if src_path.startswith(ARCHIVE_DIR):
-        dst = os.path.join(BASE_DIR, os.path.basename(src_path))
+        dst = os.path.join(ML_DATA_DIR, os.path.basename(src_path))
         shutil.copy(src_path, dst)
         src_path = dst
         print(f"Restored from archive: {os.path.basename(src_path)}")
@@ -329,7 +330,7 @@ def main():
     print(f"Shape  : {df.shape[0]} rows × {df.shape[1]} cols")
 
     # ── Find existing feature dict ────────────────────────────────────────────
-    old_dict_path, _, _ = _find_latest_version(BASE_DIR, ARCHIVE_DIR, "ml_feature_dict")
+    old_dict_path, _, _ = _find_latest_version(ML_DATA_DIR, ARCHIVE_DIR, "ml_feature_dict")
 
     # ── Report study completion availability ──────────────────────────────────
     study_comp_col = next((c for c in df.columns if "study_completion" in c.lower()), None)
@@ -356,7 +357,7 @@ def main():
 
     # ── Archive current versions (base dir only) ──────────────────────────────
     for prefix in ["ml_dataset_features", "ml_feature_dict"]:
-        base_files = glob.glob(os.path.join(BASE_DIR, f"{prefix}_*.csv"))
+        base_files = glob.glob(os.path.join(ML_DATA_DIR, f"{prefix}_*.csv"))
         for f in base_files:
             if re.search(r"_v\d+\.csv$", f):
                 dest = os.path.join(ARCHIVE_DIR, os.path.basename(f))
@@ -368,15 +369,16 @@ def main():
                     print(f"Removed duplicate: {os.path.basename(f)}")
 
     # ── Save new feature dataset ──────────────────────────────────────────────
-    new_feat_v = _next_version_in_basedir(BASE_DIR, ARCHIVE_DIR, "ml_dataset_features", date_tag)
-    out_feat   = os.path.join(BASE_DIR, f"ml_dataset_features_{date_tag}_v{new_feat_v}.csv")
+    os.makedirs(ML_DATA_DIR, exist_ok=True)
+    new_feat_v = _next_version_in_basedir(ML_DATA_DIR, ARCHIVE_DIR, "ml_dataset_features", date_tag)
+    out_feat   = os.path.join(ML_DATA_DIR, f"ml_dataset_features_{date_tag}_v{new_feat_v}.csv")
     df_new.to_csv(out_feat, index=False)
     print(f"\nSaved  : {os.path.basename(out_feat)}  "
           f"({df_new.shape[0]} rows × {df_new.shape[1]} cols)")
 
     # ── Save new feature dictionary ───────────────────────────────────────────
-    new_dict_v = _next_version_in_basedir(BASE_DIR, ARCHIVE_DIR, "ml_feature_dict", date_tag)
-    out_dict   = os.path.join(BASE_DIR, f"ml_feature_dict_{date_tag}_v{new_dict_v}.csv")
+    new_dict_v = _next_version_in_basedir(ML_DATA_DIR, ARCHIVE_DIR, "ml_feature_dict", date_tag)
+    out_dict   = os.path.join(ML_DATA_DIR, f"ml_feature_dict_{date_tag}_v{new_dict_v}.csv")
     update_feature_dict(df_new, old_dict_path, out_dict)
 
     # ── Coverage summary ──────────────────────────────────────────────────────

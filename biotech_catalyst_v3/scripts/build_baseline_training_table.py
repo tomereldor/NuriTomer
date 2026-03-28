@@ -26,6 +26,7 @@ import pandas as pd
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 
 # ---------------------------------------------------------------------------
 # Feature roster
@@ -287,7 +288,7 @@ def build_train_dict(df_before, df_after, imputation_log, feature_cols_expanded)
 def main():
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
-    src_path, _, date_tag = _latest_version_file(BASE_DIR, "ml_dataset_features")
+    src_path, _, date_tag = _latest_version_file(ML_DATA_DIR, "ml_dataset_features")
     if not src_path:
         print("ERROR: no ml_dataset_features_*.csv found", file=sys.stderr)
         sys.exit(1)
@@ -325,16 +326,17 @@ def main():
 
     # ---- Archive superseded baseline train files ----
     for prefix in ["ml_baseline_train", "ml_baseline_train_dict"]:
-        old_path, old_v, _ = _latest_version_file(BASE_DIR, prefix)
+        old_path, old_v, _ = _latest_version_file(ML_DATA_DIR, prefix)
         if old_path and os.path.exists(old_path):
             dest = os.path.join(ARCHIVE_DIR, os.path.basename(old_path))
             shutil.move(old_path, dest)
             print(f"Archived: archive/{os.path.basename(old_path)}")
 
     # ---- Save ----
-    new_v = _next_version(BASE_DIR, "ml_baseline_train", date_tag)
-    out_data = os.path.join(BASE_DIR, f"ml_baseline_train_{date_tag}_v{new_v}.csv")
-    out_dict = os.path.join(BASE_DIR, f"ml_baseline_train_dict_{date_tag}_v{new_v}.csv")
+    os.makedirs(ML_DATA_DIR, exist_ok=True)
+    new_v = _next_version(ML_DATA_DIR, "ml_baseline_train", date_tag)
+    out_data = os.path.join(ML_DATA_DIR, f"ml_baseline_train_{date_tag}_v{new_v}.csv")
+    out_dict = os.path.join(ML_DATA_DIR, f"ml_baseline_train_dict_{date_tag}_v{new_v}.csv")
 
     # Keep metadata in final file for traceability, but after target
     final_cols = METADATA_COLS + [TARGET_COL] + feat_cols_final

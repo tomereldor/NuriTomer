@@ -298,11 +298,12 @@ def get_prior_col_names() -> list:
 
 def _self_test():
     """Quick sanity check: fit on first 70% of rows, transform remainder."""
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    BASE_DIR   = os.path.dirname(SCRIPT_DIR)
+    SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
+    BASE_DIR    = os.path.dirname(SCRIPT_DIR)
+    ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 
     import glob
-    feat_files = glob.glob(os.path.join(BASE_DIR, "ml_dataset_features_*.csv"))
+    feat_files = glob.glob(os.path.join(ML_DATA_DIR, "ml_dataset_features_*.csv"))
     if not feat_files:
         print("ERROR: no ml_dataset_features_*.csv found")
         sys.exit(1)

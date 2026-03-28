@@ -58,6 +58,7 @@ SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 MODELS_DIR  = os.path.join(BASE_DIR, "models")
 REPORTS_DIR = os.path.join(BASE_DIR, "reports")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 FIGS_DIR    = os.path.join(REPORTS_DIR, "figures")
 
 METADATA_COLS = ["ticker", "event_date", "drug_name", "nct_id"]
@@ -218,7 +219,7 @@ def main():
     for d in [MODELS_DIR, REPORTS_DIR, FIGS_DIR]:
         os.makedirs(d, exist_ok=True)
 
-    train_path, train_v, date_tag = _latest(BASE_DIR, "ml_baseline_train")
+    train_path, train_v, date_tag = _latest(ML_DATA_DIR, "ml_baseline_train")
     if not train_path or "dict" in train_path:
         print("ERROR: no ml_baseline_train_*.csv found", file=sys.stderr)
         sys.exit(1)

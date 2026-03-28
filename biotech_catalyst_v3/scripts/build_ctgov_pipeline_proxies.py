@@ -49,6 +49,7 @@ warnings.filterwarnings("ignore")
 SCRIPT_DIR         = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR           = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR        = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR        = os.path.join(BASE_DIR, "data", "ml")
 CACHE_DIR          = os.path.join(BASE_DIR, "cache")
 SPONSOR_CACHE_FILE = os.path.join(CACHE_DIR, "ctgov_sponsor_v1.json")
 DRUG_CACHE_FILE    = os.path.join(CACHE_DIR, "ctgov_intervention_v1.json")
@@ -362,9 +363,10 @@ def main():
     os.makedirs(CACHE_DIR, exist_ok=True)
 
     # ── Find latest feature dataset ───────────────────────────────────────────
-    src_path, src_v, date_tag = _find_latest(BASE_DIR, "ml_dataset_features")
+    os.makedirs(ML_DATA_DIR, exist_ok=True)
+    src_path, src_v, date_tag = _find_latest(ML_DATA_DIR, "ml_dataset_features")
     if not src_path:
-        print("ERROR: no ml_dataset_features_YYYYMMDD_vN.csv found in " + BASE_DIR, file=sys.stderr)
+        print("ERROR: no ml_dataset_features_YYYYMMDD_vN.csv found in " + ML_DATA_DIR, file=sys.stderr)
         sys.exit(1)
     print(f"Input : {os.path.basename(src_path)}  (v{src_v})")
     df = pd.read_csv(src_path)
@@ -493,7 +495,7 @@ def main():
     # ── Archive and save ──────────────────────────────────────────────────────
     new_v    = src_v + 1
     out_name = f"ml_dataset_features_{date_tag}_v{new_v}.csv"
-    out_path = os.path.join(BASE_DIR, out_name)
+    out_path = os.path.join(ML_DATA_DIR, out_name)
 
     dest = os.path.join(ARCHIVE_DIR, os.path.basename(src_path))
     shutil.move(src_path, dest)
@@ -503,13 +505,13 @@ def main():
     print(f"\nSaved : {out_name}  ({df.shape[0]} rows × {df.shape[1]} cols)")
 
     # ── Update feature dict ───────────────────────────────────────────────────
-    old_dict = _find_latest_dict(BASE_DIR)
+    old_dict = _find_latest_dict(ML_DATA_DIR)
     if old_dict:
         shutil.move(old_dict, os.path.join(ARCHIVE_DIR, os.path.basename(old_dict)))
 
     out_dict_name = f"ml_feature_dict_{date_tag}_v{new_v}.csv"
     update_feature_dict(df, os.path.join(ARCHIVE_DIR, os.path.basename(old_dict)) if old_dict else None,
-                        os.path.join(BASE_DIR, out_dict_name))
+                        os.path.join(ML_DATA_DIR, out_dict_name))
     print(f"Saved : {out_dict_name}")
 
     print("\nDone — CT.gov pipeline proxy features added.")

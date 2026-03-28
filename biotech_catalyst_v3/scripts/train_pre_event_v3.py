@@ -51,6 +51,7 @@ warnings.filterwarnings("ignore")
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR     = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR  = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR  = os.path.join(BASE_DIR, "data", "ml")
 MODELS_DIR   = os.path.join(BASE_DIR, "models")
 REPORTS_DIR  = os.path.join(BASE_DIR, "reports")
 FIGS_DIR     = os.path.join(REPORTS_DIR, "figures")
@@ -371,14 +372,14 @@ def main():
 
     # ── Load v2 train table ───────────────────────────────────────────────────
     train_files = (
-        glob.glob(os.path.join(BASE_DIR, "ml_baseline_train_2*.csv")) +
+        glob.glob(os.path.join(ML_DATA_DIR, "ml_baseline_train_2*.csv")) +
         glob.glob(os.path.join(ARCHIVE_DIR, "ml_baseline_train_2*.csv"))
     )
     train_files = [f for f in train_files if "dict" not in f]
     train_path  = max(train_files, key=lambda f: int((re.search(r"_v(\d+)\.csv$", f) or type("", (), {"group": lambda s, n: "0"})).group(1)))
 
     # Also load full feature dataset (needed for prior group columns + targets)
-    feat_path = _find_latest(BASE_DIR, ARCHIVE_DIR, "ml_dataset_features")
+    feat_path = _find_latest(ML_DATA_DIR, ARCHIVE_DIR, "ml_dataset_features")
 
     print(f"Train table : {os.path.basename(train_path)}")
     print(f"Feature src : {os.path.basename(feat_path)}")

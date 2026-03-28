@@ -30,6 +30,7 @@ import pandas as pd
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 
 DATE_TAG = "20260327"
 VERSION  = 17  # Pass-9: 7 biological features (heritability + enrichment relevance families)
@@ -304,7 +305,7 @@ def time_split(df, date_col="_split_date", train_pct=0.70, val_pct=0.15):
 def main():
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
-    src_path = _find_latest_feat(BASE_DIR, ARCHIVE_DIR)
+    src_path = _find_latest_feat(ML_DATA_DIR, ARCHIVE_DIR)
     if not src_path:
         print("ERROR: no ml_dataset_features_*.csv found", file=sys.stderr)
         sys.exit(1)
@@ -381,7 +382,7 @@ def main():
 
     # ── Archive superseded v1 train table ─────────────────────────────────────
     for prefix in ["ml_baseline_train", "ml_baseline_train_dict"]:
-        old_files = glob.glob(os.path.join(BASE_DIR, f"{prefix}_*.csv"))
+        old_files = glob.glob(os.path.join(ML_DATA_DIR, f"{prefix}_*.csv"))
         for f in old_files:
             dest = os.path.join(ARCHIVE_DIR, os.path.basename(f))
             if not os.path.exists(dest):
@@ -391,8 +392,9 @@ def main():
                 os.remove(f)
 
     # ── Save ──────────────────────────────────────────────────────────────────
-    out_data = os.path.join(BASE_DIR, f"ml_baseline_train_{DATE_TAG}_v{VERSION}.csv")
-    out_dict = os.path.join(BASE_DIR, f"ml_baseline_train_dict_{DATE_TAG}_v{VERSION}.csv")
+    os.makedirs(ML_DATA_DIR, exist_ok=True)
+    out_data = os.path.join(ML_DATA_DIR, f"ml_baseline_train_{DATE_TAG}_v{VERSION}.csv")
+    out_dict = os.path.join(ML_DATA_DIR, f"ml_baseline_train_dict_{DATE_TAG}_v{VERSION}.csv")
 
     final_order = METADATA_COLS + [TARGET_COL] + feat_cols_final + ["split"]
     final_order = [c for c in final_order if c in df_enc.columns]

@@ -65,6 +65,7 @@ import pandas as pd
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 MASTER_CSV  = os.path.join(BASE_DIR, "enriched_all_clinical_clean_v3.csv")
 
 # ---------------------------------------------------------------------------
@@ -1086,8 +1087,8 @@ def build_feature_dict(df):
 def main():
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
-    data_path, data_v, date_tag = _latest_version_file(BASE_DIR, "ml_dataset_features")
-    dict_path, dict_v, _        = _latest_version_file(BASE_DIR, "ml_feature_dict")
+    data_path, data_v, date_tag = _latest_version_file(ML_DATA_DIR, "ml_dataset_features")
+    dict_path, dict_v, _        = _latest_version_file(ML_DATA_DIR, "ml_feature_dict")
 
     if not data_path:
         print("ERROR: no ml_dataset_features_*.csv found in " + BASE_DIR, file=sys.stderr)
@@ -1177,8 +1178,9 @@ def main():
             print(f"Archived {label}: archive/{os.path.basename(src)}")
 
     # Save v(N+1)
-    new_data_path = os.path.join(BASE_DIR, f"ml_dataset_features_{date_tag}_v{new_v}.csv")
-    new_dict_path = os.path.join(BASE_DIR, f"ml_feature_dict_{date_tag}_v{new_v}.csv")
+    os.makedirs(ML_DATA_DIR, exist_ok=True)
+    new_data_path = os.path.join(ML_DATA_DIR, f"ml_dataset_features_{date_tag}_v{new_v}.csv")
+    new_dict_path = os.path.join(ML_DATA_DIR, f"ml_feature_dict_{date_tag}_v{new_v}.csv")
 
     df.to_csv(new_data_path, index=False)
     feat_dict = build_feature_dict(df)

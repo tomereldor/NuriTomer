@@ -34,9 +34,10 @@ import pandas as pd
 import requests
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR    = os.path.dirname(SCRIPT_DIR)
-REPORTS_DIR = os.path.join(BASE_DIR, "reports")
-DATE_TAG    = datetime.now().strftime("%Y%m%d")
+BASE_DIR        = os.path.dirname(SCRIPT_DIR)
+REPORTS_DIR     = os.path.join(BASE_DIR, "reports")
+EXPLORATORY_DIR = os.path.join(BASE_DIR, "data", "exploratory_data")
+DATE_TAG        = datetime.now().strftime("%Y%m%d")
 
 # ---------------------------------------------------------------------------
 # Load env
@@ -301,7 +302,8 @@ def main():
 
     # PART 4: Save outputs
     print("\n── PART 4: Save outputs ──")
-    out_csv = os.path.join(BASE_DIR, f"benzinga_pilot_news_{DATE_TAG}.csv")
+    os.makedirs(EXPLORATORY_DIR, exist_ok=True)
+    out_csv = os.path.join(EXPLORATORY_DIR, f"benzinga_pilot_news_{DATE_TAG}.csv")
     if not bz_df.empty:
         bz_df.drop(columns=["bz_created_dt"], errors="ignore").to_csv(out_csv, index=False)
         print(f"Saved: {out_csv} ({len(bz_df)} rows)")
@@ -309,7 +311,7 @@ def main():
         print("No items to save.")
         out_csv = None
 
-    match_csv = os.path.join(BASE_DIR, f"benzinga_pilot_matches_{DATE_TAG}.csv")
+    match_csv = os.path.join(EXPLORATORY_DIR, f"benzinga_pilot_matches_{DATE_TAG}.csv")
     if not match_df.empty:
         match_df.to_csv(match_csv, index=False)
         print(f"Saved: {match_csv} ({len(match_df)} matches)")

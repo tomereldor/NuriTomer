@@ -40,6 +40,7 @@ import pandas as pd
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(SCRIPT_DIR)
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+ML_DATA_DIR = os.path.join(BASE_DIR, "data", "ml")
 
 NEW_FEAT_COLS = [
     "feat_genetic_basis_encoded",
@@ -370,13 +371,13 @@ def main():
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
     # --- find inputs ---
-    feat_path, feat_v, date_tag = _find_latest_features(BASE_DIR)
-    dict_path                   = _find_latest_dict(BASE_DIR)
+    feat_path, feat_v, date_tag = _find_latest_features(ML_DATA_DIR)
+    dict_path                   = _find_latest_dict(ML_DATA_DIR)
 
     if feat_path is None:
-        raise FileNotFoundError("No ml_dataset_features_YYYYMMDD_vN.csv found in " + BASE_DIR)
+        raise FileNotFoundError("No ml_dataset_features_YYYYMMDD_vN.csv found in " + ML_DATA_DIR)
     if dict_path is None:
-        raise FileNotFoundError("No ml_feature_dict_YYYYMMDD_vN.csv found in " + BASE_DIR)
+        raise FileNotFoundError("No ml_feature_dict_YYYYMMDD_vN.csv found in " + ML_DATA_DIR)
 
     print(f"Input : {os.path.basename(feat_path)}  (v{feat_v})")
     df = pd.read_csv(feat_path)
@@ -407,16 +408,17 @@ def main():
     new_v         = feat_v + 1
     out_feat_name = f"ml_dataset_features_{date_tag}_v{new_v}.csv"
     out_dict_name = f"ml_feature_dict_{date_tag}_v{new_v}.csv"
-    out_feat_path = os.path.join(BASE_DIR, out_feat_name)
-    out_dict_path = os.path.join(BASE_DIR, out_dict_name)
+    os.makedirs(ML_DATA_DIR, exist_ok=True)
+    out_feat_path = os.path.join(ML_DATA_DIR, out_feat_name)
+    out_dict_path = os.path.join(ML_DATA_DIR, out_dict_name)
 
     # --- archive previous latest ---
-    if os.path.dirname(os.path.abspath(feat_path)) == os.path.abspath(BASE_DIR):
+    if os.path.dirname(os.path.abspath(feat_path)) == os.path.abspath(ML_DATA_DIR):
         import shutil
         shutil.move(feat_path, os.path.join(ARCHIVE_DIR, os.path.basename(feat_path)))
         print(f"\nArchived: {os.path.basename(feat_path)}")
 
-    if dict_path and os.path.dirname(os.path.abspath(dict_path)) == os.path.abspath(BASE_DIR):
+    if dict_path and os.path.dirname(os.path.abspath(dict_path)) == os.path.abspath(ML_DATA_DIR):
         import shutil
         shutil.move(dict_path, os.path.join(ARCHIVE_DIR, os.path.basename(dict_path)))
         print(f"Archived: {os.path.basename(dict_path)}")

@@ -80,13 +80,14 @@ from bs4 import BeautifulSoup
 # Paths
 # ---------------------------------------------------------------------------
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR    = os.path.dirname(SCRIPT_DIR)
-REPORTS_DIR = os.path.join(BASE_DIR, "reports")
-DATE_TAG    = datetime.now().strftime("%Y%m%d")
+BASE_DIR        = os.path.dirname(SCRIPT_DIR)
+REPORTS_DIR     = os.path.join(BASE_DIR, "reports")
+EXPLORATORY_DIR = os.path.join(BASE_DIR, "data", "exploratory_data")
+DATE_TAG        = datetime.now().strftime("%Y%m%d")
 
 MASTER_CSV = os.path.join(BASE_DIR, "enriched_all_clinical_clean_v3.csv")
 TIERED_CSV = os.path.join(BASE_DIR, "enriched_all_clinical_clean_v3_tiered_20260318_v1.csv")
-OUTPUT_CSV = os.path.join(BASE_DIR, f"edgar_8k_matches_{DATE_TAG}.csv")
+OUTPUT_CSV = os.path.join(EXPLORATORY_DIR, f"edgar_8k_matches_{DATE_TAG}.csv")
 
 
 # ---------------------------------------------------------------------------
@@ -561,6 +562,8 @@ def main():
     parser.add_argument("--year-min", type=int, default=MIN_YEAR, help=f"Min event year (default {MIN_YEAR})")
     parser.add_argument("--year-max", type=int, default=MAX_YEAR, help=f"Max event year (default {MAX_YEAR})")
     args = parser.parse_args()
+
+    os.makedirs(EXPLORATORY_DIR, exist_ok=True)
 
     # ------------------------------------------------------------------
     # Load master dataset

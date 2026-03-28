@@ -34,9 +34,10 @@ import requests
 # ── Paths ──────────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+ML_DATA_DIR = os.path.join(PROJECT_DIR, "data", "ml")
 DEFAULT_IN  = os.path.join(PROJECT_DIR, "enriched_all_clinical_clean_v3.csv")
 _DATE_TAG   = date.today().strftime("%Y%m%d")
-DEFAULT_OUT = os.path.join(PROJECT_DIR, f"ml_dataset_features_{_DATE_TAG}_v1.csv")
+DEFAULT_OUT = os.path.join(ML_DATA_DIR, f"ml_dataset_features_{_DATE_TAG}_v1.csv")
 
 # ── API settings ───────────────────────────────────────────────────────────────
 CT_URL      = "https://clinicaltrials.gov/api/v2/studies/{nct_id}"
@@ -588,6 +589,7 @@ def main(input_file: str, output_file: str, skip_api: bool = False) -> None:
     print("STEP 9 — Save ML-ready dataset")
     print(SEP)
 
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     df.to_csv(output_file, index=False)
 
     # Final stats
