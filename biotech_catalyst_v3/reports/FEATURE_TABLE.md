@@ -368,3 +368,39 @@ Shows when each major feature group was added to the training roster.
 | 9 | `feat_single_asset_company_flag` | +0.339 | Existential risk → amplified move |
 | 10 | `feat_small_trial_flag` | +0.329 | Small early-stage trials → high variance |
 | 20 | `feat_heritability_level` | — | Highest-ranking v17 biological feature (LightGBM) |
+
+---
+
+## Data File Locations & Git Status
+
+| File | Path | Committed & Pushed | Shape | Description |
+|------|------|--------------------|-------|-------------|
+| Full feature dataset | `data/ml/ml_dataset_features_20260325_v3.csv` | ✅ yes | 2,822 × 154 | All engineered features before training-set filtering; includes snapshot-unsafe and intermediate columns |
+| Training table | `data/ml/ml_baseline_train_20260327_v17.csv` | ✅ yes | 1,142 × 79 | Filtered, imputed, encoded training set. 71 base features + 8 fold-safe priors. Split column included. |
+| Training feature dict | `data/ml/ml_baseline_train_dict_20260327_v17.csv` | ✅ yes | 79 rows | Per-column metadata: role, dtype, imputation method, missing counts |
+| Feature dictionary | `data/ml/ml_feature_dict_20260325_v3.csv` | ✅ yes | 21 rows | Covers newer features (pass5 timing + pass9 biological families) with descriptions and source info |
+| Master dataset | `enriched_all_clinical_clean_v3.csv` | ✅ yes | 2,958 × 63 | Canonical event dataset; source for all feature engineering |
+| Biotech universe | `biotech_universe_expanded.csv` | ✅ yes | 460 rows | All tracked tickers |
+
+> All files above are in the `biotech_catalyst_v3/` directory of the `main` branch.
+> Old/stale versions are in `biotech_catalyst_v3/archive/` (gitignored).
+> Exploratory data (benzinga, edgar) is in `data/exploratory_data/` (gitignored).
+
+---
+
+## Key Takeaways — Feature Review
+
+**1. Company track record is the single strongest signal.**
+`feat_company_historical_hit_rate` (LogReg coef +0.800) outperforms every trial-design feature. If a company has generated large moves on prior catalysts, it will likely do so again. This is a macro behavioral signal that transcends indication or trial phase.
+
+**2. The model is fundamentally pricing expected resolution, not trial quality.**
+The second-biggest cluster — fold-safe priors by phase×class (#2), imminence flags (#6), market-cap bucket priors (#4) — all encode "how much uncertainty is about to be resolved." Trial design quality (#3, #5) matters, but timing and base rates matter more.
+
+**3. ~30 features exist in the full dataset but are not in training.**
+The full feature file (`ml_dataset_features_20260325_v3.csv`) is a research sandbox with 154 columns. The training table (`ml_baseline_train_20260327_v17.csv`) is the clean 79-column subset after filtering out: snapshot-unsafe CT.gov status fields, post-event outcome flags, and intermediate computed values used only to build other features. Before adding any new feature, check both files — if it's in the full dataset but not the train table, there was a reason.
+
+**4. Biological features (Pass-9) are high-leverage, zero-cost additions.**
+7 new features were added in v17 by re-encoding the existing `disease_genetic_basis` column that had been sitting unused in one-hot form. `feat_heritability_level` already ranks #20 in LightGBM importance after a single pass. The enrichment relevance composite (`feat_enrichment_relevance_score`) captures biomarker-stratified trial design — a structural signal for outcome predictability. Zero new LLM API calls required.
+
+**5. v15 data expansion outperformed all feature engineering combined.**
+Adding 441 historical rows (2018–2022, Phase 4 expansion) pushed test AUC from 0.681 to 0.702 — a larger gain than any single feature engineering pass. v17 biological features recovered to 0.694 test AUC but the best single-point test result remains v15. The lesson: at ~1,142 training rows, data volume still dominates feature sophistication. The next highest-leverage investment is more labeled historical data, not more features.
