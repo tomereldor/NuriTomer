@@ -1,4 +1,18 @@
 ---
+## 2026-03-30 · Training Data Integrity — Genetics Imputation Bug
+
+**Affected file:** `ml_baseline_train_20260327_v17.csv` (1142 rows)
+
+486 rows have `feat_genetic_basis_encoded = 0` AND `feat_heritability_level = 1`. This is internally inconsistent:
+- Actual `disease_genetic_basis = "none"` rows → encoded=0, proxy=0.10, level=0 (correct)
+- `disease_genetic_basis = NaN/unknown` rows → encoded=NaN in feature dataset, silently imputed to 0.0 in `build_pre_event_train_v2.py` (ORDINAL_INT_FEATURES fillna), but proxy=0.40 → level=1
+
+The model cannot distinguish "no genetic basis" (true none) from "unknown genetic basis" (imputed 0) for `feat_genetic_basis_encoded`. The `feat_heritability_level` column is self-consistent (no NaN anywhere).
+
+**Fix needed before next training run:** see `reports/FEATURE_NOTES.md §2 (2026-03-30)` for the recommended fix.
+**Debug file:** `data/ml/genetics_debug_20260330_v1.csv` (490 affected source rows)
+
+---
 ## 2026-03-23 · EDGAR 8-K Ingest — Full Run (v1)
 
 **Script:** `scripts/edgar_8k_ingest.py`

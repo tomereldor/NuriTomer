@@ -5,6 +5,76 @@ Newest entry at top.
 
 ---
 
+## 2026-03-30 · Audit: prediction_date, genetics NaN imputation bug, heritability_proxy_score
+
+### 1 — What is `prediction_date`?
+
+`prediction_date` = `v_actual_date − 1 calendar day`.
+
+Defined in `scripts/add_pre_event_timing_features.py` line 158:
+```python
+pred_date = evt_date - pd.Timedelta(days=1)
+```
+
+**At training time:** applied row-by-row across the historical dataset. Simulates "the last moment before the event was announced."
+
+**At inference time:** `prediction_date = today` (the date the model is run). The model is called on a catalyst that has not yet happened. Features are computed relative to that same anchor.
+
+**Is `feat_days_to_primary_completion` valid for the current model?**
+Yes — `ct_primary_completion` is prospective CT.gov protocol metadata filed at registration, known before the event date. The feature is `ct_primary_completion − prediction_date` (in days). Negative = completion already past. It is pre-event safe and valid in the v17 model.
+
+---
+
+### 2 — Genetics NaN imputation bug (affects training dataset)
+
+**Finding:** 486 rows in `ml_baseline_train_20260327_v17.csv` show `feat_genetic_basis_encoded = 0` AND `feat_heritability_level = 1`. This combination is internally inconsistent and signals a silent NaN fill.
+
+**Root cause — two-step pipeline split:**
+
+| Stage | `feat_genetic_basis_encoded` | `feat_heritability_proxy_score` | `feat_heritability_level` |
+|---|---|---|---|
+| Source (`disease_genetic_basis`) | 490 rows are NaN | — | — |
+| After `add_biological_features.py` | NaN preserved as NaN (correct) | NaN → **0.40** (explicit null fallback) | 0.40 → **1** (moderate) |
+| After `build_pre_event_train_v2.py` `impute()` | NaN → **0.0** (ORDINAL_INT_FEATURES fillna) | unchanged 0.40 | unchanged 1 |
+
+**Why it's a bug:** In the final training table, `encoded = 0` means two different things:
+- 121 rows: actual `disease_genetic_basis = "none"` → proxy=0.10 → level=0 (low) ✓ consistent
+- 486 rows: `disease_genetic_basis = NaN/unknown` → proxy=0.40 → level=1 (moderate) ✗ inconsistent
+
+The model sees encoded=0 paired with level=0 (121 rows) AND encoded=0 paired with level=1 (486 rows), which is contradictory.
+
+**Impact:** `feat_genetic_basis_encoded` is unreliable for "none" rows in the training set; the model cannot distinguish "no genetic basis" from "unknown genetic basis." `feat_heritability_level` is unaffected (derived from proxy_score which handles nulls correctly).
+
+**Recommended fix (not implemented in this pass):** In `build_pre_event_train_v2.py`, move `feat_genetic_basis_encoded` from `ORDINAL_INT_FEATURES` to a separate handling that imputes NaN to `-1` (or a dedicated "unknown" bucket), making it distinguishable from 0 ("none"). This preserves the ordinal ordering for known values while cleanly separating unknown rows.
+
+**Debug CSV:** `data/ml/genetics_debug_20260330_v1.csv` (490 rows — the NaN source rows from the feature dataset, with full context columns).
+
+---
+
+### 3 — `feat_heritability_proxy_score`: source, formula, and scientific validity
+
+**Source:** `disease_genetic_basis` — an LLM-derived column produced by `scripts/enrich_disease_biology.py`. Four categorical values: monogenic, somatic, polygenic, none.
+
+**Formula (deterministic, no LLM calls):** Hard-coded scalar map in `add_biological_features.py` line 182:
+```python
+{"monogenic": 0.85, "somatic": 0.45, "polygenic": 0.35, "none": 0.10}
+null fallback: 0.40
+```
+
+**Transformation:** Raw category → scalar → `pd.cut` into level (low/moderate/high).
+
+**Scientific validity assessment:**
+- *Conceptually reasonable:* rank ordering (monogenic > somatic > polygenic > none) is defensible. Monogenic diseases have the clearest genetic causality (e.g., cystic fibrosis, BRCA1/2); polygenic diseases (diabetes, hypertension) have lower individual-variant effects.
+- *Not grounded in published h² estimates:* the actual narrow-sense heritability for monogenic diseases ranges from ~0.5 (some autoimmune) to >0.9 (Huntington's); these are hand-tuned priors, not literature values.
+- *Significant within-category loss:* four buckets collapse enormous within-category variation. "Somatic" covers both highly heterogeneous solid tumors and well-defined oncogene-addicted subsets.
+- *The null fallback (0.40) creates the imputation bug above.* It is reasonable as a model prior (unknown → moderate) but must not collide with encoded=0 (none → low).
+
+**Recommendation:** Keep as-is for v17. The feature is clearly labeled as a *proxy*; it ranks #20 in LightGBM importance and the AUC impact is real. The primary action item is fixing the NaN imputation conflict (§2 above) before the next training run. Replacing with Open Targets genetics evidence scores would be more principled but requires API integration and a new data pipeline; defer to a future pass.
+
+---
+
+---
+
 ## 2026-03-27 · Pass-9: Biological Feature Families (Heritability & Enrichment Relevance)
 
 7 new features in two families. Zero new LLM API calls. All STRICTLY_CLEAN (pre-event safe).
