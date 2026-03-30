@@ -229,12 +229,18 @@ CATEGORICAL_FEATURES = [
 ORDINAL_INT_FEATURES = [
     "feat_mesh_level1_encoded",
     # ── v17: Biological features — heritability ordinal (pass9) ──
-    "feat_genetic_basis_encoded",         # ordinal: none=0, polygenic=1, somatic=2, monogenic=3
+    # feat_genetic_basis_encoded moved to ORDINAL_UNKNOWN_NEG1 (0 = "none", so NaN must not fill to 0)
     "feat_heritability_level",            # ordinal bin: low=0, moderate=1, high=2
 ]
 
+# Ordinal features where 0 is a valid category — NaN must map to -1 (unknown), not 0
+ORDINAL_UNKNOWN_NEG1 = [
+    "feat_genetic_basis_encoded",  # 0=none, 1=polygenic, 2=somatic, 3=monogenic; -1=unknown
+]
+
 ALL_FEATURE_COLS = (NUMERIC_FEATURES + BINARY_FEATURES +
-                    CATEGORICAL_FEATURES + ORDINAL_INT_FEATURES)
+                    CATEGORICAL_FEATURES + ORDINAL_INT_FEATURES +
+                    ORDINAL_UNKNOWN_NEG1)
 
 TARGET_COL    = "target_large_move"
 METADATA_COLS = ["ticker", "event_date", "drug_name", "nct_id"]
@@ -267,6 +273,9 @@ def impute(df, feat_cols):
         if col in CATEGORICAL_FEATURES:
             df[col] = df[col].fillna("unknown")
             imputation_log.append((col, "unknown", int(n_miss)))
+        elif col in ORDINAL_UNKNOWN_NEG1:
+            df[col] = df[col].fillna(-1.0)
+            imputation_log.append((col, "-1 (unknown)", int(n_miss)))
         elif col in BINARY_FEATURES or col in ORDINAL_INT_FEATURES:
             df[col] = df[col].fillna(0.0)
             imputation_log.append((col, "0 (absent)", int(n_miss)))
@@ -418,10 +427,11 @@ def main():
             "missing_before": int(miss),
             "missing_after":  int(df_enc[col].isna().sum()) if col in df_enc.columns else 0,
             "note":           (
-                "one-hot encoded" if orig in CATEGORICAL_FEATURES else
-                "ordinal int"     if col in ORDINAL_INT_FEATURES   else
-                "binary flag"     if col in BINARY_FEATURES        else
-                "numeric"         if col in NUMERIC_FEATURES       else "other"
+                "one-hot encoded"          if orig in CATEGORICAL_FEATURES   else
+                "ordinal int (-1=unknown)" if col in ORDINAL_UNKNOWN_NEG1   else
+                "ordinal int"              if col in ORDINAL_INT_FEATURES    else
+                "binary flag"              if col in BINARY_FEATURES         else
+                "numeric"                  if col in NUMERIC_FEATURES        else "other"
             ),
         })
     pd.DataFrame(dict_rows).to_csv(out_dict, index=False)

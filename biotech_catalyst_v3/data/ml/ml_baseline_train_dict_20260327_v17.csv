@@ -58,8 +58,8 @@ feat_targeted_therapy_exists,feature,feat_targeted_therapy_exists,int64,none,0,0
 feat_terminated_at_event_flag,feature,feat_terminated_at_event_flag,float64,none,0,0,binary flag
 feat_withdrawn_at_event_flag,feature,feat_withdrawn_at_event_flag,float64,none,0,0,binary flag
 feat_mesh_level1_encoded,feature,feat_mesh_level1_encoded,float64,0 (absent),254,0,ordinal int
-feat_genetic_basis_encoded,feature,feat_genetic_basis,float64,none,0,0,one-hot encoded
 feat_heritability_level,feature,feat_heritability_level,float64,none,0,0,ordinal int
+feat_genetic_basis_encoded,feature,feat_genetic_basis,float64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_CNS,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Cardiovascular,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Dermatology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
