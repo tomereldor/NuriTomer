@@ -5,6 +5,113 @@ Newest entry at top.
 
 ---
 
+## 2026-04-01 · Pass-10: Open Targets genetics features (evidence-based replacement for LLM genetics)
+
+### Motivation
+
+`feat_genetic_basis_encoded` and `feat_heritability_proxy_score` (v17) are derived from an LLM
+(Perplexity sonar) that assigns each disease one of four labels: monogenic/polygenic/somatic/none.
+Problems:
+- Not grounded in published literature or curated databases
+- 490/2822 rows (17.4%) unclassified (NaN → imputed to -1 in training)
+- Four categories collapse enormous within-category variation
+- `feat_genetic_basis_encoded` had a NaN imputation bug (documented 2026-03-30)
+
+**Open Targets Platform** aggregates evidence from GWAS Catalog, ClinVar, Orphanet,
+Gene2Phenotype, ClinGen, PanelApp, IntOGen, and Cancer Gene Census into structured, scored
+associations. The Platform GraphQL API is free, requires no API key, and returns per-datasource
+scores for each target-disease pair.
+
+### Datasource design (validated empirically, OT API v26.x)
+
+| Signal | Datasources | Rationale |
+|--------|-------------|-----------|
+| Monogenic | `gene2phenotype`, `orphanet`, `clingen`, `genomics_england` | Curated rare/single-gene disease DBs — no common risk alleles |
+| Polygenic | `gwas_credible_sets` | GWAS Catalog credible sets only (renamed from `ot_genetics_portal` in v26.x) |
+| Somatic/cancer | `intogen` | Tumor somatic mutation burden (TCGA). IntOGen only — see exclusions below |
+
+**Exclusion: `eva` / `eva_somatic` (ClinVar)** — `eva` includes common polygenic risk alleles
+(HLA alleles in RA, BRCA risk alleles in breast cancer), contaminating the monogenic signal.
+`eva_somatic` includes non-cancer ClinVar somatic variants (e.g., KCNJ11 in T2D insulinomas).
+
+**Exclusion: `cancer_gene_census`** — includes cancer pathway genes used as therapeutic targets
+in non-cancer indications. JAK2/JAK3/FGFR3 appear in cancer_gene_census AND are UC therapeutic
+targets (JAK inhibitors). This gives UC a false somatic signal of 0.61. `intogen` is TCGA-only
+and never associates with non-cancer diseases.
+
+**Exclusion: `gene_burden`** — CF (monogenic) has gene_burden=0.83 for CFTR from rare-variant
+burden tests, giving false polygenic signal. `gwas_credible_sets` (GWAS Catalog) is used alone
+for the polygenic signal.
+
+### Empirical validation (top 100 targets per disease, gwas = gwas_credible_sets only)
+
+| Disease | Expected | mono_signal | gwas_signal | somatic_signal | n_mono | Classified |
+|---------|----------|-------------|-------------|----------------|--------|-----------|
+| Cystic fibrosis | monogenic | 0.945 | 0.512 | 0.000 | 8 | monogenic ✓ |
+| Sickle cell anemia | monogenic | 0.955 | 0.000 | 0.000 | 6 | monogenic ✓ |
+| Huntington disease | monogenic | 0.760 | 0.000 | 0.000 | 2 | monogenic ✓ |
+| Breast cancer | somatic | — | 0.921 | 0.956 | 21 | somatic ✓ |
+| Type 2 diabetes | polygenic | 0.932 | 0.942 | 0.000 | 12 | polygenic ✓ |
+| Rheumatoid arthritis | polygenic | 0.966 | 0.000 | 0.000 | 53 | polygenic ✓ |
+| Psoriasis | polygenic | 0.958 | 0.940 | 0.000 | 3 | polygenic ✓ |
+| Alzheimer's disease | polygenic | 0.955 | 0.953 | 0.000 | 6 | polygenic ✓ |
+| Asthma | polygenic | 0.000 | 0.975 | 0.000 | 0 | polygenic ✓ |
+| Ulcerative colitis | polygenic | 0.880 | 0.930 | 0.000* | 3 | polygenic ✓ |
+
+*UC has cancer_gene_census=0.61 (JAK inhibitor targets) but intogen=0.000 → correctly NOT somatic
+
+**Prototype run top-20 indications:** 89.5% agreement with LLM, 1/20 unknown (HIV Infections), 19 unique `ot_genetic_evidence_score` values (vs 5 in LLM proxy).
+
+### New features (6 total)
+
+| Feature | Type | Description |
+|---------|------|-------------|
+| `feat_ot_genetic_basis` | ordinal int | 0=none, 1=polygenic, 2=somatic, 3=monogenic, -1=unknown |
+| `feat_ot_genetic_evidence_score` | float 0-1 | max(monogenic, gwas, cancer_somatic) — replaces `feat_heritability_proxy_score` |
+| `feat_ot_n_genetic_targets` | int | targets with curated monogenic evidence (in top 100) |
+| `feat_ot_monogenic_signal` | float 0-1 | max score from Orphanet/G2P/ClinGen/PanelApp |
+| `feat_ot_gwas_signal` | float 0-1 | max score from GWAS Catalog / Gene Burden |
+| `feat_ot_somatic_signal` | float 0-1 | max score from IntOGen / Cancer Gene Census |
+
+**Pre-event validity:** All features are derived from disease-level curated databases (not trial
+snapshot) — valid as of disease registration, strictly pre-event safe. `STRICTLY_CLEAN`.
+
+### Classification rules
+
+```
+if somatic > 0.3                                          → somatic (2)     [intogen only]
+elif gwas_credible_sets > 0.7                             → polygenic (1)   [strong GWAS]
+elif mono > 0.5 AND n_mono ≤ 10 AND somatic < 0.15       → monogenic (3)
+elif gwas > 0.3 OR n_mono > 10                           → polygenic (1)
+elif mono > 0.1 AND n_mono > 0                           → monogenic (3)   [weak signal]
+elif max < 0.05                                           → unknown (-1)
+else                                                      → none (0)
+```
+
+Key thresholds:
+- `gwas > 0.7` first (before monogenic check): separates diseases with many true GWAS loci
+  (T2D=0.942, psoriasis=0.940, Alzheimer=0.953) from monogenic diseases with single-gene
+  GWAS credible sets (CF=0.512 from CFTR entry in GWAS Catalog)
+- `n_mono ≤ 10`: guards against complex diseases with many curated genes (RA has n_mono=53)
+- `somatic > 0.3`: intogen-only makes this specific to true cancer driver genes (no false positives)
+
+### Implementation
+
+- **Script:** `scripts/enrich_opentargets_genetics.py`
+- **Phase 1 (prototype):** `python -m scripts.enrich_opentargets_genetics --n 50` — maps top-50 indications, prints validation report, no file writes
+- **Phase 2 (full):** `python -m scripts.enrich_opentargets_genetics --full --write-features` — maps all ~1,334 indications (~30 min), writes new feature dataset version
+- **Cache:** `cache/opentargets_efo_mapping_v1.json` + `cache/opentargets_genetics_v1.json` (gitignored)
+- **Training:** `build_pre_event_train_v2.py` v18 includes all 6 OT features alongside existing v17 biology features
+
+### LLM features preserved (backward compatibility)
+
+`feat_genetic_basis_encoded`, `feat_heritability_proxy_score`, `feat_heritability_level` are kept
+in the feature dataset and training roster for the v18 run. This lets LightGBM compare old vs new
+genetics features directly via feature importance. After validating OT features rank higher, the LLM
+features can be dropped in v19.
+
+---
+
 ## 2026-03-30 · Audit: prediction_date, genetics NaN imputation bug, heritability_proxy_score
 
 ### 1 — What is `prediction_date`?
