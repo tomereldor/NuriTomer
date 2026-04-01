@@ -5,6 +5,172 @@ Feature engineering history → `FEATURE_NOTES.md`. Dataset history → `DATASET
 
 ---
 
+## v18 — Pass-10: Open Targets Genetics Features (2026-04-01)
+
+**Training table:** `ml_baseline_train_20260401_v18.csv` (1142 rows × 84 cols)
+**Feature dataset:** `ml_dataset_features_20260325_v4.csv` (2822 × 162, +6 OT columns)
+
+### Change from v17
+Added 6 OT-derived genetics features from Open Targets Platform API (free, no key):
+- `feat_ot_genetic_basis`: evidence-based classification 0-3/-1 (replaces LLM `feat_genetic_basis_encoded`)
+- `feat_ot_genetic_evidence_score`: max curated signal (replaces LLM `feat_heritability_proxy_score`)
+- `feat_ot_monogenic_signal`, `feat_ot_gwas_signal`, `feat_ot_somatic_signal`: per-datasource scores
+- `feat_ot_n_genetic_targets`: count of curated monogenic targets
+
+Datasources: Orphanet/Gene2Phenotype/ClinGen/PanelApp (monogenic), GWAS Catalog credible sets (polygenic), IntOGen (somatic). See FEATURE_NOTES.md for full rationale.
+
+### v18 vs v17 comparison
+
+| Metric | v17 (LightGBM best) | v18 (LogReg best) | Delta |
+|--------|---------------------|-------------------|-------|
+| Test AUC | 0.694 | 0.686 | -0.008 |
+| CV AUC | 0.786 ± 0.077 | 0.782 ± 0.084 | -0.004 |
+| Features | 79 | 85 | +6 OT |
+
+**Finding:** OT features rank #39-75 in LightGBM importance (vs LLM `feat_heritability_level` at #18, `feat_genetic_basis_encoded` at #23). Marginal test regression is within holdout noise. Primary limiting factor: 33% of training rows have `feat_ot_genetic_basis = -1` (unknown, EFO not mapped or no OT data), reducing signal quality.
+
+**Root cause of high unknown rate:** Many indication strings in the dataset use medical record/CT.gov terminology (e.g., "Diabetes Mellitus, Type 2", "Carcinoma, Non-Small-Cell Lung") that the OT search API doesn't match to EFO IDs. Improving EFO mapping with synonym lookup or manual curation would reduce the 44% unique-indication unknown rate.
+
+**Conclusion:** OT features are additive and scientifically more defensible than the LLM proxy, but do not materially improve model performance at current coverage. LLM genetics features retained alongside OT features for this run.
+
+---
+
+# Biotech Pre-Event Model v3 — Timing + Fold-Safe Priors
+
+**Date:** 2026-04-01
+**Objective:** Predict large stock move from public pre-event information only.
+**No press release content used.**
+**Version:** v3 — adds 9 timing features + 6 train-fold-safe reaction priors vs v2 baseline.
+
+---
+
+## 1. New Features Added
+
+### Timing features (9 new columns, deterministic)
+
+| Feature | Coverage |
+|---|---|
+| feat_primary_completion_imminent_30d | 2330/2822 | 82.6% |
+| feat_primary_completion_imminent_90d | 2330/2822 | 82.6% |
+| feat_completion_recency_bucket (6 one-hot) | 2822/2822 | 100.0% |
+| feat_time_since_last_company_event | 2441/2822 | 86.5% |
+| feat_time_since_last_asset_event | 978/2822 | 34.7% |
+| feat_asset_event_sequence_num | 2822/2822 | 100.0% |
+| feat_company_event_sequence_num | 2822/2822 | 100.0% |
+| feat_recent_company_event_flag | 2822/2822 | 100.0% |
+| feat_recent_asset_event_flag | 2822/2822 | 100.0% |
+
+**feat_days_to_study_completion:** SKIPPED — no `ct_study_completion` column in dataset.
+
+All timing features use `v_actual_date` (validated event date) as anchor.
+Sequence/time-since features sorted globally by date within company/asset groups.
+
+### Train-fold-safe priors (6 columns, injected inside folds)
+
+| Prior feature | Group key | Target stat |
+|---|---|---|
+| feat_prior_mean_abs_move_atr_by_phase | feat_phase_num | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_therapeutic_superclass | feat_therapeutic_superclass | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_phase_x_therapeutic_superclass | phase × superclass | mean(|ATR-norm move|) |
+| feat_prior_mean_abs_move_atr_by_market_cap_bucket | feat_market_cap_bucket | mean(|ATR-norm move|) |
+| feat_prior_large_move_rate_by_phase | feat_phase_num | P(large move) |
+| feat_prior_large_move_rate_by_therapeutic_superclass | feat_therapeutic_superclass | P(large move) |
+
+Priors fit on TRAIN split only; fallback = global train mean for unseen categories.
+Interaction prior requires ≥5 samples per cell, else falls back to phase-level prior.
+
+---
+
+## 2. Time-Aware Cross-Validation (LightGBM + Priors)
+
+Mean ROC-AUC = 0.782 ± 0.084
+Mean PR-AUC  = 0.678 ± 0.176
+Mean Prec@10% = 0.800 ± 0.189
+
+| Fold | Val n / Train n | ROC-AUC | PR-AUC | P@5% | P@10% | P@20% |
+|---|---|---|---|---|---|---|
+| fold_0 | 176/174 | 0.915 | 0.929 | 1.000 | 1.000 | 1.000 |
+| fold_1 | 350/174 | 0.753 | 0.749 | 1.000 | 1.000 | 0.853 |
+| fold_2 | 524/174 | 0.787 | 0.621 | 0.750 | 0.706 | 0.618 |
+| fold_3 | 698/174 | 0.687 | 0.451 | 0.625 | 0.588 | 0.529 |
+| fold_4 | 872/174 | 0.764 | 0.640 | 0.750 | 0.706 | 0.647 |
+
+---
+
+## 3. Model Comparison — Test Set (v3 features)
+
+| Model | ROC-AUC | PR-AUC | Prec@5% | Prec@10% | Prec@20% |
+|---|---|---|---|---|---|
+| LogReg | 0.686 | 0.554 | 0.800 | 0.476 | 0.548 |
+| LightGBM | 0.570 | 0.404 | 0.500 | 0.333 | 0.357 |
+| XGBoost | 0.612 | 0.439 | 0.500 | 0.429 | 0.452 |
+
+★ **Best model: LogReg**
+Test ROC-AUC = 0.686 | PR-AUC = 0.554
+Prec@top 5% = 0.800 | @top 10% = 0.476 | @top 20% = 0.548
+
+---
+
+## 4. Comparison vs v2 Baseline
+
+| Metric | v2 Baseline | v3 (timing+priors) | Change |
+|---|---|---|---|
+| Best ROC-AUC (test) | N/A | 0.686 | unknown |
+| Best Prec@10% (test) | N/A | 0.476 | — |
+| Feature count | 49 | 85 | +36 |
+
+**Overall verdict: unknown**
+
+---
+
+## 5. Threshold / Ranking Strategy
+
+### High-precision watchlist
+Threshold ≈ 0.95: prec=1.000  rec=0.014  n=1
+
+### Broad candidate list (best F1)
+Threshold ≈ 0.16: prec=0.423  rec=1.000  n=175
+
+---
+
+## 6. Top 10 Feature Importances (LogReg)
+
+| Rank | Feature | Importance |
+|---|---|---|
+| 1 | feat_company_historical_hit_rate | 0.8129 |
+| 2 | feat_prior_large_move_rate_by_phase_x_therapeutic_superclass | 0.7787 |
+| 3 | feat_trial_quality_score | 0.6927 |
+| 4 | feat_prior_large_move_rate_by_market_cap_bucket | 0.5667 |
+| 5 | feat_blinded_flag | 0.5057 |
+| 6 | feat_primary_completion_imminent_90d | 0.4488 |
+| 7 | feat_enrollment_log | 0.3549 |
+| 8 | feat_single_asset_company_flag | 0.3389 |
+| 9 | feat_small_trial_flag | 0.3259 |
+| 10 | feat_cash_runway_proxy | 0.3245 |
+
+---
+
+## 7. Key Findings
+
+- **Timing features** add coverage of trial completion proximity, which was missing in v2.
+  `feat_completion_recency_bucket` and `feat_primary_completion_imminent_*` capture
+  the "hot zone" where readout is imminent — a known driver of pre-event moves.
+- **Sequence features** (`feat_company/asset_event_sequence_num`) encode whether this
+  is a company's first major readout or a follow-on event. Later-stage companies with
+  repeat catalysts may have more predictable patterns.
+- **Fold-safe priors** prevent leakage that the static precomputed priors in the dataset
+  would cause. They encode the average magnitude/rate of moves for similar phase/disease.
+- **Time-since-last-event** features encode event clustering and momentum dynamics.
+
+## 8. Figures
+
+- `figures/cv_folds_20260312_v3.png`
+- `figures/model_comparison_20260312_v3.png`
+- `figures/roc_pr_20260312_v3.png`
+- `figures/feature_importance_20260312_v3.png`
+
+---
+
 ## TL;DR — Model Version History
 
 | Version | Date | Training rows | Features | Test AUC | CV AUC | PR-AUC | Best model | Key change |

@@ -114,7 +114,7 @@ query DiseaseEvidence($efoId: String!) {
   disease(efoId: $efoId) {
     id
     name
-    associatedTargets(page: {index: 0, size: 100}) {
+    associatedTargets(page: {index: 0, size: 25}) {
       count
       rows {
         target { approvedSymbol }
@@ -135,7 +135,7 @@ def _make_ssl_context():
     return ctx
 
 
-def graphql_request(query, variables=None, retries=3):
+def graphql_request(query, variables=None, retries=2):
     """Execute a GraphQL query. Returns (data_dict, error_str_or_None)."""
     ctx = _make_ssl_context()
     payload = json.dumps({"query": query, "variables": variables or {}}).encode("utf-8")
@@ -146,7 +146,7 @@ def graphql_request(query, variables=None, retries=3):
                 data=payload,
                 headers={"Content-Type": "application/json", "Accept": "application/json"},
             )
-            with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
+            with urllib.request.urlopen(req, context=ctx, timeout=15) as resp:
                 result = json.loads(resp.read())
             if "errors" in result:
                 return None, str(result["errors"])
@@ -157,7 +157,7 @@ def graphql_request(query, variables=None, retries=3):
         except Exception as e:
             err = str(e)
         if attempt < retries - 1:
-            time.sleep(1.5 * (attempt + 1))
+            time.sleep(1.0 * (attempt + 1))
     return None, err
 
 

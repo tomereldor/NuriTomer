@@ -22,6 +22,11 @@ feat_lead_asset_dependency_score,feature,feat_lead_asset_dependency_score,float6
 feat_log_market_cap,feature,feat_log_market_cap,float64,median=2.7787,102,0,numeric
 feat_n_trials_for_company,feature,feat_n_trials_for_company,int64,none,0,0,numeric
 feat_n_unique_drugs_for_company,feature,feat_n_unique_drugs_for_company,int64,none,0,0,numeric
+feat_ot_genetic_evidence_score,feature,feat_ot_genetic_evidence_score,float64,none,0,0,numeric
+feat_ot_gwas_signal,feature,feat_ot_gwas_signal,float64,none,0,0,numeric
+feat_ot_monogenic_signal,feature,feat_ot_monogenic_signal,float64,none,0,0,numeric
+feat_ot_n_genetic_targets,feature,feat_ot_n_genetic_targets,int64,none,0,0,numeric
+feat_ot_somatic_signal,feature,feat_ot_somatic_signal,float64,none,0,0,numeric
 feat_phase_num,feature,feat_phase_num,float64,median=2.0000,89,0,numeric
 feat_pipeline_depth_score,feature,feat_pipeline_depth_score,float64,none,0,0,numeric
 feat_pivotal_proxy_score,feature,feat_pivotal_proxy_score,float64,none,0,0,numeric
@@ -60,6 +65,7 @@ feat_withdrawn_at_event_flag,feature,feat_withdrawn_at_event_flag,float64,none,0
 feat_mesh_level1_encoded,feature,feat_mesh_level1_encoded,float64,0 (absent),254,0,ordinal int
 feat_heritability_level,feature,feat_heritability_level,float64,none,0,0,ordinal int
 feat_genetic_basis_encoded,feature,feat_genetic_basis,float64,none,0,0,one-hot encoded
+feat_ot_genetic_basis,feature,feat_ot_genetic_basis,int64,none,0,0,ordinal int (-1=unknown)
 feat_therapeutic_superclass_CNS,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Cardiovascular,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded
 feat_therapeutic_superclass_Dermatology,feature,feat_therapeutic_superclass,int64,none,0,0,one-hot encoded

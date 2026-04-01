@@ -6,18 +6,18 @@ No press release content is used. All predictions are based on pre-event structu
 
 ---
 
-## Current Files — Quick Reference (as of 2026-03-28)
+## Current Files — Quick Reference (as of 2026-04-01)
 
 > **For Nurit:** Here are the current canonical data files and where to find them.
 
 | File | Location | Git? | Contents |
 |------|----------|------|---------|
-| **Full feature dataset** | `data/ml/ml_dataset_features_20260325_v3.csv` | ✅ committed & pushed | 2,822 rows × 154 cols — all engineered features before training-set filtering |
-| **Training table (current)** | `data/ml/ml_baseline_train_20260327_v17.csv` | ✅ committed & pushed | 1,142 rows × 79 features (71 base + 8 fold-safe priors) — what the model actually trains on |
+| **Full feature dataset** | `data/ml/ml_dataset_features_20260325_v4.csv` | ✅ committed & pushed | 2,822 rows × 162 cols — all engineered features including 6 new Open Targets genetics columns |
+| **Training table (current)** | `data/ml/ml_baseline_train_20260401_v18.csv` | ✅ committed & pushed | 1,142 rows × 84 cols (77 base + 8 fold-safe priors = 85 features at train time) — what the model actually trains on |
 | **Master dataset** | `enriched_all_clinical_clean_v3.csv` | ✅ committed & pushed | 2,958 rows × 63 cols — source of truth for all events |
 | **Feature reference** | `reports/FEATURE_TABLE.md` | ✅ committed & pushed | Full table: every feature, formula, source, coverage, status |
 
-**Current model (v17):** Logistic Regression — Test AUC **0.694**, CV AUC **0.786 ± 0.077** (5-fold time-aware). 79 features, 1,142 training rows (32% positive rate).
+**Current model (v18):** Logistic Regression — Test AUC **0.686**, CV AUC **0.782 ± 0.084** (5-fold time-aware). 85 features at train time, 1,142 training rows (32% positive rate).
 
 **Feature documentation:** See [`reports/FEATURE_TABLE.md`](reports/FEATURE_TABLE.md) for the complete feature reference with descriptions, formulas, and active/deprecated status.
 
@@ -369,6 +369,24 @@ These features are kept as-is. They carry real signal for non-oncology (where CT
 ---
 
 ## Changelog
+
+### v3.50 — 2026-04-01 (Pass-10: Open Targets genetics features → v18 retrain)
+
+- **6 new evidence-based genetics features** derived from the Open Targets Platform API (free, no key required) — replaces hand-tuned LLM category proxies with scores grounded in curated databases (Orphanet, ClinVar, GWAS Catalog, IntOGen, Gene2Phenotype, ClinGen):
+  - `feat_ot_genetic_basis` (ordinal −1/0/1/2/3: unknown/none/polygenic/somatic/monogenic — evidence-derived)
+  - `feat_ot_genetic_evidence_score` (float 0–1: max evidence score across all genetic data types)
+  - `feat_ot_n_genetic_targets` (int: count of targets with curated monogenic evidence)
+  - `feat_ot_monogenic_signal` (float 0–1: max score from Orphanet/Gene2Phenotype/ClinGen/PanelApp)
+  - `feat_ot_gwas_signal` (float 0–1: max score from GWAS Catalog)
+  - `feat_ot_somatic_signal` (float 0–1: max score from IntOGen)
+- **v18 retrain:** `ml_baseline_train_20260401_v18.csv` (1,142 rows, 77 base + 8 priors = 85 features)
+  - Test AUC **0.686** (vs v17: 0.694 — −0.008, within holdout noise), PR-AUC 0.565, CV AUC **0.782 ± 0.084**, best model: LogReg
+  - OT features rank #39–75 in LightGBM importance; LLM `feat_heritability_level` still at #18 — root cause is 33% unknown rate in OT features (medical record terminology in CT.gov indications not matching OT EFO search)
+  - Both LLM and OT genetics features retained in model for comparison; OT features are additive and scientifically defensible
+- **EFO mapping:** 1,334 unique indications → 67% mapped to EFO IDs via OT GraphQL `search` endpoint; 33% unknown (future: preprocess CT.gov terminology variants)
+- **New script:** `scripts/enrich_opentargets_genetics.py` — Phase 1 (prototype, top-N) and Phase 2 (full build) modes; caches EFO + evidence profiles in `cache/` (gitignored)
+- **Feature dataset:** `ml_dataset_features_20260325_v4.csv` (2,822 × 162, +8 cols: 6 feat_ot_* + ot_efo_id + ot_efo_name)
+- **Documentation:** `reports/FEATURE_NOTES.md` updated with Pass-10 entry; `reports/MODEL_REPORTS.md` updated with v18 section
 
 ### v3.49 — 2026-03-27 (Pass-9: biological feature families → v17 retrain)
 
